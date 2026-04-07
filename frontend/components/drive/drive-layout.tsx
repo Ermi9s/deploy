@@ -1,71 +1,97 @@
 'use client'
 
-import { useState } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Menu } from 'lucide-react'
+import {
+  CircleUserRound,
+  Cloud,
+  FolderOpen,
+  Users,
+  Clock3,
+  Star,
+} from 'lucide-react'
+import { api, getStoredTokens } from '@/lib/api'
 
 interface DriveLayoutProps {
   children: React.ReactNode
 }
 
 export default function DriveLayout({ children }: DriveLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const hasAuthToken = Boolean(getStoredTokens()?.access)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b shadow-sm sticky top-0 z-40">
-        <div className="flex items-center justify-between px-6 py-4 max-w-full">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden"
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">OKM</span>
+      <header className="h-16 sticky top-0 z-50 bg-slate-50 border-b border-slate-200/70">
+        <div className="h-full px-4 sm:px-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            <div className="flex items-center gap-2 mr-2 sm:mr-6 shrink-0">
+              <Cloud className="w-7 h-7 text-blue-600" />
+              <span className="text-lg font-semibold text-slate-800">OKM</span>
+            </div>
+
+            <div className="hidden md:block w-full max-w-2xl">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search in Drive"
+                  className="w-full h-11 rounded-xl border border-slate-200 bg-slate-100/80 px-4 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition"
+                />
               </div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent hidden sm:inline">
-                OKM
-              </h1>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <p className="text-sm text-gray-600">OKM</p>
+
+          <div className="flex items-center gap-2">
+            {hasAuthToken ? (
+              <>
+                <Link href="/profile">
+                  <Button variant="ghost" size="icon" title="Profile" className="text-slate-600 hover:text-slate-900">
+                    <CircleUserRound className="w-5 h-5" />
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-200 text-slate-700 hover:bg-slate-100"
+                  onClick={() => {
+                    api.logout()
+                    window.location.href = '/login'
+                  }}
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <p className="text-sm text-slate-500">JWT auth ready</p>
+            )}
           </div>
         </div>
       </header>
 
-      <div className="flex">
-        {/* Sidebar */}
-        {sidebarOpen && (
-          <aside className="w-64 bg-white border-r shadow-sm p-4 hidden lg:block sticky top-24 h-[calc(100vh-96px)]">
-            <nav className="space-y-2">
-              <a
-                href="/drive"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 font-medium border border-blue-200 hover:shadow-sm transition"
-              >
-                <span className="text-lg">📁</span>
-                My Drive
-              </a>
-              <a
-                href="/drive"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition"
-              >
-                <span className="text-lg">⭐</span>
-                Starred
-              </a>
-            </nav>
-          </aside>
-        )}
+      <div className="flex min-h-[calc(100vh-4rem)]">
+        <aside className="hidden lg:flex w-64 fixed left-0 top-16 bottom-0 bg-slate-100 border-r border-slate-200/70 flex-col px-3 py-4">
+          <nav className="space-y-1">
+            <Link href="/drive" className="flex items-center gap-3 px-4 py-2.5 rounded-r-full bg-blue-100 text-blue-800 text-sm font-medium">
+              <FolderOpen className="w-4 h-4 text-blue-900" />
+              My Drive
+            </Link>
+            <button className="w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-r-full text-slate-600 hover:bg-slate-200 text-sm font-medium transition">
+              <Users className="w-4 h-4 text-blue-900" />
+              Shared with me
+            </button>
+            <button className="w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-r-full text-slate-600 hover:bg-slate-200 text-sm font-medium transition">
+              <Clock3 className="w-4 h-4 text-blue-900" />
+              Recent
+            </button>
+            <button className="w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-r-full text-slate-600 hover:bg-slate-200 text-sm font-medium transition">
+              <Star className="w-4 h-4 text-blue-900" />
+              Starred
+            </button>
+          </nav>
+        </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 p-6 overflow-auto">
-          {children}
+        <main className="w-full lg:ml-64 p-4 sm:p-6 overflow-auto">
+          <div className="bg-white rounded-2xl min-h-full p-5 sm:p-6">{children}</div>
         </main>
       </div>
     </div>

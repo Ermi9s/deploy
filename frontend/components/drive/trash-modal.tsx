@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react'
 import { X, Trash2, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { api } from '@/lib/api'
 
 interface TrashItem {
   id: string
   name: string
   type: 'file' | 'folder'
-  deletedAt: string
+  deletedAt?: string | null
 }
 
 interface TrashModalProps {
@@ -26,9 +27,8 @@ export default function TrashModal({ onClose }: TrashModalProps) {
 
   const loadTrash = async () => {
     try {
-      const response = await fetch('/data/drive.json')
-      const data = await response.json()
-      setItems(data.trash || [])
+      const data = await api.listTrash()
+      setItems(data.items || [])
     } catch (error) {
       console.error('Failed to load trash:', error)
     } finally {
@@ -36,12 +36,22 @@ export default function TrashModal({ onClose }: TrashModalProps) {
     }
   }
 
-  const handleRestore = (item: TrashItem) => {
-    alert(`Restored "${item.name}" from trash`)
+  const handleRestore = async (item: TrashItem) => {
+    try {
+      await api.restoreItem(item.id)
+      await loadTrash()
+    } catch (error) {
+      console.error('Failed to restore item:', error)
+    }
   }
 
-  const handleDeletePermanent = (item: TrashItem) => {
-    alert(`Permanently deleted "${item.name}"`)
+  const handleDeletePermanent = async (item: TrashItem) => {
+    try {
+      await api.deleteFile(item.id, true)
+      await loadTrash()
+    } catch (error) {
+      console.error('Failed to permanently delete item:', error)
+    }
   }
 
   return (
@@ -72,11 +82,13 @@ export default function TrashModal({ onClose }: TrashModalProps) {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-800 truncate">{item.name}</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Deleted {new Date(item.deletedAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
+                      Deleted {item.deletedAt
+                        ? new Date(item.deletedAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })
+                        : 'unknown date'}
                     </p>
                   </div>
                   <div className="flex gap-2 ml-4 flex-shrink-0">

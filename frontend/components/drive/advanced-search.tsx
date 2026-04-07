@@ -28,12 +28,12 @@ const FILE_TYPES = [
 ]
 
 const SORT_OPTIONS = [
-  { label: 'Newest First', value: 'created_at', order: 'desc' },
-  { label: 'Oldest First', value: 'created_at', order: 'asc' },
+  { label: 'Newest First', value: 'createdAt', order: 'desc' },
+  { label: 'Oldest First', value: 'createdAt', order: 'asc' },
   { label: 'Name (A-Z)', value: 'name', order: 'asc' },
   { label: 'Name (Z-A)', value: 'name', order: 'desc' },
-  { label: 'Size (Small to Large)', value: 'file_size', order: 'asc' },
-  { label: 'Size (Large to Small)', value: 'file_size', order: 'desc' },
+  { label: 'Size (Small to Large)', value: 'fileSize', order: 'asc' },
+  { label: 'Size (Large to Small)', value: 'fileSize', order: 'desc' },
 ]
 
 export default function AdvancedSearch({ onSearch }: AdvancedSearchProps) {
@@ -41,7 +41,7 @@ export default function AdvancedSearch({ onSearch }: AdvancedSearchProps) {
   const [filters, setFilters] = useState<SearchFilters>({
     query: '',
     fileType: '',
-    sortBy: 'created_at',
+    sortBy: 'createdAt',
     sortOrder: 'desc',
   })
 
@@ -55,7 +55,7 @@ export default function AdvancedSearch({ onSearch }: AdvancedSearchProps) {
     const defaultFilters = {
       query: '',
       fileType: '',
-      sortBy: 'created_at',
+      sortBy: 'createdAt',
       sortOrder: 'desc' as const,
     }
     setFilters(defaultFilters)
@@ -63,15 +63,15 @@ export default function AdvancedSearch({ onSearch }: AdvancedSearchProps) {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex gap-2 items-center">
+    <div className="space-y-4">
+      <div className="flex gap-2 items-center rounded-xl bg-white border border-slate-200 p-2">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
           <Input
             placeholder="Search files by name, type, or date..."
             value={filters.query}
             onChange={(e) => handleSearch({ query: e.target.value })}
-            className="pl-10"
+            className="pl-9 border-slate-200"
           />
         </div>
         <Button
@@ -81,7 +81,7 @@ export default function AdvancedSearch({ onSearch }: AdvancedSearchProps) {
         >
           <Filter className="w-4 h-4" />
         </Button>
-        {(filters.query || filters.fileType || filters.sortBy !== 'created_at') && (
+        {(filters.query || filters.fileType || filters.sortBy !== 'createdAt') && (
           <Button
             variant="ghost"
             size="icon"
@@ -94,9 +94,9 @@ export default function AdvancedSearch({ onSearch }: AdvancedSearchProps) {
       </div>
 
       {showAdvanced && (
-        <Card className="p-4 space-y-4">
+        <Card className="p-5 space-y-5 border-slate-200 shadow-none">
           <div className="space-y-2">
-            <label className="text-sm font-medium">File Type</label>
+            <label className="text-sm font-medium text-slate-700">File Type</label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {FILE_TYPES.map((type) => (
                 <Button
@@ -104,7 +104,7 @@ export default function AdvancedSearch({ onSearch }: AdvancedSearchProps) {
                   variant={filters.fileType === type.value ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => handleSearch({ fileType: type.value })}
-                  className="justify-start"
+                  className="justify-start border-slate-200"
                 >
                   {type.label}
                 </Button>
@@ -113,7 +113,7 @@ export default function AdvancedSearch({ onSearch }: AdvancedSearchProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Sort By</label>
+            <label className="text-sm font-medium text-slate-700">Sort By</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {SORT_OPTIONS.map((option) => (
                 <Button
@@ -130,7 +130,7 @@ export default function AdvancedSearch({ onSearch }: AdvancedSearchProps) {
                       sortOrder: option.order as 'asc' | 'desc',
                     })
                   }
-                  className="justify-start"
+                  className="justify-start border-slate-200"
                 >
                   {option.label}
                 </Button>

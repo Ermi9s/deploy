@@ -1,85 +1,41 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { api, DriveItem } from '@/lib/api'
 import DriveLayout from '@/components/drive/drive-layout'
-import FileGrid from '@/components/drive/file-grid'
-import UploadArea from '@/components/drive/upload-area'
+import AuthGuard from '@/components/auth/auth-guard'
 import FolderNav from '@/components/drive/folder-nav'
-import AdvancedSearch from '@/components/drive/advanced-search'
-import Breadcrumb from '@/components/drive/breadcrumb'
-import TrashButton from '@/components/drive/trash-button'
-
-interface SearchFilters {
-  query: string
-  fileType: string
-  sortBy: string
-  sortOrder: 'asc' | 'desc'
-}
-
-interface BreadcrumbItem {
-  id: string | null
-  name: string
-}
+import { Folder, MoreVertical, FileText, Table2, Image as ImageIcon, File } from 'lucide-react'
 
 export default function DrivePage() {
+  const router = useRouter()
   const [items, setItems] = useState<DriveItem[]>([])
   const [folders, setFolders] = useState<DriveItem[]>([])
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
-  const [folderPath, setFolderPath] = useState<BreadcrumbItem[]>([])
-  const [filters, setFilters] = useState<SearchFilters>({
-    query: '',
-    fileType: '',
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
-  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     loadItems()
-  }, [currentFolderId, filters])
+  }, [currentFolderId, router])
 
   const loadItems = async () => {
     setLoading(true)
     try {
-      const data = await api.fetchItems(currentFolderId)
-      let itemsToDisplay = data.items
-
-      // Apply search filter (Client-side for now)
-      if (filters.query) {
-        itemsToDisplay = itemsToDisplay.filter((item: DriveItem) =>
-          item.name.toLowerCase().includes(filters.query.toLowerCase())
-        )
-      }
-
-      // Apply file type filter (Client-side for now)
-      if (filters.fileType) {
-        itemsToDisplay = itemsToDisplay.filter((item: DriveItem) =>
-          item.type === filters.fileType || (item.fileType?.includes(filters.fileType))
-        )
-      }
+      const data = await api.listFiles(currentFolderId)
+      const itemsToDisplay = data.items
 
       // Separate files and folders
       const foldersData = itemsToDisplay.filter((item: DriveItem) => item.type === 'folder')
       const filesData = itemsToDisplay.filter((item: DriveItem) => item.type === 'file')
 
-      // Apply sorting
-      const sortedItems = [...foldersData, ...filesData].sort((a: DriveItem, b: DriveItem) => {
-        let compareValue = 0
-        if (filters.sortBy === 'createdAt') {
-          compareValue = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        } else if (filters.sortBy === 'name') {
-          compareValue = a.name.localeCompare(b.name)
-        } else if (filters.sortBy === 'size') {
-          compareValue = (b.fileSize || 0) - (a.fileSize || 0)
-        }
-        return filters.sortOrder === 'asc' ? -compareValue : compareValue
-      })
-
       setFolders(foldersData)
       setItems(filesData)
     } catch (error) {
       console.error('Failed to load items:', error)
+      if (error instanceof Error && error.message.toLowerCase().includes('token')) {
+        router.replace('/login')
+      }
     } finally {
       setLoading(false)
     }
@@ -87,38 +43,116 @@ export default function DrivePage() {
 
   const handleFolderNavigate = (folderId: string | null) => {
     setCurrentFolderId(folderId)
-    if (folderId === null) {
-      setFolderPath([])
-    }
   }
 
-  const handleSearchFilters = (newFilters: SearchFilters) => {
-    setFilters(newFilters)
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  }
+
+  const iconForFile = (mimeType?: string) => {
+    if (!mimeType) return <File className="w-5 h-5 text-slate-500" />
+    if (mimeType.includes('sheet') || mimeType.includes('excel')) return <Table2 className="w-5 h-5 text-emerald-600" />
+    if (mimeType.includes('image')) return <ImageIcon className="w-5 h-5 text-orange-500" />
+    if (mimeType.includes('pdf')) return <FileText className="w-5 h-5 text-rose-600" />
+    return <File className="w-5 h-5 text-slate-500" />
   }
 
   return (
-    <DriveLayout>
-      <div className="space-y-4">
-        <AdvancedSearch onSearch={handleSearchFilters} />
-        <Breadcrumb items={folderPath} onNavigate={handleFolderNavigate} />
-        <div className="flex gap-2 items-center justify-between">
-          <FolderNav currentFolderId={currentFolderId} onNavigate={handleFolderNavigate} onSuccess={loadItems} />
-          <TrashButton />
+    <AuthGuard>
+      <DriveLayout>
+        <div className="space-y-10">
+          <header className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-normal text-slate-800">My Drive</h1>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <FolderNav currentFolderId={currentFolderId} onNavigate={handleFolderNavigate} onSuccess={loadItems} />
+            </div>
+          </header>
+
+          <section>
+            <h2 className="text-sm font-medium text-slate-500 mb-4 px-1">Folders</h2>
+            {folders.length === 0 ? (
+              <div className="text-sm text-slate-500 px-1">No folders in this location.</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                {folders.map((folder) => (
+                  <button
+                    key={folder.id}
+                    type="button"
+                    onDoubleClick={() => handleFolderNavigate(folder.id)}
+                    className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all text-left group"
+                  >
+                    <Folder className="w-5 h-5 text-slate-500 group-hover:text-blue-600 transition-colors" />
+                    <span className="text-sm font-medium text-slate-700 truncate">{folder.name}</span>
+                    <MoreVertical className="w-4 h-4 text-slate-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section>
+            <h2 className="text-sm font-medium text-slate-500 mb-4 px-1">Files</h2>
+            {loading ? (
+              <p className="text-sm text-slate-500 px-1">Loading files...</p>
+            ) : items.length === 0 ? (
+              <p className="text-sm text-slate-500 px-1">No files in this location.</p>
+            ) : (
+              <div className="w-full">
+                <div className="grid grid-cols-12 px-4 py-2 text-xs font-semibold text-slate-500 border-b border-slate-200 uppercase tracking-wider">
+                  <div className="col-span-7">Name</div>
+                  <div className="col-span-3">Owner</div>
+                  <div className="col-span-2 text-right sm:text-left">Last modified</div>
+                </div>
+
+                {items.map((file) => (
+                  <div
+                    key={file.id}
+                    className="grid grid-cols-12 px-4 py-4 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer items-center"
+                  >
+                    <div className="col-span-7 flex items-center gap-3 min-w-0">
+                      {iconForFile(file.fileType)}
+                      <span className="text-sm font-medium text-slate-800 truncate">{file.name}</span>
+                    </div>
+                    <div className="col-span-3 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[10px] text-blue-700 font-bold">ME</div>
+                      <span className="text-xs text-slate-500 hidden sm:inline">Me</span>
+                    </div>
+                    <div className="col-span-2 text-right sm:text-left text-xs text-slate-500">
+                      {formatDate(file.updatedAt || file.createdAt)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {currentFolderId ? (
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => handleFolderNavigate(null)}
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                Back to root
+              </button>
+            </div>
+          ) : null}
+
+          {loading ? null : (
+            <div className="hidden">
+              {/* Keeps API-driven refresh affordance via existing components if needed later */}
+              <FolderNav currentFolderId={currentFolderId} onNavigate={handleFolderNavigate} onSuccess={loadItems} />
+            </div>
+          )}
         </div>
-        <UploadArea currentFolderId={currentFolderId} onUploadSuccess={loadItems} />
-        {loading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Loading files...</p>
-          </div>
-        ) : (
-          <FileGrid
-            items={[...folders, ...items]}
-            onRefresh={loadItems}
-            currentFolderId={currentFolderId}
-            onNavigate={handleFolderNavigate}
-          />
-        )}
-      </div>
-    </DriveLayout>
+      </DriveLayout>
+    </AuthGuard>
   )
 }

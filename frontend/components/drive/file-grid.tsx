@@ -58,7 +58,7 @@ export default function FileGrid({
       return
     }
     try {
-      await api.renameItem(item.id, newName, item.type)
+      await api.renameItem(item.id, newName)
       setRenamingId(null)
       setNewName('')
       onRefresh()
@@ -69,7 +69,7 @@ export default function FileGrid({
 
   const handleDelete = async (item: DriveItem) => {
     try {
-      await api.deleteItem(item.id, item.type)
+      await api.deleteFile(item.id)
       setContextMenu(null)
       onRefresh()
     } catch (error) {
@@ -80,11 +80,11 @@ export default function FileGrid({
   if (items.length === 0) {
     return (
       <div className="text-center py-16">
-        <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
-          <Folder className="w-10 h-10 text-gray-400" />
+        <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
+          <Folder className="w-8 h-8 text-slate-400" />
         </div>
-        <p className="text-gray-600 font-medium text-lg">No files or folders yet</p>
-        <p className="text-gray-500 text-sm mt-1">Start by uploading files or creating a new folder</p>
+        <p className="text-slate-700 font-medium text-base">No files or folders yet</p>
+        <p className="text-slate-500 text-sm mt-1">Start by uploading files or creating a folder</p>
       </div>
     )
   }
@@ -95,7 +95,7 @@ export default function FileGrid({
         {items.map((item) => (
           <Card
             key={item.id}
-            className="p-4 hover:shadow-lg hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 cursor-pointer group relative border-gray-200 hover:border-blue-300"
+            className="p-4 bg-white border-slate-200 shadow-none hover:border-slate-300 transition-colors cursor-pointer group relative"
             onDoubleClick={() => {
               if (item.type === 'folder') {
                 onNavigate(item.id)
@@ -112,13 +112,13 @@ export default function FileGrid({
             <div className="flex flex-col items-center gap-3">
               <div className={`p-3 rounded-lg transition-all ${
                 item.type === 'folder' 
-                  ? 'bg-blue-100 group-hover:bg-blue-200' 
-                  : 'bg-gray-100 group-hover:bg-gray-200'
+                  ? 'bg-blue-50 group-hover:bg-blue-100' 
+                  : 'bg-slate-100 group-hover:bg-slate-200'
               }`}>
                 {item.type === 'folder' ? (
-                  <Folder className="w-8 h-8 text-blue-600" />
+                  <Folder className="w-7 h-7 text-blue-600" />
                 ) : (
-                  <File className="w-8 h-8 text-gray-600" />
+                  <File className="w-7 h-7 text-slate-600" />
                 )}
               </div>
 
@@ -138,7 +138,7 @@ export default function FileGrid({
                   />
                 ) : (
                   <p 
-                    className="font-medium text-sm truncate cursor-text hover:bg-blue-50 px-1 py-0.5 rounded" 
+                    className="font-medium text-sm text-slate-800 truncate cursor-text hover:bg-slate-100 px-1 py-0.5 rounded" 
                     title={item.name}
                     onDoubleClick={() => {
                       setRenamingId(item.id)
@@ -150,10 +150,10 @@ export default function FileGrid({
                 )}
               </div>
 
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-slate-500 text-center">
                 {item.type === 'folder' ? 'Folder' : formatFileSize(item.fileSize || 0)}
               </p>
-              <p className="text-xs text-gray-400 text-center">
+              <p className="text-xs text-slate-400 text-center">
                 {formatDate(item.createdAt)}
               </p>
             </div>
@@ -164,18 +164,18 @@ export default function FileGrid({
       {/* Context Menu */}
       {contextMenu && (
         <div
-          className="fixed bg-white rounded-lg shadow-xl border border-gray-300 z-50 overflow-hidden backdrop-blur-sm"
+          className="fixed bg-white rounded-lg border border-slate-200 shadow-sm z-50 overflow-hidden"
           style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
           onClick={() => setContextMenu(null)}
         >
           <div className="py-1 min-w-max">
             {contextMenu.item.type === 'file' && (
-              <button className="flex items-center gap-3 px-4 py-2 hover:bg-blue-50 w-full text-left text-sm text-gray-700 hover:text-blue-700 transition">
+              <button className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors">
                 <Download className="w-4 h-4" /> Download
               </button>
             )}
             <button 
-              className="flex items-center gap-3 px-4 py-2 hover:bg-blue-50 w-full text-left text-sm text-gray-700 hover:text-blue-700 transition"
+              className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors"
               onClick={() => {
                 setRenamingId(contextMenu.item.id)
                 setNewName(contextMenu.item.name)
@@ -184,15 +184,15 @@ export default function FileGrid({
             >
               <Edit className="w-4 h-4" /> Rename
             </button>
-            <button className="flex items-center gap-3 px-4 py-2 hover:bg-blue-50 w-full text-left text-sm text-gray-700 hover:text-blue-700 transition">
+            <button className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors">
               <Copy className="w-4 h-4" /> Copy
             </button>
-            <button className="flex items-center gap-3 px-4 py-2 hover:bg-blue-50 w-full text-left text-sm text-gray-700 hover:text-blue-700 transition">
+            <button className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors">
               <Move className="w-4 h-4" /> Move
             </button>
-            <div className="border-t border-gray-200" />
+            <div className="border-t border-slate-200" />
             <button
-              className="flex items-center gap-3 px-4 py-2 hover:bg-red-50 w-full text-left text-sm text-red-600 hover:text-red-700 transition"
+              className="flex items-center gap-3 px-4 py-2 hover:bg-red-50 w-full text-left text-sm text-red-600 transition-colors"
               onClick={() => handleDelete(contextMenu.item)}
             >
               <Trash2 className="w-4 h-4" /> Delete

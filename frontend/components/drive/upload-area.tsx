@@ -29,7 +29,7 @@ export default function UploadArea({ currentFolderId, onUploadSuccess }: UploadA
     setIsUploading(true)
     try {
       for (let i = 0; i < files.length; i++) {
-        await api.uploadFile(files[i], currentFolderId)
+        await api.uploadDocument(files[i], currentFolderId)
       }
       onUploadSuccess()
     } catch (error) {
@@ -55,10 +55,10 @@ export default function UploadArea({ currentFolderId, onUploadSuccess }: UploadA
 
   return (
     <Card
-      className={`p-12 text-center cursor-pointer transition border-2 border-dashed ${
+      className={`p-8 sm:p-10 text-center cursor-pointer transition-colors border border-dashed rounded-xl shadow-none ${
         isDragging
-          ? 'bg-blue-50 border-blue-400 shadow-md'
-          : 'bg-gradient-to-br from-blue-50 to-indigo-50 hover:shadow-md border-blue-200'
+          ? 'bg-blue-50 border-blue-300'
+          : 'bg-white border-slate-200 hover:border-slate-300'
       }`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -66,15 +66,15 @@ export default function UploadArea({ currentFolderId, onUploadSuccess }: UploadA
     >
       <div className="space-y-4">
         <div className="flex justify-center">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-            <Upload className="w-8 h-8 text-blue-600" />
+          <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
+            <Upload className="w-6 h-6 text-slate-600" />
           </div>
         </div>
         <div>
-          <p className="text-gray-800 font-semibold text-lg">
+          <p className="text-slate-900 font-medium text-base">
             Drag files here to upload
           </p>
-          <p className="text-sm text-gray-600 mt-1">or click the button below to select files</p>
+          <p className="text-sm text-slate-600 mt-1">or use the button below</p>
         </div>
         <input
           type="file"
@@ -85,11 +85,12 @@ export default function UploadArea({ currentFolderId, onUploadSuccess }: UploadA
         />
         <Button
           size="lg"
+          disabled={isUploading}
           onClick={() => document.getElementById('file-input')?.click()}
           className="bg-blue-600 hover:bg-blue-700 text-white"
         >
           <Upload className="w-4 h-4 mr-2" />
-          Select Files
+          {isUploading ? 'Uploading...' : 'Select files'}
         </Button>
       </div>
     </Card>
