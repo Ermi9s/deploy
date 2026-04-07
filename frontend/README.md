@@ -1,6 +1,6 @@
-# OKM - UI Demo
+# OKM Frontend
 
-A fully functional OKM UI built with React, Next.js, and Tailwind CSS. This is a pure UI demonstration with mock data loaded from JSON files.
+A Next.js frontend for the OKM backend APIs. The drive UI now uses the live management and ingestion services instead of mock JSON files.
 
 ## Features
 
@@ -8,7 +8,7 @@ A fully functional OKM UI built with React, Next.js, and Tailwind CSS. This is a
 - **Drag & Drop Interface**: Interactive upload area with drag-and-drop support
 - **File Preview**: Support for images, PDFs, videos, and audio files
 - **Search & Filter**: Advanced search with file type and sorting filters
-- **Trash Recovery**: Soft delete with ability to restore deleted items
+- **Trash Recovery**: Soft delete with ability to restore deleted items from the management API
 - **Responsive Design**: Fully responsive layout that works on desktop, tablet, and mobile
 - **Beautiful UI**: Modern design with gradients, smooth transitions, and intuitive controls
 
@@ -55,37 +55,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to see the a
     - trash-modal.tsx      # Trash/recycle bin
     - breadcrumb.tsx       # Navigation breadcrumbs
   /ui             # Reusable UI components (shadcn/ui)
-
-/public
-  /data           # Mock data
-    - drive.json  # Sample files and folders
 ```
 
-## Data Structure
-
-The mock data is stored in `/public/data/drive.json`:
-
-```json
-{
-  "items": [
-    {
-      "id": "file-1",
-      "name": "Document.pdf",
-      "type": "file",
-      "fileType": "application/pdf",
-      "fileSize": 2048576,
-      "createdAt": "2024-03-13T09:15:00Z"
-    }
-  ],
-  "folders": {
-    "folder-1": {
-      "name": "Projects",
-      "items": [...]
-    }
-  },
-  "trash": [...]
-}
-```
+The drive page is backed by the live backend APIs, so mock data is no longer required.
 
 ## Key Components
 
@@ -102,15 +74,12 @@ Modal for previewing different file types with placeholder content.
 Advanced search and filtering UI with multiple sort and filter options.
 
 ### TrashModal
-Shows deleted items with restore and permanent delete options.
+Shows deleted items from the backend with restore and permanent delete options.
 
 ### UploadArea
-Drag-and-drop interface for file uploads (demo: shows alerts only).
+Drag-and-drop interface for file uploads that sends files to ingestion first, then registers them in management.
 
 ## Customization
-
-### Add More Files
-Edit `/public/data/drive.json` to add more files, folders, and trash items.
 
 ### Modify Colors
 Edit `app/layout.tsx` and the component files to change the color scheme. The app uses Tailwind CSS utility classes.
@@ -120,10 +89,10 @@ Update the file type filters in `/components/drive/advanced-search.tsx`.
 
 ## Notes
 
-- This is a UI-only demonstration. The upload, delete, and rename functions show alerts but don't persist changes.
-- All data is loaded from the JSON file and stored in component state.
-- No backend, database, or authentication is required.
-- Perfect for prototyping, design exploration, or building portfolio projects.
+- Set `NEXT_PUBLIC_MANAGEMENT_API` and `NEXT_PUBLIC_INGESTION_API` before running the frontend.
+- Uploads go to ingestion first, then the returned document is registered in management so it appears in the drive list.
+- JWT tokens are stored in browser local storage by the API client.
+- Trash, rename, create folder, move, and delete actions are backed by the management API.
 
 ## Technologies Used
 
