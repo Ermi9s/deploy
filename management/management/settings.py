@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure--oo@=ygfnja!1ct=1y+*$6^6-0p44!03h040*fusk4=z@b(b+j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,management').split(',') if host.strip()]
 
 
 # Application definition
@@ -42,12 +42,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'drf_spectacular',
+    'corsheaders',
     'UserAccountManager',
+    'drive',
     'rest_framework',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -132,6 +135,24 @@ STATIC_ROOT = os.getenv('STATIC_ROOT', '/tmp/staticfiles')
 # Media files (profile pictures, uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        'CORS_ALLOWED_ORIGINS',
+        'http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001',
+    ).split(',')
+    if origin.strip()
+]
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        'CSRF_TRUSTED_ORIGINS',
+        'http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001',
+    ).split(',')
+    if origin.strip()
+]
 
 
 

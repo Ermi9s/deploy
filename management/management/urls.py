@@ -20,6 +20,7 @@ urlpatterns = [
 
     # App URLs
     path('auth/', include('UserAccountManager.urls')),
+    path('api/drive/', include('drive.urls')),
 ]
 
 # Serve media files in development
