@@ -1,6 +1,6 @@
 # Project Structure and Run Guide
 
-This repository contains 4 Django API services, a dedicated Celery workers service, and a root Docker Compose setup.
+This repository contains 4 Django API services, a Next.js frontend, a dedicated Celery workers service, and a root Docker Compose setup.
 
 ## Structure
 
@@ -9,6 +9,7 @@ This repository contains 4 Django API services, a dedicated Celery workers servi
 - `notification/`
 - `rag/`
 - `workers/`
+- `frontend/`
 - `docker-compose.yml`
 
 Each service folder has:
@@ -75,18 +76,31 @@ celery_app.send_task(
 )
 ```
 
+## Frontend Integration
+
+The frontend uses the backend as the source of truth:
+
+- `GET /api/drive/` lists drive items
+- `POST /api/drive/create_folder/` creates folders
+- `PATCH /api/drive/{id}/rename/` renames items
+- `PATCH /api/drive/{id}/move/` moves items
+- `DELETE /api/drive/{id}/delete_item/` sends items to trash
+- `POST /api/drive/{id}/restore/` restores trashed items
+- `POST /api/drive/upload_document/` registers uploads after ingestion
+- `POST /auth/token/` and `POST /auth/refresh/` handle JWT auth
+
 ## Ingestion API
 
 Upload endpoint:
 
-- `POST /api/v1/documents/upload`
+- `POST /api/v1/documents/upload/`
 - Content type: `multipart/form-data`
 - Form field: `file`
 - Supported file types: `application/pdf`, common image MIME types (`png`, `jpg`, `jpeg`, `tiff`, `bmp`, `webp`)
 
 Status endpoint:
 
-- `GET /api/v1/documents/{document_id}/status`
+- `GET /api/v1/documents/{document_id}/status/`
 
 WebSocket progress endpoint:
 
