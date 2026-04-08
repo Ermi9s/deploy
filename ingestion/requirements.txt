@@ -5,3 +5,4 @@ celery[redis]==5.4.0
 djangorestframework==3.15.2
 drf-spectacular
 psycopg[binary]
+gunicorn

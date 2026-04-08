@@ -12,9 +12,12 @@ RUN python -m pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r /app/requirements.txt
 
 COPY --chown=app:app . /app
+RUN chmod +x /app/entrypoint.sh
+
+ENV DJANGO_WSGI_MODULE=ingestion.wsgi:application
 
 USER app
 
 EXPOSE 8000
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+ENTRYPOINT ["/app/entrypoint.sh"]

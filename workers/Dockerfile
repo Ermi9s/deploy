@@ -17,7 +17,8 @@ RUN python -m pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r /app/requirements.txt
 
 COPY --chown=app:app . /app
+RUN chmod +x /app/entrypoint.sh
 
 USER app
 
-CMD ["celery", "-A", "workers", "worker", "--loglevel=info", "--queues=document_ingestion_jobs,default"]
+ENTRYPOINT ["/app/entrypoint.sh"]
