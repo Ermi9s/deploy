@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from rest_framework import serializers
 
-from .models import DriveItem
+from .models import DriveItem, FileVersion
 
 
 class DriveItemSerializer(serializers.ModelSerializer):
@@ -54,3 +54,29 @@ class RegisterUploadSerializer(serializers.Serializer):
     fileSize = serializers.IntegerField(min_value=0)
     parentId = serializers.UUIDField(required=False, allow_null=True)
     storagePath = serializers.CharField(required=False, allow_blank=True)
+
+
+class RequestUploadSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    mimeType = serializers.CharField(max_length=255)
+    parentId = serializers.UUIDField(required=False, allow_null=True)
+    size = serializers.IntegerField(min_value=1)
+
+
+class ConfirmUploadSerializer(serializers.Serializer):
+    storageKey = serializers.CharField(max_length=1024)
+    checksum = serializers.CharField(max_length=128, allow_blank=True, required=False)
+    documentId = serializers.UUIDField(required=False, allow_null=True)
+    taskId = serializers.CharField(required=False, allow_blank=True)
+
+
+class FileVersionSerializer(serializers.ModelSerializer):
+    storageKey = serializers.CharField(source='storage_key', read_only=True)
+    createdAt = serializers.DateTimeField(source='created_at', read_only=True)
+
+    class Meta:
+        model = FileVersion
+        fields = ('id', 'version', 'size', 'checksum', 'storageKey', 'createdAt')
+        read_only_fields = fields
+
+

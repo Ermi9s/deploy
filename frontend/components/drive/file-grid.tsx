@@ -23,6 +23,9 @@ export default function FileGrid({
 }: FileGridProps) {
   const [selectedItem, setSelectedItem] = useState<DriveItem | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewError, setPreviewError] = useState<string | null>(null)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; item: DriveItem } | null>(null)
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [newName, setNewName] = useState('')
@@ -77,6 +80,43 @@ export default function FileGrid({
     }
   }
 
+  const handleDownload = async (item: DriveItem) => {
+    try {
+      const res = await api.getDownloadUrl(item.id)
+      const a = document.createElement('a')
+      a.href = res.downloadUrl
+      a.download = item.name
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setContextMenu(null)
+    } catch (error) {
+      console.error('Failed to download item:', error)
+    }
+  }
+
+  const openPreview = async (item: DriveItem) => {
+    if (item.type !== 'file') {
+      return
+    }
+
+    setSelectedItem(item)
+    setPreviewOpen(true)
+    setPreviewUrl(null)
+    setPreviewError(null)
+    setPreviewLoading(true)
+
+    try {
+      const res = await api.getDownloadUrl(item.id)
+      setPreviewUrl(res.downloadUrl)
+    } catch (error) {
+      console.error('Failed to load preview URL:', error)
+      setPreviewError('Could not load a preview URL for this file.')
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
   if (items.length === 0) {
     return (
       <div className="text-center py-16">
@@ -104,8 +144,7 @@ export default function FileGrid({
             onContextMenu={(e) => handleContextMenu(e, item)}
             onClick={() => {
               if (item.type === 'file') {
-                setSelectedItem(item)
-                setPreviewOpen(true)
+                void openPreview(item)
               }
             }}
           >
@@ -170,7 +209,10 @@ export default function FileGrid({
         >
           <div className="py-1 min-w-max">
             {contextMenu.item.type === 'file' && (
-              <button className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors">
+              <button 
+                onClick={() => handleDownload(contextMenu.item)}
+                className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors"
+              >
                 <Download className="w-4 h-4" /> Download
               </button>
             )}
@@ -203,7 +245,19 @@ export default function FileGrid({
 
       {/* File Preview */}
       {previewOpen && selectedItem && (
-        <FilePreview item={selectedItem} onClose={() => setPreviewOpen(false)} />
+        <FilePreview 
+          item={selectedItem} 
+          fileUrl={previewUrl}
+          loading={previewLoading}
+          error={previewError}
+          onClose={() => {
+            setPreviewOpen(false)
+            setPreviewUrl(null)
+            setPreviewError(null)
+            setPreviewLoading(false)
+          }} 
+          onDownload={() => handleDownload(selectedItem)}
+        />
       )}
     </>
   )

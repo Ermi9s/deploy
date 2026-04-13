@@ -29,6 +29,16 @@ DEBUG = True
 
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,management').split(',') if host.strip()]
 
+# MinIO configuration
+MINIO_ENDPOINT = os.getenv('MINIO_ENDPOINT', 'minio:9000')
+MINIO_PUBLIC_ENDPOINT = os.getenv('MINIO_PUBLIC_ENDPOINT', MINIO_ENDPOINT)
+MINIO_ACCESS_KEY = os.getenv('MINIO_ROOT_USER', 'okm_minio_user')
+MINIO_SECRET_KEY = os.getenv('MINIO_ROOT_PASSWORD', 'okm_minio_secret')
+MINIO_BUCKET = os.getenv('MINIO_BUCKET', 'okm-files')
+MINIO_REGION = os.getenv('MINIO_REGION', 'us-east-1')
+MINIO_SECURE = os.getenv('MINIO_SECURE', 'false').lower() == 'true'
+MINIO_PUBLIC_SECURE = os.getenv('MINIO_PUBLIC_SECURE', str(MINIO_SECURE)).lower() == 'true'
+MAX_UPLOAD_SIZE_MB = int(os.getenv('MAX_UPLOAD_SIZE_MB', 500))
 
 # Application definition
 

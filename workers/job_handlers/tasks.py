@@ -25,6 +25,10 @@ def _task_progress(task, status: str, progress: int, stage: str, message: str) -
     task.update_state(state='PROGRESS', meta={'status': status, 'progress': progress, 'stage': stage, 'message': message})
 
 
+def _count_words(text: str) -> int:
+    return len(text.split())
+
+
 def _extract_pdf_text(pdf_path: Path) -> str:
     with fitz.open(pdf_path) as document:
         return '\n'.join((page.get_text('text') or '') for page in document)
@@ -39,13 +43,16 @@ def _ocr_image_file(image_path: Path) -> str:
     return _ocr_image_bytes(image_path.read_bytes())
 
 
-def _ocr_pdf(pdf_path: Path) -> str:
+def _ocr_pdf(pdf_path: Path, progress_callback=None) -> str:
     text_blocks: list[str] = []
     with fitz.open(pdf_path) as document:
-        for page in document:
+        total_pages = len(document)
+        for idx, page in enumerate(document):
             pixmap = page.get_pixmap(dpi=300)
             image_bytes = pixmap.tobytes('png')
             text_blocks.append(_ocr_image_bytes(image_bytes))
+            if progress_callback is not None:
+                progress_callback(idx + 1, total_pages)
     return '\n'.join(text_blocks)
 
 
@@ -79,22 +86,6 @@ def _embedding_values(response: Any) -> list[float]:
             return [float(v) for v in values]
 
     raise ValueError('Unable to parse embedding vector from Gemini response.')
-
-
-def _embed_chunks(chunks: list[str]) -> list[list[float]]:
-    api_key = os.getenv('GEMINI_API_KEY')
-    if not api_key:
-        raise RuntimeError('GEMINI_API_KEY is not set.')
-
-    model = os.getenv('GEMINI_EMBEDDING_MODEL', 'text-embedding-004')
-    client = genai.Client(api_key=api_key)
-    vectors: list[list[float]] = []
-
-    for chunk in chunks:
-        response = client.models.embed_content(model=model, contents=chunk)
-        vectors.append(_embedding_values(response))
-
-    return vectors
 
 
 def _ensure_index(es: Elasticsearch, index_name: str, embedding_dims: int) -> None:
@@ -168,19 +159,46 @@ def handle_document_ingestion_job(self, payload: dict[str, Any]) -> dict[str, An
     if not file_path.exists():
         raise FileNotFoundError(f'Uploaded file not found: {file_path}')
 
-    _task_progress(self, 'processing', 10, 'extracting_text', 'Starting text extraction.')
+    _task_progress(self, 'processing', 2, 'extracting_text', 'Starting text extraction.')
 
     source_type = 'pdf' if mime_type == 'application/pdf' else 'image'
     text = ''
 
     if mime_type == 'application/pdf':
-        text = _extract_pdf_text(file_path)
+        with fitz.open(file_path) as document:
+            total_pages = max(len(document), 1)
+            text_blocks: list[str] = []
+            for idx, page in enumerate(document):
+                text_blocks.append(page.get_text('text') or '')
+                # Smooth extraction updates in the first 20% of progress.
+                extraction_progress = 2 + int(((idx + 1) / total_pages) * 18)
+                _task_progress(
+                    self,
+                    'processing',
+                    extraction_progress,
+                    'extracting_text',
+                    f'Extracting text from PDF page {idx + 1}/{total_pages}.',
+                )
+            text = '\n'.join(text_blocks)
+
         if len(text.strip()) < MIN_PDF_TEXT_CHARS:
-            _task_progress(self, 'processing', 25, 'ocr_fallback', 'Low PDF text quality detected, running OCR fallback.')
-            text = _ocr_pdf(file_path)
+            _task_progress(self, 'processing', 22, 'ocr_fallback', 'Low PDF text quality detected, running OCR fallback.')
+
+            def ocr_progress(done_pages: int, total_pages: int) -> None:
+                progress = 22 + int((done_pages / max(total_pages, 1)) * 13)
+                _task_progress(
+                    self,
+                    'processing',
+                    progress,
+                    'ocr_fallback',
+                    f'Running OCR fallback on page {done_pages}/{total_pages}.',
+                )
+
+            text = _ocr_pdf(file_path, progress_callback=ocr_progress)
     elif mime_type.startswith('image/'):
-        _task_progress(self, 'processing', 25, 'ocr', 'Running OCR for image upload.')
+        _task_progress(self, 'processing', 18, 'ocr', 'Running OCR for image upload.')
         text = _ocr_image_file(file_path)
+        _task_progress(self, 'processing', 35, 'ocr', 'OCR completed for image upload.')
     else:
         raise ValueError(f'Unsupported MIME type: {mime_type}')
 
@@ -188,22 +206,83 @@ def handle_document_ingestion_job(self, payload: dict[str, Any]) -> dict[str, An
     if not cleaned_text:
         raise ValueError('No extractable text found after extraction/OCR.')
 
-    _task_progress(self, 'processing', 45, 'chunking', 'Chunking extracted text.')
+    total_words = max(_count_words(cleaned_text), 1)
+
+    _task_progress(self, 'processing', 40, 'chunking', f'Chunking extracted text ({total_words} words detected).')
     chunks = _chunk_text(cleaned_text)
     if not chunks:
         raise ValueError('No chunks generated from extracted text.')
 
-    _task_progress(self, 'processing', 65, 'embedding', 'Generating Gemini embeddings.')
-    vectors = _embed_chunks(chunks)
+    chunk_word_counts = [max(_count_words(chunk), 1) for chunk in chunks]
+    total_chunk_words = max(sum(chunk_word_counts), 1)
+    _task_progress(self, 'processing', 48, 'chunking', f'Created {len(chunks)} chunks for embedding.')
 
-    _task_progress(self, 'processing', 85, 'indexing', 'Indexing chunks into Elasticsearch.')
-    indexed_chunks = _index_document_chunks(
-        document_id=document_id,
-        filename=original_filename,
-        source_type=source_type,
-        chunks=chunks,
-        vectors=vectors,
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        raise RuntimeError('GEMINI_API_KEY is not set.')
+
+    model = os.getenv('GEMINI_EMBEDDING_MODEL', 'text-embedding-004')
+    client = genai.Client(api_key=api_key)
+
+    vectors: list[list[float]] = []
+    embedded_words = 0
+    for idx, chunk in enumerate(chunks):
+        response = client.models.embed_content(model=model, contents=chunk)
+        vectors.append(_embedding_values(response))
+
+        embedded_words += chunk_word_counts[idx]
+        embedding_progress = 48 + int((embedded_words / total_chunk_words) * 30)
+        _task_progress(
+            self,
+            'processing',
+            embedding_progress,
+            'embedding',
+            f'Embedding chunk {idx + 1}/{len(chunks)} ({embedded_words}/{total_chunk_words} words processed).',
+        )
+
+    _task_progress(self, 'processing', 80, 'indexing', 'Preparing Elasticsearch index.')
+
+    es_url = os.getenv('ELASTICSEARCH_URL', 'http://elasticsearch:9200')
+    index_name = os.getenv('ELASTICSEARCH_INDEX', 'documents_chunks')
+    es = Elasticsearch(es_url)
+
+    _ensure_index(es, index_name, len(vectors[0]))
+
+    es.delete_by_query(
+        index=index_name,
+        body={'query': {'term': {'document_id': document_id}}},
+        conflicts='proceed',
+        refresh=True,
     )
+
+    indexed_words = 0
+    for idx, (chunk, vector) in enumerate(zip(chunks, vectors)):
+        es.index(
+            index=index_name,
+            id=f'{document_id}:{idx}',
+            document={
+                'document_id': document_id,
+                'chunk_id': f'{document_id}:{idx}',
+                'text': chunk,
+                'source_type': source_type,
+                'filename': original_filename,
+                'embedding': vector,
+                'created_at': datetime.now(timezone.utc).isoformat(),
+            },
+        )
+
+        indexed_words += chunk_word_counts[idx]
+        indexing_progress = 80 + int((indexed_words / total_chunk_words) * 19)
+        _task_progress(
+            self,
+            'processing',
+            indexing_progress,
+            'indexing',
+            f'Indexed chunk {idx + 1}/{len(chunks)} ({indexed_words}/{total_chunk_words} words).',
+        )
+
+    es.indices.refresh(index=index_name)
+    indexed_chunks = len(chunks)
 
     result = {
         'document_id': document_id,

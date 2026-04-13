@@ -2,17 +2,24 @@ from __future__ import annotations
 
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.conf import settings
+from django.db import transaction
+from django.utils.encoding import force_str
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import DriveItem
+from .models import DriveItem, FileVersion
+from .services import minio_service
 from .serializers import (
     CreateFolderSerializer,
     DriveItemSerializer,
     MoveItemSerializer,
     RegisterUploadSerializer,
     RenameItemSerializer,
+    RequestUploadSerializer,
+    ConfirmUploadSerializer,
+    FileVersionSerializer,
 )
 
 
@@ -141,3 +148,155 @@ class TrashListAPIView(DriveItemBaseAPIView):
         queryset = self.get_queryset().filter(is_trashed=True)
         serializer = DriveItemSerializer(queryset, many=True)
         return Response({'items': serializer.data})
+
+
+class RequestUploadURLAPIView(DriveItemBaseAPIView):
+    def post(self, request):
+        serializer = RequestUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        max_size_bytes = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
+        if data['size'] > max_size_bytes:
+            return Response({'error': f'File size exceeds {settings.MAX_UPLOAD_SIZE_MB}MB.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        self._resolve_parent(data.get('parentId'))
+
+        storage_key = minio_service.generate_upload_key(request.user.id, data['name'])
+        upload_url = minio_service.presigned_put_url(storage_key)
+
+        return Response({
+            'uploadUrl': upload_url,
+            'storageKey': storage_key,
+            'expiresIn': 600,
+        })
+
+
+class ConfirmUploadAPIView(DriveItemBaseAPIView):
+    def post(self, request):
+        serializer = ConfirmUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        val_data = serializer.validated_data
+
+        name = request.data.get('name', 'unnamed')
+        mime_type = request.data.get('mimeType', '')
+        parent_id = request.data.get('parentId')
+        drive_item_id = request.data.get('driveItemId')
+
+        storage_key = val_data['storageKey']
+        checksum = val_data.get('checksum', '')
+        source_document_id = val_data.get('documentId')
+        task_id = val_data.get('taskId', '')
+
+        if not minio_service.object_exists(storage_key):
+            return Response({'error': 'Object not found in storage.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        size = minio_service.get_object_size(storage_key)
+        parent = self._resolve_parent(parent_id)
+
+        with transaction.atomic():
+            if drive_item_id:
+                item = get_object_or_404(self.get_queryset(), id=drive_item_id, item_type=DriveItem.ItemType.FILE)
+                next_version = item.versions.order_by('-version').first().version + 1 if item.versions.exists() else 1
+                item.file_size = size
+                if source_document_id:
+                    item.source_document_id = source_document_id
+                if task_id:
+                    item.task_id = task_id
+                item.save(update_fields=['file_size', 'source_document_id', 'task_id', 'updated_at'])
+            else:
+                item = DriveItem.objects.create(
+                    owner=request.user,
+                    name=name,
+                    item_type=DriveItem.ItemType.FILE,
+                    parent=parent,
+                    mime_type=mime_type,
+                    file_size=size,
+                    storage_path=storage_key,
+                    source_document_id=source_document_id,
+                    task_id=task_id,
+                )
+                next_version = 1
+
+            FileVersion.objects.create(
+                drive_item=item,
+                storage_key=storage_key,
+                version=next_version,
+                size=size,
+                checksum=checksum,
+            )
+
+        return Response(DriveItemSerializer(item).data, status=status.HTTP_201_CREATED)
+
+
+class DownloadFileAPIView(DriveItemBaseAPIView):
+    def get(self, request, item_id):
+        item = get_object_or_404(self.get_queryset(), id=item_id, item_type=DriveItem.ItemType.FILE, is_trashed=False)
+        version_param = request.query_params.get('version')
+
+        if version_param:
+            try:
+                version_number = int(version_param)
+            except ValueError:
+                return Response({'error': 'Invalid version parameter.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            version_obj = item.versions.filter(version=version_number).first()
+            if not version_obj:
+                return Response({'error': 'Version not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+            url = minio_service.presigned_get_url(version_obj.storage_key)
+            return Response({'downloadUrl': url})
+
+        latest_version = item.versions.order_by('-version').first()
+        if latest_version:
+            url = minio_service.presigned_get_url(latest_version.storage_key)
+            return Response({'downloadUrl': url})
+
+        if item.storage_path:
+            url = minio_service.presigned_get_url(item.storage_path)
+            return Response({'downloadUrl': url})
+
+        return Response({'error': 'No file versions found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class FileContentAPIView(DriveItemBaseAPIView):
+    def get(self, request, item_id):
+        item = get_object_or_404(self.get_queryset(), id=item_id, item_type=DriveItem.ItemType.FILE, is_trashed=False)
+
+        version_param = request.query_params.get('version')
+        if version_param:
+            try:
+                version_number = int(version_param)
+            except ValueError:
+                return Response({'error': 'Invalid version parameter.'}, status=status.HTTP_400_BAD_REQUEST)
+            version_obj = item.versions.filter(version=version_number).first()
+        else:
+            version_obj = item.versions.order_by('-version').first()
+
+        if not version_obj and not item.storage_path:
+            return Response({'error': 'No file content found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        storage_key = version_obj.storage_key if version_obj else item.storage_path
+
+        try:
+            content_bytes = minio_service.get_object_bytes(storage_key)
+            content = force_str(content_bytes, encoding='utf-8')
+        except UnicodeDecodeError:
+            return Response({'error': 'This file is not a UTF-8 text file and cannot be edited inline.'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response({'error': 'Failed to read file content.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({
+            'content': content,
+            'version': version_obj.version if version_obj else None,
+            'mimeType': item.mime_type,
+            'name': item.name,
+        })
+
+
+class FileVersionListAPIView(DriveItemBaseAPIView):
+    def get(self, request, item_id):
+        item = get_object_or_404(self.get_queryset(), id=item_id, item_type=DriveItem.ItemType.FILE)
+        versions = item.versions.order_by('-version')
+        serializer = FileVersionSerializer(versions, many=True)
+        return Response({'versions': serializer.data})

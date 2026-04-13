@@ -48,3 +48,17 @@ class DriveItem(models.Model):
             self.is_trashed = False
             self.deleted_at = None
             self.save(update_fields=['is_trashed', 'deleted_at', 'updated_at'])
+
+class FileVersion(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    drive_item = models.ForeignKey(DriveItem, on_delete=models.CASCADE, related_name='versions')
+    storage_key = models.CharField(max_length=1024)
+    version = models.PositiveIntegerField()
+    size = models.PositiveBigIntegerField()
+    checksum = models.CharField(max_length=128, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-version']
+        unique_together = [('drive_item', 'version')]
+

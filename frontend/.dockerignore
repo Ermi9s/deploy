@@ -1,0 +1,20 @@
+# Dependency directories
+node_modules
+
+# Next.js build output
+.next
+out
+
+# Local caches and logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# VCS and editor files
+.git
+.gitignore
+.vscode
+
+# Misc
+.DS_Store
+tsconfig.tsbuildinfo
