@@ -47,6 +47,7 @@ services:
     depends_on:
       - redis
       - postgres
+      - management
 
   management:
     build:
@@ -72,6 +73,8 @@ services:
       - ./notification:/app
     ports:
       - "8003:8000"
+    depends_on:
+      - management
 
   rag:
     build:
@@ -85,6 +88,7 @@ services:
       - "8004:8000"
     depends_on:
       - elasticsearch
+      - management
 
   frontend:
     build:
@@ -112,6 +116,7 @@ services:
     depends_on:
       - redis
       - elasticsearch
+      - management
 
 volumes:
   esdata:

@@ -15,6 +15,7 @@ class DriveItemSerializer(serializers.ModelSerializer):
     fileSize = serializers.IntegerField(source='file_size', read_only=True)
     sourceDocumentId = serializers.UUIDField(source='source_document_id', allow_null=True, read_only=True)
     taskId = serializers.CharField(source='task_id', read_only=True)
+    departmentAccess = serializers.JSONField(source='department_access', read_only=True)
 
     class Meta:
         model = DriveItem
@@ -30,6 +31,7 @@ class DriveItemSerializer(serializers.ModelSerializer):
             'fileSize',
             'sourceDocumentId',
             'taskId',
+            'departmentAccess',
         )
 
 
@@ -54,6 +56,8 @@ class RegisterUploadSerializer(serializers.Serializer):
     fileSize = serializers.IntegerField(min_value=0)
     parentId = serializers.UUIDField(required=False, allow_null=True)
     storagePath = serializers.CharField(required=False, allow_blank=True)
+    # MAC: {"<dept-uuid>": <min_ranking_int>, ...}
+    departmentAccess = serializers.JSONField(required=False, default=dict)
 
 
 class RequestUploadSerializer(serializers.Serializer):
@@ -68,6 +72,8 @@ class ConfirmUploadSerializer(serializers.Serializer):
     checksum = serializers.CharField(max_length=128, allow_blank=True, required=False)
     documentId = serializers.UUIDField(required=False, allow_null=True)
     taskId = serializers.CharField(required=False, allow_blank=True)
+    # MAC: {"<dept-uuid>": <min_ranking_int>, ...}
+    departmentAccess = serializers.JSONField(required=False, default=dict)
 
 
 class FileVersionSerializer(serializers.ModelSerializer):

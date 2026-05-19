@@ -66,6 +66,20 @@ class UploadDocumentAPIView(APIView):
         if mime_type not in SUPPORTED_MIME_TYPES:
             return Response({'error': f'Unsupported file type: {mime_type}'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # MAC: accept the department permission matrix supplied by the caller.
+        # Expected format: JSON object {"<dept-uuid>": <min_ranking_int>, ...}
+        import json
+        raw_access = request.data.get('departmentAccess', '{}')
+        if isinstance(raw_access, str):
+            try:
+                department_access = json.loads(raw_access)
+            except (ValueError, TypeError):
+                department_access = {}
+        elif isinstance(raw_access, dict):
+            department_access = raw_access
+        else:
+            department_access = {}
+
         document = UploadedDocument.objects.create(
             original_filename=upload.name,
             mime_type=mime_type,
@@ -73,6 +87,7 @@ class UploadDocumentAPIView(APIView):
             status=UploadedDocument.Status.QUEUED,
             progress=0,
             stage='queued',
+            department_access=department_access,
         )
 
         extension = Path(upload.name).suffix.lower()

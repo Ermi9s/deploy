@@ -21,18 +21,57 @@ def embed_query(question: str) -> list[float]:
     raise ValueError('Failed to generate embedding for the query.')
 
 
-def retrieve_chunks(query_vector: list[float], top_k: int | None = None) -> list[dict]:
-    """Perform a k-NN search against the Elasticsearch documents_chunks index."""
+def retrieve_chunks(
+    query_vector: list[float],
+    top_k: int | None = None,
+    department_id: str | None = None,
+    permission_ranking: int | None = None,
+) -> list[dict]:
+    """
+    Perform a k-NN search against the Elasticsearch documents_chunks index.
+
+    When `department_id` and `permission_ranking` are provided (extracted from
+    the caller's JWT), a strict MAC filter is applied:
+      1. The chunk must list the caller's department in its `department_access`.
+      2. The caller's ranking must be >= the chunk's `min_ranking` for that dept.
+
+    Both conditions are evaluated within the same nested object so that dept_id
+    and min_ranking from different departments can never cross-contaminate.
+    """
     es = get_es_client()
     k = top_k or settings.RAG_TOP_K
 
+    knn_clause: dict = {
+        'field': 'embedding',
+        'query_vector': query_vector,
+        'k': k,
+        'num_candidates': k * 10,
+    }
+
+    # --- MAC filter ---------------------------------------------------
+    # Apply only when the token carries valid department context.
+    # Users without MAC context (e.g. admin accounts) see all chunks.
+    if department_id and permission_ranking is not None:
+        knn_clause['filter'] = {
+            'nested': {
+                'path': 'department_access',
+                'query': {
+                    'bool': {
+                        'must': [
+                            # 1. The user's department must exist in the access list.
+                            {'term': {'department_access.dept_id': str(department_id)}},
+                            # 2. The chunk's minimum ranking for that dept must be
+                            #    <= the user's own ranking (i.e. user has enough clearance).
+                            {'range': {'department_access.min_ranking': {'lte': int(permission_ranking)}}},
+                        ]
+                    }
+                },
+            }
+        }
+    # ------------------------------------------------------------------
+
     body = {
-        'knn': {
-            'field': 'embedding',
-            'query_vector': query_vector,
-            'k': k,
-            'num_candidates': k * 10,
-        },
+        'knn': knn_clause,
         '_source': ['document_id', 'chunk_id', 'text', 'filename', 'source_type'],
         'size': k,
     }

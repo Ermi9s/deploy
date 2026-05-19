@@ -19,6 +19,12 @@ class UploadedDocument(models.Model):
     progress = models.PositiveSmallIntegerField(default=0)
     stage = models.CharField(max_length=100, blank=True)
     error_message = models.TextField(blank=True)
+    # MAC: mirrors the DriveItem permission matrix {"<dept-uuid>": <min_ranking_int>}
+    department_access = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='Access control matrix forwarded from the management DriveItem.',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     started_at = models.DateTimeField(null=True, blank=True)

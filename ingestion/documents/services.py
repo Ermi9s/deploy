@@ -27,6 +27,9 @@ def enqueue_document(document: UploadedDocument) -> str:
         'file_path': document.storage_path,
         'mime_type': document.mime_type,
         'original_filename': document.original_filename,
+        # MAC: forward the permission matrix to the worker so it can embed
+        # it in every Elasticsearch chunk for downstream RAG filtering.
+        'department_access': document.department_access,
     }
     task = get_celery_app().send_task(settings.WORKERS_INGEST_TASK_NAME, kwargs={'payload': payload}, queue="default")
     return task.id

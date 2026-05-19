@@ -187,6 +187,7 @@ class ConfirmUploadAPIView(DriveItemBaseAPIView):
         checksum = val_data.get('checksum', '')
         source_document_id = val_data.get('documentId')
         task_id = val_data.get('taskId', '')
+        department_access = val_data.get('departmentAccess', {})
 
         if not minio_service.object_exists(storage_key):
             return Response({'error': 'Object not found in storage.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -199,11 +200,12 @@ class ConfirmUploadAPIView(DriveItemBaseAPIView):
                 item = get_object_or_404(self.get_queryset(), id=drive_item_id, item_type=DriveItem.ItemType.FILE)
                 next_version = item.versions.order_by('-version').first().version + 1 if item.versions.exists() else 1
                 item.file_size = size
+                item.department_access = department_access
                 if source_document_id:
                     item.source_document_id = source_document_id
                 if task_id:
                     item.task_id = task_id
-                item.save(update_fields=['file_size', 'source_document_id', 'task_id', 'updated_at'])
+                item.save(update_fields=['file_size', 'department_access', 'source_document_id', 'task_id', 'updated_at'])
             else:
                 item = DriveItem.objects.create(
                     owner=request.user,
@@ -215,6 +217,7 @@ class ConfirmUploadAPIView(DriveItemBaseAPIView):
                     storage_path=storage_key,
                     source_document_id=source_document_id,
                     task_id=task_id,
+                    department_access=department_access,
                 )
                 next_version = 1
 

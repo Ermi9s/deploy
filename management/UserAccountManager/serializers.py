@@ -136,7 +136,24 @@ class ResetPasswordSerializer(serializers.Serializer):
 # ---------------------------------------------------------------------------
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    '''Validates the user's provider before issuing JWT tokens, returns user info.'''
+    '''Validates the user's provider before issuing JWT tokens, returns user info
+    and injects MAC department/ranking claims into the token payload.'''
+
+    @classmethod
+    def get_token(cls, user):
+        """Embed MAC claims inside the signed JWT so downstream services can
+        enforce access control without a cross-service database round-trip."""
+        token = super().get_token(user)
+        profile = getattr(user, 'profile', None)
+        token['department_id'] = (
+            str(profile.department_id) if profile and profile.department_id else None
+        )
+        token['permission_ranking'] = (
+            profile.permission_level.ranking
+            if profile and profile.permission_level_id
+            else None
+        )
+        return token
 
     def validate(self, attrs):
         try:
@@ -152,4 +169,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # Append full user info (with nested profile) to the token response
         data['user'] = UserSerializer(self.user).data
+
+        # Also surface MAC context in the response body for convenience
+        profile = getattr(self.user, 'profile', None)
+        data['department_id'] = (
+            str(profile.department_id) if profile and profile.department_id else None
+        )
+        data['permission_ranking'] = (
+            profile.permission_level.ranking
+            if profile and profile.permission_level_id
+            else None
+        )
         return data
