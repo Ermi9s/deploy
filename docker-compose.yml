@@ -83,6 +83,8 @@ services:
       - ./rag:/app
     ports:
       - "8004:8000"
+    depends_on:
+      - elasticsearch
 
   frontend:
     build:

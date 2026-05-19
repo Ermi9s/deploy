@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-j_0qo_5qcu2j+2xj0=g4eyu-uy_-*1a(d7((a=^)12p%^oazjj
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'drf_spectacular',
+    'query',
 ]
 
 MIDDLEWARE = [
@@ -121,3 +124,19 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.getenv('STATIC_ROOT', '/tmp/staticfiles')
+
+# --- RAG Configuration ---
+ELASTICSEARCH_URL = os.getenv('ELASTICSEARCH_URL', 'http://elasticsearch:9200')
+ELASTICSEARCH_INDEX = os.getenv('ELASTICSEARCH_INDEX', 'documents_chunks')
+
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+GEMINI_EMBEDDING_MODEL = os.getenv('GEMINI_EMBEDDING_MODEL', 'text-embedding-004')
+GEMINI_GENERATIVE_MODEL = os.getenv('GEMINI_GENERATIVE_MODEL', 'gemini-2.0-flash')
+
+# Number of top-k chunks to retrieve from Elasticsearch
+RAG_TOP_K = int(os.getenv('RAG_TOP_K', '5'))
+
+# DRF
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
