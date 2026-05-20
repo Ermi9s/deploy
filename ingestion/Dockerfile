@@ -15,8 +15,12 @@ COPY --chown=app:app . /app
 RUN chmod +x /app/entrypoint.sh
 
 ENV DJANGO_WSGI_MODULE=ingestion.wsgi:application
+ENV DJANGO_SETTINGS_MODULE=ingestion.settings
 
-USER app
+# Generate migrations at build time (runs as root — no permission issues)
+RUN python manage.py makemigrations --noinput
+
+USER root
 
 EXPOSE 8000
 

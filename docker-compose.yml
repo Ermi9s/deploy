@@ -69,6 +69,8 @@ services:
       - ./management/.env
     volumes:
       - ./management:/app
+      - /app/UserAccountManager/migrations
+      - /app/drive/migrations
     ports:
       - "8002:8000"
     depends_on:
@@ -87,6 +89,7 @@ services:
       - ./ingestion/.env
     volumes:
       - ./ingestion:/app
+      - /app/documents/migrations
       - shared_uploads:/shared/uploads
     ports:
       - "8001:8000"
@@ -128,6 +131,7 @@ services:
       - ./rag/.env
     volumes:
       - ./rag:/app
+      - /app/query/migrations
     ports:
       - "8004:8000"
     depends_on:
