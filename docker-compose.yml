@@ -102,7 +102,7 @@ services:
       postgres:
         condition: service_healthy
       management:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "curl -fs http://localhost:8000/api/schema/ || exit 1"]
       interval: 15s
@@ -122,7 +122,7 @@ services:
       - "8003:8000"
     depends_on:
       management:
-        condition: service_healthy
+        condition: service_started
       redis:
         condition: service_healthy
       postgres:
@@ -150,7 +150,7 @@ services:
       elasticsearch:
         condition: service_healthy
       management:
-        condition: service_healthy
+        condition: service_started
       postgres:
         condition: service_healthy
     healthcheck:
@@ -171,7 +171,7 @@ services:
       - "3000:3000"
     depends_on:
       management:
-        condition: service_healthy
+        condition: service_started
       ingestion:
         condition: service_healthy
     healthcheck:
