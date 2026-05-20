@@ -6,6 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 RUN addgroup -S app && adduser -S app -G app
+RUN apk add --no-cache curl
 
 COPY requirements.txt /app/requirements.txt
 RUN python -m pip install --no-cache-dir --upgrade pip \
