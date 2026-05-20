@@ -43,6 +43,21 @@ export interface AuthUser {
 /** Per-department access rule stored on a DriveItem. */
 export type DepartmentAccessMap = Record<string, number> // { "<dept-uuid>": min_ranking }
 
+/** A single permission level within a department. */
+export interface PermissionLevel {
+  id: number
+  name: string
+  ranking: number
+}
+
+/** Department with its full permission level hierarchy. */
+export interface Department {
+  id: number
+  uuid: string
+  name: string
+  permission_levels: PermissionLevel[]
+}
+
 export interface DriveItem {
   id: string
   name: string
@@ -406,6 +421,14 @@ export const api = {
 
   async getCurrentUser(): Promise<AuthUser> {
     return request<AuthUser>('/auth/me/')
+  },
+
+  async listDepartments(): Promise<Department[]> {
+    return request<Department[]>('/auth/departments/')
+  },
+
+  async getDepartment(id: number): Promise<Department> {
+    return request<Department>(`/auth/departments/${id}/`)
   },
 
   async updateUser(payload: {

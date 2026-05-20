@@ -1,15 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { Shield, Plus, X, ChevronDown } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { DepartmentAccessMap } from '@/lib/api'
-
-interface DeptEntry {
-  deptId: string
-  deptLabel: string
-  minRanking: number
-}
+import { useEffect, useState } from 'react'
+import { Shield, Loader2, AlertCircle, Lock, Unlock, X } from 'lucide-react'
+import { api, Department, DepartmentAccessMap } from '@/lib/api'
 
 interface DepartmentAccessPickerProps {
   value: DepartmentAccessMap
@@ -18,174 +11,211 @@ interface DepartmentAccessPickerProps {
 }
 
 /**
- * A self-contained editor for the file-level department access matrix.
- *
- * Produces a map of:   { "<dept-id-or-label>": min_ranking }
- *
- * In a real system the dept options would be fetched from the management API.
- * For now it accepts free-text department identifiers so the picker is usable
- * immediately without an extra endpoint.
+ * DepartmentAccessPicker
+ * 
+ * Renders an interactive matrix grid:
+ * - Rows: Departments
+ * - Columns: Clearance levels represented as horizontal pill badges.
+ * - Clicking a pill badge pre-selects that clearance level and enables access for the department.
+ * - Public department is locked at Rank 1 (Public) and cannot be removed.
  */
 export default function DepartmentAccessPicker({
   value,
   onChange,
   disabled = false,
 }: DepartmentAccessPickerProps) {
-  const [open, setOpen] = useState(false)
-  const [newDept, setNewDept] = useState('')
-  const [newRanking, setNewRanking] = useState(1)
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const entries: DeptEntry[] = Object.entries(value).map(([id, rank]) => ({
-    deptId: id,
-    deptLabel: id,
-    minRanking: rank,
-  }))
+  // Fetch departments on mount
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+    api
+      .listDepartments()
+      .then((depts) => {
+        setDepartments(depts)
 
-  const handleAdd = () => {
-    const trimmed = newDept.trim()
-    if (!trimmed || value[trimmed] !== undefined) return
-    onChange({ ...value, [trimmed]: newRanking })
-    setNewDept('')
-    setNewRanking(1)
+        // Pre-populate the Public department with ranking 1 if not already set.
+        const pub = depts.find((d) => d.name === 'Public')
+        if (pub && value[pub.uuid] === undefined) {
+          onChange({ ...value, [pub.uuid]: 1 })
+        }
+      })
+      .catch(() => setError('Failed to load departments. Please reload.'))
+      .finally(() => setLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const isPublic = (dept: Department) => dept.name === 'Public'
+
+  const isSelected = (dept: Department) => value[dept.uuid] !== undefined
+
+  const handleSelectLevel = (dept: Department, ranking: number) => {
+    if (disabled) return
+    // If it's Public, they cannot change the level or remove it (it must stay at ranking 1)
+    if (isPublic(dept)) return
+
+    onChange({
+      ...value,
+      [dept.uuid]: ranking,
+    })
   }
 
-  const handleRemove = (deptId: string) => {
+  const handleRemoveDepartment = (dept: Department) => {
+    if (disabled || isPublic(dept)) return
     const next = { ...value }
-    delete next[deptId]
+    delete next[dept.uuid]
     onChange(next)
   }
 
-  const handleRankChange = (deptId: string, rank: number) => {
-    onChange({ ...value, [deptId]: Math.max(1, rank) })
+  const getBadgeStyle = (ranking: number, isCurrentSelection: boolean) => {
+    if (!isCurrentSelection) {
+      return 'bg-slate-100 hover:bg-slate-200 text-slate-500 border-slate-200'
+    }
+    // Highlighting based on clearance level
+    if (ranking <= 1) return 'bg-emerald-600 text-white border-emerald-600 ring-2 ring-emerald-300 ring-offset-1'
+    if (ranking === 2) return 'bg-sky-600 text-white border-sky-600 ring-2 ring-sky-300 ring-offset-1'
+    if (ranking === 3) return 'bg-amber-600 text-white border-amber-600 ring-2 ring-amber-300 ring-offset-1'
+    if (ranking === 4) return 'bg-orange-600 text-white border-orange-600 ring-2 ring-orange-300 ring-offset-1'
+    return 'bg-red-600 text-white border-red-600 ring-2 ring-red-300 ring-offset-1'
   }
 
-  const rankingLabel = (r: number) => {
-    if (r <= 1) return 'Public'
-    if (r === 2) return 'Restricted'
-    if (r === 3) return 'Confidential'
-    if (r === 4) return 'Secret'
-    return 'Top Secret'
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-10 text-slate-400 border border-slate-100 bg-white rounded-xl">
+        <Loader2 className="w-5 h-5 animate-spin text-indigo-500" />
+        <span className="text-sm font-medium">Loading security matrix...</span>
+      </div>
+    )
   }
 
-  const rankingColor = (r: number) => {
-    if (r <= 1) return 'bg-emerald-100 text-emerald-800 border-emerald-200'
-    if (r === 2) return 'bg-sky-100 text-sky-800 border-sky-200'
-    if (r === 3) return 'bg-amber-100 text-amber-800 border-amber-200'
-    if (r === 4) return 'bg-orange-100 text-orange-800 border-orange-200'
-    return 'bg-red-100 text-red-800 border-red-200'
+  if (error) {
+    return (
+      <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+        <AlertCircle className="w-5 h-5 shrink-0" />
+        <div>
+          <p className="font-semibold">Security configuration error</p>
+          <p className="text-xs mt-0.5">{error}</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
-      {/* Header toggle */}
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setOpen((p) => !p)}
-        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100 transition disabled:opacity-50"
-      >
-        <span className="flex items-center gap-2">
-          <Shield className="w-4 h-4 text-indigo-500" />
-          Department Access Control
-          {entries.length > 0 && (
-            <span className="ml-1 inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">
-              {entries.length}
-            </span>
-          )}
-        </span>
-        <ChevronDown
-          className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
-
-      {open && (
-        <div className="px-4 pb-4 space-y-3 border-t border-slate-200">
-          <p className="text-xs text-slate-500 pt-3">
-            Specify which departments may access this file and the minimum clearance
-            ranking required. Leave empty to allow unrestricted access.
-          </p>
-
-          {/* Existing entries */}
-          {entries.length > 0 && (
-            <ul className="space-y-2">
-              {entries.map((e) => (
-                <li
-                  key={e.deptId}
-                  className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2"
-                >
-                  <Shield className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                  <span className="flex-1 text-sm font-medium text-slate-700 truncate">
-                    {e.deptLabel}
-                  </span>
-                  <select
-                    value={e.minRanking}
-                    disabled={disabled}
-                    onChange={(ev) => handleRankChange(e.deptId, Number(ev.target.value))}
-                    className={`text-xs border rounded-full px-2 py-0.5 font-semibold cursor-pointer ${rankingColor(e.minRanking)}`}
-                  >
-                    {[1, 2, 3, 4, 5].map((r) => (
-                      <option key={r} value={r}>
-                        Rank {r} — {rankingLabel(r)}
-                      </option>
-                    ))}
-                  </select>
-                  {!disabled && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(e.deptId)}
-                      className="ml-1 text-slate-400 hover:text-red-500 transition"
-                      aria-label={`Remove ${e.deptLabel}`}
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {/* Add new department */}
-          {!disabled && (
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Department UUID or name…"
-                value={newDept}
-                onChange={(e) => setNewDept(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                className="flex-1 h-8 rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-              />
-              <select
-                value={newRanking}
-                onChange={(e) => setNewRanking(Number(e.target.value))}
-                className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-              >
-                {[1, 2, 3, 4, 5].map((r) => (
-                  <option key={r} value={r}>
-                    Rank {r}
-                  </option>
-                ))}
-              </select>
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleAdd}
-                disabled={!newDept.trim()}
-                className="h-8 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
-              >
-                <Plus className="w-3.5 h-3.5 mr-1" />
-                Add
-              </Button>
-            </div>
-          )}
-
-          {entries.length === 0 && (
-            <p className="text-xs italic text-slate-400 text-center py-2">
-              No restrictions set — all authenticated users may access this file.
-            </p>
-          )}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-indigo-500" />
+          <div>
+            <h4 className="text-sm font-semibold text-slate-800">Clearance Classification Matrix</h4>
+            <p className="text-xs text-slate-500">Configure who is authorized to view vector search results.</p>
+          </div>
         </div>
-      )}
+      </div>
+
+      <div className="border border-slate-200/80 rounded-xl bg-white overflow-hidden shadow-sm">
+        <div className="min-w-full overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-100 table-fixed">
+            <thead className="bg-slate-50/70">
+              <tr>
+                <th scope="col" className="w-[180px] px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Department
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Clearance Requirement
+                </th>
+                <th scope="col" className="w-[80px] px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {departments.map((dept) => {
+                const selected = isSelected(dept)
+                const pub = isPublic(dept)
+                const activeRanking = value[dept.uuid]
+                // Sort levels by ranking (lowest first)
+                const levels = dept.permission_levels.slice().sort((a, b) => a.ranking - b.ranking)
+
+                return (
+                  <tr
+                    key={dept.uuid}
+                    className={`transition-colors ${selected ? 'bg-indigo-50/20' : 'hover:bg-slate-50/40'}`}
+                  >
+                    {/* Department Header */}
+                    <td className="px-4 py-3.5 align-middle">
+                      <div className="flex items-center gap-2">
+                        {pub ? (
+                          <Lock className="w-4 h-4 text-emerald-500 shrink-0" />
+                        ) : selected ? (
+                          <Unlock className="w-4 h-4 text-indigo-400 shrink-0" />
+                        ) : (
+                          <span className="w-4 h-4 rounded-full border border-dashed border-slate-300 shrink-0" />
+                        )}
+                        <span className={`text-sm font-semibold truncate ${selected ? 'text-slate-900 font-bold' : 'text-slate-500'}`}>
+                          {dept.name}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Level Pills Matrix */}
+                    <td className="px-4 py-3.5 align-middle">
+                      <div className="flex flex-wrap gap-2">
+                        {levels.map((level) => {
+                          const isCurrent = selected && activeRanking === level.ranking
+                          const isButtonDisabled = disabled || (pub && level.ranking !== 1)
+
+                          return (
+                            <button
+                              key={level.id}
+                              type="button"
+                              disabled={isButtonDisabled}
+                              onClick={() => handleSelectLevel(dept, level.ranking)}
+                              className={`px-3 py-1 rounded-full text-xs font-bold border transition-all cursor-pointer select-none ${getBadgeStyle(
+                                level.ranking,
+                                isCurrent
+                              )} ${isButtonDisabled ? 'opacity-55 cursor-not-allowed' : ''}`}
+                            >
+                              {level.name}
+                            </button>
+                          )
+                        })}
+
+                        {levels.length === 0 && (
+                          <span className="text-xs italic text-slate-400">No clearance levels defined</span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Action / Active State */}
+                    <td className="px-4 py-3.5 align-middle text-center">
+                      {pub ? (
+                        <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                          Locked
+                        </span>
+                      ) : selected ? (
+                        <button
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => handleRemoveDepartment(dept)}
+                          className="p-1 hover:bg-red-50 hover:text-red-500 text-slate-400 rounded-lg transition-colors border border-transparent hover:border-red-200 shrink-0"
+                          title="Revoke department access"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      ) : (
+                        <span className="text-[10px] font-medium text-slate-400 italic">None</span>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   )
 }

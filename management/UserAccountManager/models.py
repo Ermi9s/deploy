@@ -23,6 +23,12 @@ class Department(TimeStampMixin):
     Represents an organisational department (e.g. Engineering, HR).
     Departments are the top-level grouping for the MAC hierarchy.
     """
+    uuid = models.UUIDField(
+        default=uuid4,
+        unique=True,
+        editable=False,
+        help_text='Stable public identifier used as the key in department_access JSON maps.',
+    )
     name = models.CharField(max_length=128, unique=True)
 
     class Meta:

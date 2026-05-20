@@ -22,6 +22,7 @@ from .serializers import (
     ProfileUpdateSerializer,
     ProfilePicSerializer,
     CustomTokenObtainPairSerializer,
+    DepartmentSerializer,
     SignupRequestSerializer,
     SignupResponseSerializer,
     LoginRequestSerializer,
@@ -29,6 +30,7 @@ from .serializers import (
     ForgotPasswordRequestSerializer,
     ResetPasswordSerializer,
 )
+from .models import Department
 from .permissions import IsOwnerOrSuperuser
 from .services import GoogleOAuth2Service
 
@@ -85,6 +87,52 @@ class UserMeView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+
+
+# ---------------------------------------------------------------------------
+# Department Views (MAC — read-only reference data)
+# ---------------------------------------------------------------------------
+
+class DepartmentListView(generics.ListAPIView):
+    """
+    GET /auth/departments/
+    Returns all departments with their nested permission levels.
+    Used by the frontend to populate the DepartmentAccessPicker.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = DepartmentSerializer
+    queryset = Department.objects.prefetch_related('permission_levels').order_by('name')
+
+    @extend_schema(
+        summary='List Departments',
+        description=(
+            'Returns all available departments with their nested permission levels. '
+            'The department\'s `uuid` field is the key used in the `department_access` JSON map.'
+        ),
+        responses={200: DepartmentSerializer(many=True)},
+        tags=['Departments'],
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+
+class DepartmentDetailView(generics.RetrieveAPIView):
+    """
+    GET /auth/departments/<id>/
+    Returns a single department with its permission levels.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = DepartmentSerializer
+    queryset = Department.objects.prefetch_related('permission_levels')
+
+    @extend_schema(
+        summary='Get Department',
+        description='Returns a single department with its nested permission levels.',
+        responses={200: DepartmentSerializer},
+        tags=['Departments'],
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 
 # ---------------------------------------------------------------------------

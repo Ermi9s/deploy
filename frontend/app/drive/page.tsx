@@ -6,6 +6,7 @@ import { api, DriveItem, FileVersion, IngestionStatusSnapshot } from '@/lib/api'
 import DriveLayout from '@/components/drive/drive-layout'
 import AuthGuard from '@/components/auth/auth-guard'
 import AllFileViewer from '@/components/drive/all-file-viewer'
+import UploadModal from '@/components/drive/upload-modal'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -105,8 +106,7 @@ export default function DrivePage() {
   const [searchQuery, setSearchQuery] = useState('')
 
   const [loading, setLoading] = useState(true)
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [isCreatingFolder, setIsCreatingFolder] = useState(false)
   const [folderName, setFolderName] = useState('')
 
@@ -468,42 +468,6 @@ export default function DrivePage() {
     }
   }
 
-  const triggerUpload = () => {
-    fileInputRef.current?.click()
-  }
-
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files ? Array.from(event.target.files) : []
-    if (files.length === 0) {
-      return
-    }
-
-    setIsUploading(true)
-    setUploadError(null)
-    try {
-      const uploadedItems: DriveItem[] = []
-      for (const file of files) {
-        const uploaded = await api.uploadDocument(file, currentFolderId)
-        uploadedItems.push(uploaded)
-      }
-
-      // Send users to a dedicated live progress screen after single-file uploads.
-      if (uploadedItems.length === 1 && uploadedItems[0]?.sourceDocumentId) {
-        const item = uploadedItems[0]
-        router.push(`/drive/ingestion/${item.sourceDocumentId}?itemId=${item.id}`)
-        return
-      }
-
-      await refreshData()
-    } catch (error) {
-      console.error('Upload failed:', error)
-      const message = error instanceof Error ? error.message : 'Upload failed'
-      setUploadError(message)
-    } finally {
-      setIsUploading(false)
-      event.target.value = ''
-    }
-  }
 
   const handleCreateFolder = async () => {
     if (!folderName.trim()) {
@@ -863,9 +827,9 @@ export default function DrivePage() {
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Refresh
               </Button>
-              <Button size="sm" onClick={triggerUpload} disabled={isUploading} className="min-w-[180px]">
+              <Button size="sm" onClick={() => setUploadModalOpen(true)} className="min-w-[180px]">
                 <Upload className="mr-2 h-4 w-4" />
-                {isUploading ? 'Uploading...' : `Upload to ${currentFolderName}`}
+                Upload to {currentFolderName}
               </Button>
               <Button variant="outline" size="sm" onClick={() => setIsCreatingFolder((prev) => !prev)}>
                 {isCreatingFolder ? <X className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
@@ -873,14 +837,6 @@ export default function DrivePage() {
               </Button>
             </div>
           </header>
-
-          <input ref={fileInputRef} type="file" className="hidden" multiple onChange={handleUpload} />
-
-          {uploadError ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              Upload failed for folder "{currentFolderName}": {uploadError}
-            </div>
-          ) : null}
 
           {isCreatingFolder ? (
             <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
@@ -1314,6 +1270,13 @@ export default function DrivePage() {
             </section>
           </TabsContent>
         </Tabs>
+
+        <UploadModal
+          open={uploadModalOpen}
+          onOpenChange={setUploadModalOpen}
+          currentFolderId={currentFolderId}
+          onUploadSuccess={() => void refreshData()}
+        />
 
       </DriveLayout>
     </AuthGuard>

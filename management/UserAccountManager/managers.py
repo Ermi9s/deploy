@@ -35,9 +35,19 @@ class UserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self._db)
 
-        # Create an associated Profile immediately
-        from UserAccountManager.models import Profile
-        Profile.objects.create(user=user)
+        # Create an associated Profile and assign the Public department/level.
+        from UserAccountManager.models import Department, PermissionLevel, Profile
+        profile = Profile.objects.create(user=user)
+        try:
+            pub_dept = Department.objects.get(name='Public')
+            pub_level = PermissionLevel.objects.get(department=pub_dept, ranking=1)
+            profile.department = pub_dept
+            profile.permission_level = pub_level
+            profile.save(update_fields=['department', 'permission_level'])
+        except (Department.DoesNotExist, PermissionLevel.DoesNotExist):
+            # Seed data not yet applied (e.g. very first migrate before post_migrate fires).
+            # The profile is still created; an admin can assign later.
+            pass
 
         return user
 

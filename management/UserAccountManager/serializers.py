@@ -1,7 +1,30 @@
 '''Serializers for User, Profile, and auth endpoints with Swagger schema support'''
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User, Profile
+from .models import User, Profile, Department, PermissionLevel
+
+
+# ---------------------------------------------------------------------------
+# MAC: Department & PermissionLevel Serializers
+# ---------------------------------------------------------------------------
+
+class PermissionLevelSerializer(serializers.ModelSerializer):
+    '''Read-only serializer for PermissionLevel — exposed inside DepartmentSerializer.'''
+
+    class Meta:
+        model = PermissionLevel
+        fields = ['id', 'name', 'ranking']
+        read_only_fields = fields
+
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    '''Read-only serializer for Department with nested permission levels.'''
+    permission_levels = PermissionLevelSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Department
+        fields = ['id', 'uuid', 'name', 'permission_levels']
+        read_only_fields = fields
 
 
 # ---------------------------------------------------------------------------
@@ -9,16 +32,20 @@ from .models import User, Profile
 # ---------------------------------------------------------------------------
 
 class ProfileSerializer(serializers.ModelSerializer):
-    '''Serializer for the Profile model.'''
+    '''Serializer for the Profile model including nested MAC fields.'''
+    department = DepartmentSerializer(read_only=True)
+    permission_level = PermissionLevelSerializer(read_only=True)
 
     class Meta:
         model = Profile
         fields = [
             'id', 'contact_info', 'firstname', 'lastname',
             'emergency_contact_name', 'emergency_number',
-            'profile_pic', 'address', 'created_at', 'updated_at',
+            'profile_pic', 'address',
+            'department', 'permission_level',
+            'created_at', 'updated_at',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'department', 'permission_level', 'created_at', 'updated_at']
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
@@ -135,6 +162,17 @@ class ResetPasswordSerializer(serializers.Serializer):
 # Custom Token Serializer (provider check before auth)
 # ---------------------------------------------------------------------------
 
+def _get_public_mac_defaults() -> tuple[str | None, int]:
+    """Return (public_dept_uuid_str, public_ranking) as a fallback for unassigned users.
+    Returns (None, 1) if the seed data doesn't exist yet (first boot before migrate)."""
+    try:
+        pub_dept = Department.objects.get(name='Public')
+        pub_level = PermissionLevel.objects.get(department=pub_dept, ranking=1)
+        return str(pub_dept.uuid), pub_level.ranking
+    except (Department.DoesNotExist, PermissionLevel.DoesNotExist):
+        return None, 1
+
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     '''Validates the user's provider before issuing JWT tokens, returns user info
     and injects MAC department/ranking claims into the token payload.'''
@@ -142,17 +180,23 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         """Embed MAC claims inside the signed JWT so downstream services can
-        enforce access control without a cross-service database round-trip."""
+        enforce access control without a cross-service database round-trip.
+        Falls back to the Public department when the profile has no MAC assignment."""
         token = super().get_token(user)
         profile = getattr(user, 'profile', None)
-        token['department_id'] = (
-            str(profile.department_id) if profile and profile.department_id else None
-        )
-        token['permission_ranking'] = (
-            profile.permission_level.ranking
-            if profile and profile.permission_level_id
-            else None
-        )
+
+        if profile and profile.department_id:
+            token['department_id'] = str(profile.department.uuid)
+        else:
+            pub_uuid, _ = _get_public_mac_defaults()
+            token['department_id'] = pub_uuid
+
+        if profile and profile.permission_level_id:
+            token['permission_ranking'] = profile.permission_level.ranking
+        else:
+            _, pub_ranking = _get_public_mac_defaults()
+            token['permission_ranking'] = pub_ranking
+
         return token
 
     def validate(self, attrs):
@@ -172,12 +216,16 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # Also surface MAC context in the response body for convenience
         profile = getattr(self.user, 'profile', None)
-        data['department_id'] = (
-            str(profile.department_id) if profile and profile.department_id else None
-        )
-        data['permission_ranking'] = (
-            profile.permission_level.ranking
-            if profile and profile.permission_level_id
-            else None
-        )
+        pub_uuid, pub_ranking = _get_public_mac_defaults()
+
+        if profile and profile.department_id:
+            data['department_id'] = str(profile.department.uuid)
+        else:
+            data['department_id'] = pub_uuid
+
+        if profile and profile.permission_level_id:
+            data['permission_ranking'] = profile.permission_level.ranking
+        else:
+            data['permission_ranking'] = pub_ranking
+
         return data
