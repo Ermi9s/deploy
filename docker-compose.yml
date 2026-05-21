@@ -69,8 +69,6 @@ services:
       - ./management/.env
     volumes:
       - ./management:/app
-      - /app/UserAccountManager/migrations
-      - /app/drive/migrations
     ports:
       - "8002:8000"
     depends_on:
@@ -89,7 +87,6 @@ services:
       - ./ingestion/.env
     volumes:
       - ./ingestion:/app
-      - /app/documents/migrations
       - shared_uploads:/shared/uploads
     ports:
       - "8001:8000"
@@ -127,11 +124,13 @@ services:
     build:
       context: ./rag
       dockerfile: Dockerfile
+    command: daphne -b 0.0.0.0 -p 8000 rag.asgi:application
     env_file:
       - ./rag/.env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
     volumes:
       - ./rag:/app
-      - /app/query/migrations
     ports:
       - "8004:8000"
     depends_on:
@@ -140,6 +139,8 @@ services:
       management:
         condition: service_started
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
 
@@ -150,12 +151,15 @@ services:
     environment:
       - NEXT_PUBLIC_MANAGEMENT_API=http://localhost:8002
       - NEXT_PUBLIC_INGESTION_API=http://localhost:8001
+      - NEXT_PUBLIC_RAG_API=http://localhost:8004
     ports:
       - "3000:3000"
     depends_on:
       management:
         condition: service_started
       ingestion:
+        condition: service_started
+      rag:
         condition: service_started
 
   workers:

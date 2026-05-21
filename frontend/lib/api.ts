@@ -1,5 +1,6 @@
 const MANAGEMENT_API = process.env.NEXT_PUBLIC_MANAGEMENT_API || 'http://localhost:8002'
 const INGESTION_API = process.env.NEXT_PUBLIC_INGESTION_API || 'http://localhost:8001'
+const RAG_API = process.env.NEXT_PUBLIC_RAG_API || 'http://localhost:8004'
 
 const TOKEN_STORAGE_KEY = 'okm_tokens'
 
@@ -624,5 +625,64 @@ export const api = {
     const baseUrl = new URL(INGESTION_API)
     const protocol = baseUrl.protocol === 'https:' ? 'wss:' : 'ws:'
     return `${protocol}//${baseUrl.host}/ws/uploads/${encodeURIComponent(documentId)}/`
+  },
+
+  /**
+   * Returns the base WebSocket URL for the RAG chat endpoint.
+   *
+   * The JWT is intentionally NOT embedded in the URL.
+   * The caller (useChatWebSocket hook) passes it as a Sec-WebSocket-Protocol
+   * subprotocol value — the only browser-safe way to attach auth credentials
+   * to a WebSocket upgrade request.
+   *
+   * Usage in the hook:
+   *   const ws = new WebSocket(api.getChatWsUrl(), ['access_token', jwtToken])
+   */
+  getChatWsUrl(): string {
+    const baseUrl = new URL(RAG_API)
+    const protocol = baseUrl.protocol === 'https:' ? 'wss:' : 'ws:'
+    return `${protocol}//${baseUrl.host}/ws/chat/`
+  },
+
+  chat: {
+    async listSessions(page?: number): Promise<{
+      count: number
+      next: string | null
+      previous: string | null
+      results: { id: string; title: string; created_at: string; updated_at: string }[]
+    }> {
+      const query = page ? `?page=${page}` : ''
+      return request(`/api/query/chat/sessions/${query}`, { baseUrl: RAG_API })
+    },
+
+    async createSession(): Promise<{ id: string; title: string; created_at: string; updated_at: string }> {
+      return request('/api/query/chat/sessions/', { method: 'POST', baseUrl: RAG_API })
+    },
+
+    async renameSession(id: string, title: string): Promise<{ id: string; title: string; created_at: string; updated_at: string }> {
+      return request(`/api/query/chat/sessions/${id}/`, {
+        method: 'PATCH',
+        body: { title },
+        baseUrl: RAG_API,
+      })
+    },
+
+    async deleteSession(id: string): Promise<void> {
+      await request<void>(`/api/query/chat/sessions/${id}/`, {
+        method: 'DELETE',
+        baseUrl: RAG_API,
+      })
+    },
+
+    async listMessages(sessionId: string): Promise<{
+      id: string
+      session_id: string
+      role: 'user' | 'assistant'
+      content: string
+      sources: any[]
+      created_at: string
+    }[]> {
+      return request(`/api/query/chat/sessions/${sessionId}/messages/`, { baseUrl: RAG_API })
+    },
   },
 }

@@ -11,6 +11,7 @@ import {
   Clock3,
   Star,
   Shield,
+  MessageSquare,
 } from 'lucide-react'
 import { api, getStoredTokens, getMacContext } from '@/lib/api'
 
@@ -131,6 +132,13 @@ export default function DriveLayout({ children }: DriveLayoutProps) {
           >
             <FolderOpen className="w-4 h-4 text-indigo-600" />
             My Drive
+          </Link>
+          <Link
+            href="/chat"
+            className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium transition"
+          >
+            <MessageSquare className="w-4 h-4 text-slate-500" />
+            Knowledge Assistant
           </Link>
           <button className="w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium transition">
             <Users className="w-4 h-4 text-slate-500" />
