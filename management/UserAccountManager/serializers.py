@@ -1,7 +1,7 @@
 '''Serializers for User, Profile, and auth endpoints with Swagger schema support'''
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User, Profile, Department, PermissionLevel
+from .models import User, Profile, Department, PermissionLevel, AuditLog
 
 
 # ---------------------------------------------------------------------------
@@ -83,9 +83,9 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'uuid', 'email', 'first_name', 'last_name',
-            'password', 'provider', 'profile',
+            'password', 'provider', 'is_superuser', 'is_staff', 'profile',
         ]
-        read_only_fields = ['id', 'uuid', 'provider']
+        read_only_fields = ['id', 'uuid', 'provider', 'is_superuser', 'is_staff']
 
     def create(self, validated_data):
         """
@@ -104,8 +104,8 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'uuid', 'email', 'first_name', 'last_name', 'provider', 'profile']
-        read_only_fields = ['id', 'uuid', 'provider']
+        fields = ['id', 'uuid', 'email', 'first_name', 'last_name', 'provider', 'is_superuser', 'is_staff', 'profile']
+        read_only_fields = ['id', 'uuid', 'provider', 'is_superuser', 'is_staff']
 
 
 # ---------------------------------------------------------------------------
@@ -229,3 +229,132 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             data['permission_ranking'] = pub_ranking
 
         return data
+
+
+# ---------------------------------------------------------------------------
+# Admin Serializers — used by /auth/admin/ endpoints only
+# ---------------------------------------------------------------------------
+
+class AdminPermissionLevelSerializer(serializers.ModelSerializer):
+    '''Writable serializer for PermissionLevel — used by admin endpoints.'''
+
+    class Meta:
+        model = PermissionLevel
+        fields = ['id', 'name', 'ranking', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate_ranking(self, value):
+        if value < 1:
+            raise serializers.ValidationError('Ranking must be a positive integer.')
+        return value
+
+
+class AdminDepartmentSerializer(serializers.ModelSerializer):
+    '''Writable department serializer; nests permission levels for reads.'''
+    permission_levels = AdminPermissionLevelSerializer(many=True, read_only=True)
+    member_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Department
+        fields = ['id', 'uuid', 'name', 'permission_levels', 'member_count', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'uuid', 'permission_levels', 'member_count', 'created_at', 'updated_at']
+
+    def get_member_count(self, obj):
+        return obj.members.filter(is_deleted=False).count()
+
+
+class AdminUserProfileSerializer(serializers.ModelSerializer):
+    '''Compact profile for use inside AdminUserListSerializer.'''
+    department = serializers.SerializerMethodField()
+    permission_level = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = ['id', 'firstname', 'lastname', 'department', 'permission_level']
+
+    def get_department(self, obj):
+        if obj.department_id:
+            return {'id': obj.department.id, 'uuid': str(obj.department.uuid), 'name': obj.department.name}
+        return None
+
+    def get_permission_level(self, obj):
+        if obj.permission_level_id:
+            return {
+                'id': obj.permission_level.id,
+                'name': obj.permission_level.name,
+                'ranking': obj.permission_level.ranking,
+            }
+        return None
+
+
+class AdminUserListSerializer(serializers.ModelSerializer):
+    '''User list serializer for admin — includes is_superuser and nested profile.'''
+    profile = AdminUserProfileSerializer(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'uuid', 'email', 'first_name', 'last_name',
+            'is_superuser', 'is_staff', 'is_active', 'is_deleted',
+            'created_at', 'profile',
+        ]
+        read_only_fields = [
+            'id', 'uuid', 'email', 'first_name', 'last_name',
+            'is_superuser', 'is_staff', 'is_active', 'is_deleted',
+            'created_at', 'profile',
+        ]
+
+
+class AdminUserAssignSerializer(serializers.Serializer):
+    '''Payload for POST /auth/admin/users/<pk>/assign/.'''
+    department_id = serializers.IntegerField(allow_null=True)
+    permission_level_id = serializers.IntegerField(allow_null=True)
+
+    def validate(self, attrs):
+        dept_id = attrs.get('department_id')
+        level_id = attrs.get('permission_level_id')
+
+        dept = level = None
+        if dept_id is not None:
+            try:
+                dept = Department.objects.get(pk=dept_id)
+            except Department.DoesNotExist:
+                raise serializers.ValidationError({'department_id': 'Department not found.'})
+
+        if level_id is not None:
+            try:
+                level = PermissionLevel.objects.get(pk=level_id)
+            except PermissionLevel.DoesNotExist:
+                raise serializers.ValidationError({'permission_level_id': 'Permission level not found.'})
+
+        if dept and level and level.department_id != dept.id:
+            raise serializers.ValidationError(
+                {'permission_level_id': 'Permission level does not belong to the selected department.'}
+            )
+
+        attrs['_department'] = dept
+        attrs['_permission_level'] = level
+        return attrs
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    '''Read-only audit log serializer.'''
+    actor_email = serializers.SerializerMethodField()
+    action_type_display = serializers.CharField(source='get_action_type_display', read_only=True)
+    target_type_display = serializers.CharField(source='get_target_type_display', read_only=True)
+
+    class Meta:
+        model = AuditLog
+        fields = [
+            'id', 'actor_email', 'action_type', 'action_type_display',
+            'target_type', 'target_type_display', 'target_id',
+            'details', 'ip_address', 'timestamp',
+        ]
+        read_only_fields = [
+            'id', 'actor_email', 'action_type', 'action_type_display',
+            'target_type', 'target_type_display', 'target_id',
+            'details', 'ip_address', 'timestamp',
+        ]
+
+    def get_actor_email(self, obj):
+        return obj.actor.email if obj.actor_id else 'system'

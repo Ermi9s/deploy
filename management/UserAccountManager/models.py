@@ -1,4 +1,4 @@
-'''Defining User and Profile models with soft-delete support'''
+'''Defining User and Profile models with soft-delete support, and AuditLog for admin audit trail.'''
 from django.core.exceptions import ValidationError
 from django.db import models
 from uuid import uuid4
@@ -177,3 +177,62 @@ class Profile(TimeStampMixin, SoftDeleteMixin):
 
     def __str__(self) -> str:
         return f'Profile of {self.user.email}'
+
+
+class AuditLog(models.Model):
+    """
+    Immutable record of every admin action performed via the Admin UI.
+    Written by admin_views helpers; never updated or soft-deleted.
+    """
+    ACTION_CHOICES = [
+        ('CREATE', 'Create'),
+        ('UPDATE', 'Update'),
+        ('DELETE', 'Delete'),
+        ('ASSIGN', 'Assign'),
+        ('ROLE_TOGGLE', 'Role Toggle'),
+    ]
+    TARGET_CHOICES = [
+        ('DEPARTMENT', 'Department'),
+        ('PERMISSION_LEVEL', 'Permission Level'),
+        ('USER', 'User'),
+    ]
+
+    actor = models.ForeignKey(
+        'User',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='admin_actions',
+        help_text='The admin user who performed this action.',
+    )
+    action_type = models.CharField(
+        max_length=20,
+        choices=ACTION_CHOICES,
+        db_index=True,
+    )
+    target_type = models.CharField(
+        max_length=30,
+        choices=TARGET_CHOICES,
+        db_index=True,
+        help_text='The model that was modified.',
+    )
+    target_id = models.CharField(
+        max_length=128,
+        help_text='Primary key or UUID of the affected object.',
+    )
+    details = models.JSONField(
+        default=dict,
+        help_text='Before/after diff or human-readable change description.',
+    )
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+    )
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self) -> str:
+        actor_email = self.actor.email if self.actor_id else 'system'
+        return f'[{self.timestamp:%Y-%m-%d %H:%M}] {actor_email} {self.action_type} {self.target_type} {self.target_id}'

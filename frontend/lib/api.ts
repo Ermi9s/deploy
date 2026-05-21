@@ -38,6 +38,8 @@ export interface AuthUser {
   first_name?: string
   last_name?: string
   provider?: string
+  is_superuser?: boolean
+  is_staff?: boolean
   profile?: UserProfile
 }
 
@@ -58,6 +60,34 @@ export interface Department {
   name: string
   permission_levels: PermissionLevel[]
 }
+
+export interface AuditLog {
+  id: number
+  actor_email: string
+  action_type: string
+  action_type_display: string
+  target_type: string
+  target_type_display: string
+  target_id: string
+  details: JsonObject
+  ip_address: string | null
+  timestamp: string
+}
+
+export interface AdminDashboardStats {
+  total_users: number
+  total_departments: number
+  total_clearance_levels: number
+  recent_audit_logs: AuditLog[]
+}
+
+export interface PaginatedResponse<T> {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}
+
 
 export interface DriveItem {
   id: string
@@ -685,4 +715,78 @@ export const api = {
       return request(`/api/query/chat/sessions/${sessionId}/messages/`, { baseUrl: RAG_API })
     },
   },
+  admin: {
+    async getDashboardStats(): Promise<AdminDashboardStats> {
+      return request<AdminDashboardStats>('/auth/admin/dashboard/')
+    },
+    async listDepartments(): Promise<Department[]> {
+      return request<Department[]>('/auth/admin/departments/')
+    },
+    async createDepartment(payload: { name: string; initial_levels?: { name: string; ranking: number }[] }): Promise<Department> {
+      return request<Department>('/auth/admin/departments/', {
+        method: 'POST',
+        body: payload as unknown as JsonObject,
+      })
+    },
+    async updateDepartment(id: number, payload: { name: string }): Promise<Department> {
+      return request<Department>(`/auth/admin/departments/${id}/`, {
+        method: 'PATCH',
+        body: payload as unknown as JsonObject,
+      })
+    },
+    async deleteDepartment(id: number): Promise<void> {
+      await request<void>(`/auth/admin/departments/${id}/`, {
+        method: 'DELETE',
+      })
+    },
+    async listPermissionLevels(deptId: number): Promise<PermissionLevel[]> {
+      return request<PermissionLevel[]>(`/auth/admin/departments/${deptId}/permission-levels/`)
+    },
+    async createPermissionLevel(deptId: number, payload: { name: string; ranking: number }): Promise<PermissionLevel> {
+      return request<PermissionLevel>(`/auth/admin/departments/${deptId}/permission-levels/`, {
+        method: 'POST',
+        body: payload as unknown as JsonObject,
+      })
+    },
+    async updatePermissionLevel(id: number, payload: { name?: string; ranking?: number }): Promise<PermissionLevel> {
+      return request<PermissionLevel>(`/auth/admin/permission-levels/${id}/`, {
+        method: 'PATCH',
+        body: payload as unknown as JsonObject,
+      })
+    },
+    async deletePermissionLevel(id: number): Promise<void> {
+      await request<void>(`/auth/admin/permission-levels/${id}/`, {
+        method: 'DELETE',
+      })
+    },
+    async listUsers(params: { search?: string; department_id?: string; page?: number } = {}): Promise<PaginatedResponse<AuthUser>> {
+      const parts: string[] = []
+      if (params.search) parts.push(`search=${encodeURIComponent(params.search)}`)
+      if (params.department_id) parts.push(`department_id=${encodeURIComponent(params.department_id)}`)
+      if (params.page) parts.push(`page=${params.page}`)
+      const query = parts.length > 0 ? `?${parts.join('&')}` : ''
+      return request<PaginatedResponse<AuthUser>>(`/auth/admin/users/${query}`)
+    },
+    async assignUser(userId: number, payload: { department_id: number | null; permission_level_id: number | null }): Promise<AuthUser> {
+      return request<AuthUser>(`/auth/admin/users/${userId}/assign/`, {
+        method: 'POST',
+        body: payload as unknown as JsonObject,
+      })
+    },
+    async toggleAdmin(userId: number): Promise<{ user_id: number; email: string; is_superuser: boolean }> {
+      return request<{ user_id: number; email: string; is_superuser: boolean }>(`/auth/admin/users/${userId}/toggle-admin/`, {
+        method: 'POST',
+        body: {},
+      })
+    },
+    async listAuditLogs(params: { action_type?: string; target_type?: string; page?: number } = {}): Promise<PaginatedResponse<AuditLog>> {
+      const parts: string[] = []
+      if (params.action_type) parts.push(`action_type=${encodeURIComponent(params.action_type)}`)
+      if (params.target_type) parts.push(`target_type=${encodeURIComponent(params.target_type)}`)
+      if (params.page) parts.push(`page=${params.page}`)
+      const query = parts.length > 0 ? `?${parts.join('&')}` : ''
+      return request<PaginatedResponse<AuditLog>>(`/auth/admin/audit-logs/${query}`)
+    },
+  },
 }
+

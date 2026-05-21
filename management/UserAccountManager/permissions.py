@@ -23,3 +23,17 @@ class IsOwnerOrSuperuser(BasePermission):
             return request.user == obj
         # For Profile and similar objects with a 'user' FK
         return hasattr(obj, 'user') and request.user == obj.user
+
+
+class IsSiteAdmin(BasePermission):
+    """
+    Allows access only to authenticated site administrators (is_superuser=True).
+    Applied to all /auth/admin/ endpoints.
+    """
+
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and request.user.is_superuser
+        )
