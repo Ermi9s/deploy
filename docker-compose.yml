@@ -162,6 +162,19 @@ services:
       rag:
         condition: service_started
 
+  admin-frontend:
+    build:
+      context: ./admin-frontend
+      dockerfile: Dockerfile
+    environment:
+      - NEXT_PUBLIC_MANAGEMENT_API=http://localhost:8002
+      - NEXT_PUBLIC_PORTAL_URL=http://localhost:3000
+    ports:
+      - "3001:3000"
+    depends_on:
+      management:
+        condition: service_started
+
   workers:
     build:
       context: ./workers
