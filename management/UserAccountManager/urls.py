@@ -1,6 +1,6 @@
 '''URL configuration for UserAccountManager app.'''
 from rest_framework_simplejwt.views import TokenRefreshView
-from django.urls import path
+from django.urls import path, include
 from .views import (
     SignUPView,
     GoogleOAuth2RedirectView,
@@ -12,6 +12,8 @@ from .views import (
     UserMeView,
     ForgotPasswordView,
     ResetPasswordView,
+    DepartmentListView,
+    DepartmentDetailView,
 )
 
 urlpatterns = [
@@ -33,5 +35,13 @@ urlpatterns = [
     # User management
     path('me/', UserMeView.as_view(), name='user-me'),
     path('user/', UserDetailView.as_view(), name='user-detail'),
+
+    # MAC reference data — read-only for all authenticated users
+    path('departments/', DepartmentListView.as_view(), name='department-list'),
+    path('departments/<int:pk>/', DepartmentDetailView.as_view(), name='department-detail'),
+
+    # Admin API — requires IsSiteAdmin (is_superuser=True)
+    path('admin/', include('UserAccountManager.admin_urls')),
 ]
+
 

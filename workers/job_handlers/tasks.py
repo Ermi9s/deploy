@@ -101,6 +101,16 @@ def _ensure_index(es: Elasticsearch, index_name: str, embedding_dims: int) -> No
             'filename': {'type': 'keyword'},
             'created_at': {'type': 'date'},
             'embedding': {'type': 'dense_vector', 'dims': embedding_dims},
+            # MAC: nested type guarantees that dept_id + min_ranking conditions are
+            # evaluated within the SAME array element, preventing cross-entry
+            # false-positive matches across different departments.
+            'department_access': {
+                'type': 'nested',
+                'properties': {
+                    'dept_id':     {'type': 'keyword'},
+                    'min_ranking': {'type': 'integer'},
+                },
+            },
         }
     }
     es.indices.create(index=index_name, mappings=mappings)
@@ -155,6 +165,14 @@ def handle_document_ingestion_job(self, payload: dict[str, Any]) -> dict[str, An
     file_path = Path(payload['file_path'])
     mime_type = str(payload.get('mime_type', 'application/octet-stream'))
     original_filename = str(payload.get('original_filename', file_path.name))
+
+    # MAC: convert flat dict {"<dept-uuid>": min_ranking, ...} to a list of typed
+    # objects [{"dept_id": ..., "min_ranking": ...}] suitable for ES nested mapping.
+    raw_access: dict = payload.get('department_access') or {}
+    access_list: list[dict] = [
+        {'dept_id': str(dept_id), 'min_ranking': int(min_r)}
+        for dept_id, min_r in raw_access.items()
+    ]
 
     if not file_path.exists():
         raise FileNotFoundError(f'Uploaded file not found: {file_path}')
@@ -268,6 +286,9 @@ def handle_document_ingestion_job(self, payload: dict[str, Any]) -> dict[str, An
                 'filename': original_filename,
                 'embedding': vector,
                 'created_at': datetime.now(timezone.utc).isoformat(),
+                # MAC: embed the nested access list into every chunk so the RAG
+                # retrieval filter can enforce per-department ranking at query time.
+                'department_access': access_list,
             },
         )
 

@@ -26,6 +26,18 @@ class DriveItem(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # MAC: maps Department UUID (str) → minimum integer ranking required for access.
+    # Example: {"<dept-uuid>": 3, "<dept-uuid-2>": 1}
+    # An empty dict means no department restrictions have been applied.
+    department_access = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text=(
+            'Access control matrix. Keys are Department UUIDs (strings), '
+            'values are the minimum ranking integer required for that department. '
+            'A department absent from this map has no access.'
+        ),
+    )
 
     class Meta:
         ordering = ['-created_at']

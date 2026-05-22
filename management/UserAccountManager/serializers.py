@@ -1,7 +1,30 @@
 '''Serializers for User, Profile, and auth endpoints with Swagger schema support'''
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User, Profile
+from .models import User, Profile, Department, PermissionLevel, AuditLog
+
+
+# ---------------------------------------------------------------------------
+# MAC: Department & PermissionLevel Serializers
+# ---------------------------------------------------------------------------
+
+class PermissionLevelSerializer(serializers.ModelSerializer):
+    '''Read-only serializer for PermissionLevel — exposed inside DepartmentSerializer.'''
+
+    class Meta:
+        model = PermissionLevel
+        fields = ['id', 'name', 'ranking']
+        read_only_fields = fields
+
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    '''Read-only serializer for Department with nested permission levels.'''
+    permission_levels = PermissionLevelSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Department
+        fields = ['id', 'uuid', 'name', 'permission_levels']
+        read_only_fields = fields
 
 
 # ---------------------------------------------------------------------------
@@ -9,16 +32,20 @@ from .models import User, Profile
 # ---------------------------------------------------------------------------
 
 class ProfileSerializer(serializers.ModelSerializer):
-    '''Serializer for the Profile model.'''
+    '''Serializer for the Profile model including nested MAC fields.'''
+    department = DepartmentSerializer(read_only=True)
+    permission_level = PermissionLevelSerializer(read_only=True)
 
     class Meta:
         model = Profile
         fields = [
             'id', 'contact_info', 'firstname', 'lastname',
             'emergency_contact_name', 'emergency_number',
-            'profile_pic', 'address', 'created_at', 'updated_at',
+            'profile_pic', 'address',
+            'department', 'permission_level',
+            'created_at', 'updated_at',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'department', 'permission_level', 'created_at', 'updated_at']
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
@@ -56,9 +83,9 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'uuid', 'email', 'first_name', 'last_name',
-            'password', 'provider', 'profile',
+            'password', 'provider', 'is_superuser', 'is_staff', 'profile',
         ]
-        read_only_fields = ['id', 'uuid', 'provider']
+        read_only_fields = ['id', 'uuid', 'provider', 'is_superuser', 'is_staff']
 
     def create(self, validated_data):
         """
@@ -77,8 +104,8 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'uuid', 'email', 'first_name', 'last_name', 'provider', 'profile']
-        read_only_fields = ['id', 'uuid', 'provider']
+        fields = ['id', 'uuid', 'email', 'first_name', 'last_name', 'provider', 'is_superuser', 'is_staff', 'profile']
+        read_only_fields = ['id', 'uuid', 'provider', 'is_superuser', 'is_staff']
 
 
 # ---------------------------------------------------------------------------
@@ -135,8 +162,42 @@ class ResetPasswordSerializer(serializers.Serializer):
 # Custom Token Serializer (provider check before auth)
 # ---------------------------------------------------------------------------
 
+def _get_public_mac_defaults() -> tuple[str | None, int]:
+    """Return (public_dept_uuid_str, public_ranking) as a fallback for unassigned users.
+    Returns (None, 1) if the seed data doesn't exist yet (first boot before migrate)."""
+    try:
+        pub_dept = Department.objects.get(name='Public')
+        pub_level = PermissionLevel.objects.get(department=pub_dept, ranking=1)
+        return str(pub_dept.uuid), pub_level.ranking
+    except (Department.DoesNotExist, PermissionLevel.DoesNotExist):
+        return None, 1
+
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    '''Validates the user's provider before issuing JWT tokens, returns user info.'''
+    '''Validates the user's provider before issuing JWT tokens, returns user info
+    and injects MAC department/ranking claims into the token payload.'''
+
+    @classmethod
+    def get_token(cls, user):
+        """Embed MAC claims inside the signed JWT so downstream services can
+        enforce access control without a cross-service database round-trip.
+        Falls back to the Public department when the profile has no MAC assignment."""
+        token = super().get_token(user)
+        profile = getattr(user, 'profile', None)
+
+        if profile and profile.department_id:
+            token['department_id'] = str(profile.department.uuid)
+        else:
+            pub_uuid, _ = _get_public_mac_defaults()
+            token['department_id'] = pub_uuid
+
+        if profile and profile.permission_level_id:
+            token['permission_ranking'] = profile.permission_level.ranking
+        else:
+            _, pub_ranking = _get_public_mac_defaults()
+            token['permission_ranking'] = pub_ranking
+
+        return token
 
     def validate(self, attrs):
         try:
@@ -152,4 +213,148 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # Append full user info (with nested profile) to the token response
         data['user'] = UserSerializer(self.user).data
+
+        # Also surface MAC context in the response body for convenience
+        profile = getattr(self.user, 'profile', None)
+        pub_uuid, pub_ranking = _get_public_mac_defaults()
+
+        if profile and profile.department_id:
+            data['department_id'] = str(profile.department.uuid)
+        else:
+            data['department_id'] = pub_uuid
+
+        if profile and profile.permission_level_id:
+            data['permission_ranking'] = profile.permission_level.ranking
+        else:
+            data['permission_ranking'] = pub_ranking
+
         return data
+
+
+# ---------------------------------------------------------------------------
+# Admin Serializers — used by /auth/admin/ endpoints only
+# ---------------------------------------------------------------------------
+
+class AdminPermissionLevelSerializer(serializers.ModelSerializer):
+    '''Writable serializer for PermissionLevel — used by admin endpoints.'''
+
+    class Meta:
+        model = PermissionLevel
+        fields = ['id', 'name', 'ranking', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate_ranking(self, value):
+        if value < 1:
+            raise serializers.ValidationError('Ranking must be a positive integer.')
+        return value
+
+
+class AdminDepartmentSerializer(serializers.ModelSerializer):
+    '''Writable department serializer; nests permission levels for reads.'''
+    permission_levels = AdminPermissionLevelSerializer(many=True, read_only=True)
+    member_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Department
+        fields = ['id', 'uuid', 'name', 'permission_levels', 'member_count', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'uuid', 'permission_levels', 'member_count', 'created_at', 'updated_at']
+
+    def get_member_count(self, obj):
+        return obj.members.filter(is_deleted=False).count()
+
+
+class AdminUserProfileSerializer(serializers.ModelSerializer):
+    '''Compact profile for use inside AdminUserListSerializer.'''
+    department = serializers.SerializerMethodField()
+    permission_level = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = ['id', 'firstname', 'lastname', 'department', 'permission_level']
+
+    def get_department(self, obj):
+        if obj.department_id:
+            return {'id': obj.department.id, 'uuid': str(obj.department.uuid), 'name': obj.department.name}
+        return None
+
+    def get_permission_level(self, obj):
+        if obj.permission_level_id:
+            return {
+                'id': obj.permission_level.id,
+                'name': obj.permission_level.name,
+                'ranking': obj.permission_level.ranking,
+            }
+        return None
+
+
+class AdminUserListSerializer(serializers.ModelSerializer):
+    '''User list serializer for admin — includes is_superuser and nested profile.'''
+    profile = AdminUserProfileSerializer(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'uuid', 'email', 'first_name', 'last_name',
+            'is_superuser', 'is_staff', 'is_active', 'is_deleted',
+            'created_at', 'profile',
+        ]
+        read_only_fields = [
+            'id', 'uuid', 'email', 'first_name', 'last_name',
+            'is_superuser', 'is_staff', 'is_active', 'is_deleted',
+            'created_at', 'profile',
+        ]
+
+
+class AdminUserAssignSerializer(serializers.Serializer):
+    '''Payload for POST /auth/admin/users/<pk>/assign/.'''
+    department_id = serializers.IntegerField(allow_null=True)
+    permission_level_id = serializers.IntegerField(allow_null=True)
+
+    def validate(self, attrs):
+        dept_id = attrs.get('department_id')
+        level_id = attrs.get('permission_level_id')
+
+        dept = level = None
+        if dept_id is not None:
+            try:
+                dept = Department.objects.get(pk=dept_id)
+            except Department.DoesNotExist:
+                raise serializers.ValidationError({'department_id': 'Department not found.'})
+
+        if level_id is not None:
+            try:
+                level = PermissionLevel.objects.get(pk=level_id)
+            except PermissionLevel.DoesNotExist:
+                raise serializers.ValidationError({'permission_level_id': 'Permission level not found.'})
+
+        if dept and level and level.department_id != dept.id:
+            raise serializers.ValidationError(
+                {'permission_level_id': 'Permission level does not belong to the selected department.'}
+            )
+
+        attrs['_department'] = dept
+        attrs['_permission_level'] = level
+        return attrs
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    '''Read-only audit log serializer.'''
+    actor_email = serializers.SerializerMethodField()
+    action_type_display = serializers.CharField(source='get_action_type_display', read_only=True)
+    target_type_display = serializers.CharField(source='get_target_type_display', read_only=True)
+
+    class Meta:
+        model = AuditLog
+        fields = [
+            'id', 'actor_email', 'action_type', 'action_type_display',
+            'target_type', 'target_type_display', 'target_id',
+            'details', 'ip_address', 'timestamp',
+        ]
+        read_only_fields = [
+            'id', 'actor_email', 'action_type', 'action_type_display',
+            'target_type', 'target_type_display', 'target_id',
+            'details', 'ip_address', 'timestamp',
+        ]
+
+    def get_actor_email(self, obj):
+        return obj.actor.email if obj.actor_id else 'system'

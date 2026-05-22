@@ -27,7 +27,48 @@ class DriveItemBaseAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return DriveItem.objects.filter(owner=self.request.user)
+        user = self.request.user
+        if user.is_superuser:
+            return DriveItem.objects.all()
+
+        queryset = DriveItem.objects.filter(owner=user)
+        try:
+            profile = getattr(user, 'profile', None)
+            if profile:
+                dept = profile.department
+                perm = profile.permission_level
+                if dept and perm is not None:
+                    from django.db.models import Q
+                    dept_uuid_str = str(dept.uuid)
+                    ranking_val = int(perm.ranking)
+                    mac_query = Q(
+                        department_access__has_key=dept_uuid_str,
+                        **{f"department_access__{dept_uuid_str}__lte": ranking_val}
+                    )
+                    queryset = DriveItem.objects.filter(Q(owner=user) | mac_query)
+        except Exception:
+            pass
+
+        return queryset
+
+    def _get_item(self, item_id, file_only=True, is_trashed=False):
+        import uuid
+        try:
+            uuid.UUID(str(item_id))
+        except ValueError:
+            from django.http import Http404
+            raise Http404("Invalid ID format")
+
+        from django.db.models import Q
+        filters = Q(id=item_id) | Q(source_document_id=item_id)
+
+        queryset = self.get_queryset()
+        if file_only:
+            queryset = queryset.filter(item_type=DriveItem.ItemType.FILE)
+        if is_trashed is not None:
+            queryset = queryset.filter(is_trashed=is_trashed)
+
+        return get_object_or_404(queryset, filters)
 
     def _resolve_parent(self, parent_id):
         if parent_id in (None, '', 'null'):
@@ -187,6 +228,7 @@ class ConfirmUploadAPIView(DriveItemBaseAPIView):
         checksum = val_data.get('checksum', '')
         source_document_id = val_data.get('documentId')
         task_id = val_data.get('taskId', '')
+        department_access = val_data.get('departmentAccess', {})
 
         if not minio_service.object_exists(storage_key):
             return Response({'error': 'Object not found in storage.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -199,11 +241,12 @@ class ConfirmUploadAPIView(DriveItemBaseAPIView):
                 item = get_object_or_404(self.get_queryset(), id=drive_item_id, item_type=DriveItem.ItemType.FILE)
                 next_version = item.versions.order_by('-version').first().version + 1 if item.versions.exists() else 1
                 item.file_size = size
+                item.department_access = department_access
                 if source_document_id:
                     item.source_document_id = source_document_id
                 if task_id:
                     item.task_id = task_id
-                item.save(update_fields=['file_size', 'source_document_id', 'task_id', 'updated_at'])
+                item.save(update_fields=['file_size', 'department_access', 'source_document_id', 'task_id', 'updated_at'])
             else:
                 item = DriveItem.objects.create(
                     owner=request.user,
@@ -215,6 +258,7 @@ class ConfirmUploadAPIView(DriveItemBaseAPIView):
                     storage_path=storage_key,
                     source_document_id=source_document_id,
                     task_id=task_id,
+                    department_access=department_access,
                 )
                 next_version = 1
 
@@ -231,7 +275,7 @@ class ConfirmUploadAPIView(DriveItemBaseAPIView):
 
 class DownloadFileAPIView(DriveItemBaseAPIView):
     def get(self, request, item_id):
-        item = get_object_or_404(self.get_queryset(), id=item_id, item_type=DriveItem.ItemType.FILE, is_trashed=False)
+        item = self._get_item(item_id, file_only=True, is_trashed=False)
         version_param = request.query_params.get('version')
 
         if version_param:
@@ -261,7 +305,7 @@ class DownloadFileAPIView(DriveItemBaseAPIView):
 
 class FileContentAPIView(DriveItemBaseAPIView):
     def get(self, request, item_id):
-        item = get_object_or_404(self.get_queryset(), id=item_id, item_type=DriveItem.ItemType.FILE, is_trashed=False)
+        item = self._get_item(item_id, file_only=True, is_trashed=False)
 
         version_param = request.query_params.get('version')
         if version_param:
@@ -296,7 +340,7 @@ class FileContentAPIView(DriveItemBaseAPIView):
 
 class FileVersionListAPIView(DriveItemBaseAPIView):
     def get(self, request, item_id):
-        item = get_object_or_404(self.get_queryset(), id=item_id, item_type=DriveItem.ItemType.FILE)
+        item = self._get_item(item_id, file_only=True, is_trashed=None)
         versions = item.versions.order_by('-version')
         serializer = FileVersionSerializer(versions, many=True)
         return Response({'versions': serializer.data})

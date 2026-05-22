@@ -66,6 +66,54 @@ class UploadDocumentAPIView(APIView):
         if mime_type not in SUPPORTED_MIME_TYPES:
             return Response({'error': f'Unsupported file type: {mime_type}'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # MAC: parse and strictly validate the department permission matrix.
+        # Expected format: JSON object {"<dept-uuid>": <min_ranking_int>, ...}
+        # We reject empty maps so Elasticsearch chunks are never indexed without access control.
+        import json
+        raw_access = request.data.get('departmentAccess', None)
+        if raw_access is None:
+            return Response(
+                {'error': 'departmentAccess is required. Include at least the Public department.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if isinstance(raw_access, str):
+            try:
+                department_access = json.loads(raw_access)
+            except (ValueError, TypeError):
+                return Response(
+                    {'error': 'departmentAccess must be valid JSON.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        elif isinstance(raw_access, dict):
+            department_access = raw_access
+        else:
+            return Response(
+                {'error': 'departmentAccess must be a JSON object.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not isinstance(department_access, dict):
+            return Response(
+                {'error': 'departmentAccess must be a JSON object mapping department UUIDs to integer rankings.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not department_access:
+            return Response(
+                {'error': 'departmentAccess must not be empty. Include at least the Public department.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        for key, ranking in department_access.items():
+            if not isinstance(key, str) or not key.strip():
+                return Response(
+                    {'error': f'departmentAccess key {key!r} must be a non-empty string (department UUID).'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not isinstance(ranking, int) or isinstance(ranking, bool) or ranking < 0:
+                return Response(
+                    {'error': f'departmentAccess value for {key!r} must be a non-negative integer.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         document = UploadedDocument.objects.create(
             original_filename=upload.name,
             mime_type=mime_type,
@@ -73,6 +121,7 @@ class UploadDocumentAPIView(APIView):
             status=UploadedDocument.Status.QUEUED,
             progress=0,
             stage='queued',
+            department_access=department_access,
         )
 
         extension = Path(upload.name).suffix.lower()

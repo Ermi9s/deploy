@@ -1,27 +1,51 @@
+"""
+Serializers for the persistent chat history REST API.
+
+ChatSessionSerializer  — used for session list / create / update responses.
+ChatMessageSerializer  — used for message list responses.
+"""
+from __future__ import annotations
+
 from rest_framework import serializers
 
+from .models import ChatMessage, ChatSession
+
+
+class ChatSessionSerializer(serializers.ModelSerializer):
+    """Serializer for ChatSession — omits user_id (derived from JWT, never trusted from client)."""
+
+    class Meta:
+        model = ChatSession
+        fields = ["id", "title", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    """Serializer for ChatMessage — read-only (messages are written by the WS consumer)."""
+
+    class Meta:
+        model = ChatMessage
+        fields = ["id", "session_id", "role", "content", "sources", "created_at"]
+        read_only_fields = fields
+
+
+# ---------------------------------------------------------------------------
+# Query (existing) serializers — kept here to consolidate serializer module
+# ---------------------------------------------------------------------------
 
 class QueryRequestSerializer(serializers.Serializer):
-    question = serializers.CharField(
-        max_length=2000,
-        help_text='The user question to answer using the knowledge base.',
-    )
-    top_k = serializers.IntegerField(
-        required=False,
-        min_value=1,
-        max_value=20,
-        help_text='Number of relevant chunks to retrieve (default from settings).',
-    )
+    """Schema for the synchronous POST /api/query/ endpoint."""
+    question = serializers.CharField(min_length=1, max_length=4096)
+    top_k = serializers.IntegerField(min_value=1, max_value=20, required=False)
 
 
-class SourceChunkSerializer(serializers.Serializer):
-    chunk_id = serializers.CharField()
+class SourceSerializer(serializers.Serializer):
     document_id = serializers.CharField()
+    chunk_id = serializers.CharField()
     filename = serializers.CharField()
-    text = serializers.CharField()
     score = serializers.FloatField()
 
 
 class QueryResponseSerializer(serializers.Serializer):
     answer = serializers.CharField()
-    sources = SourceChunkSerializer(many=True)
+    sources = SourceSerializer(many=True)

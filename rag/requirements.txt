@@ -1,7 +1,12 @@
 Django==6.0.3
-gunicorn==23.0.0
+daphne==4.1.2
+channels==4.1.0
+channels-redis==4.2.0
+redis==5.0.8
 psycopg[binary]
 djangorestframework==3.16.0
+djangorestframework-simplejwt==5.3.1
 drf-spectacular==0.28.0
 elasticsearch==8.17.2
 google-genai==1.14.0
+django-cors-headers==4.7.0

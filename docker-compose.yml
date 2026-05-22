@@ -7,11 +7,22 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   minio:
     image: minio/minio:latest
@@ -23,6 +34,12 @@ services:
       - "9001:9001"
     volumes:
       - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
@@ -32,21 +49,16 @@ services:
       - "9200:9200"
     volumes:
       - esdata:/usr/share/elasticsearch/data
-
-  ingestion:
-    build:
-      context: ./ingestion
-      dockerfile: Dockerfile
-    env_file:
-      - ./ingestion/.env
-    volumes:
-      - ./ingestion:/app
-      - shared_uploads:/shared/uploads
-    ports:
-      - "8001:8000"
-    depends_on:
-      - redis
-      - postgres
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fs http://localhost:9200/_cluster/health || exit 1"
+        ]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
   management:
     build:
@@ -60,7 +72,32 @@ services:
     ports:
       - "8002:8000"
     depends_on:
-      - minio
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+
+  ingestion:
+    build:
+      context: ./ingestion
+      dockerfile: Dockerfile
+    env_file:
+      - ./ingestion/.env
+    volumes:
+      - ./ingestion:/app
+      - shared_uploads:/shared/uploads
+    ports:
+      - "8001:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      management:
+        condition: service_started
+
 
   notification:
     build:
@@ -72,19 +109,40 @@ services:
       - ./notification:/app
     ports:
       - "8003:8000"
+    depends_on:
+      management:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+
 
   rag:
     build:
       context: ./rag
       dockerfile: Dockerfile
+    command: daphne -b 0.0.0.0 -p 8000 rag.asgi:application
     env_file:
       - ./rag/.env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
     volumes:
       - ./rag:/app
     ports:
       - "8004:8000"
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+      management:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 
   frontend:
     build:
@@ -93,11 +151,29 @@ services:
     environment:
       - NEXT_PUBLIC_MANAGEMENT_API=http://localhost:8002
       - NEXT_PUBLIC_INGESTION_API=http://localhost:8001
+      - NEXT_PUBLIC_RAG_API=http://localhost:8004
     ports:
       - "3000:3000"
     depends_on:
-      - management
-      - ingestion
+      management:
+        condition: service_started
+      ingestion:
+        condition: service_started
+      rag:
+        condition: service_started
+
+  admin-frontend:
+    build:
+      context: ./admin-frontend
+      dockerfile: Dockerfile
+    environment:
+      - NEXT_PUBLIC_MANAGEMENT_API=http://localhost:8002
+      - NEXT_PUBLIC_PORTAL_URL=http://localhost:3000
+    ports:
+      - "3001:3000"
+    depends_on:
+      management:
+        condition: service_started
 
   workers:
     build:
@@ -110,8 +186,15 @@ services:
       - ./workers:/app
       - shared_uploads:/shared/uploads
     depends_on:
-      - redis
-      - elasticsearch
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      management:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
 
 volumes:
   esdata:

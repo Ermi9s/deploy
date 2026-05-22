@@ -3,6 +3,7 @@ set -e
 
 cd /app
 
+# --- Django Initialization ---
 if [ -f manage.py ]; then
   echo "Running database migrations..."
   python manage.py migrate --noinput
@@ -11,6 +12,13 @@ if [ -f manage.py ]; then
   python manage.py collectstatic --noinput
 fi
 
+# --- MinIO Initialization without 'mc' ---
+if [ -f init_minio.py ]; then
+  echo "Running MinIO bucket initialization script..."
+  python init_minio.py
+fi
+
+# --- Hand-off to custom command or Gunicorn ---
 if [ "$#" -gt 0 ]; then
   exec "$@"
 fi

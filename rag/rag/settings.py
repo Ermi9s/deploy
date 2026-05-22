@@ -32,18 +32,25 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    'daphne',
+    # 'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
+    'channels',
     'drf_spectacular',
+    'corsheaders',
     'query',
 ]
 
+ASGI_APPLICATION = 'rag.asgi.application'
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -70,7 +77,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'rag.wsgi.application'
+# WSGI_APPLICATION = 'rag.wsgi.application'  # replaced by Daphne/ASGI
 
 
 # Database
@@ -136,7 +143,50 @@ GEMINI_GENERATIVE_MODEL = os.getenv('GEMINI_GENERATIVE_MODEL', 'gemini-2.0-flash
 # Number of top-k chunks to retrieve from Elasticsearch
 RAG_TOP_K = int(os.getenv('RAG_TOP_K', '5'))
 
+# --- Redis / Channels ---
+REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [REDIS_URL],
+        },
+    }
+}
+
+# --- Chat Memory ---
+CHAT_HISTORY_MAX_PAIRS = int(os.getenv('CHAT_HISTORY_MAX_PAIRS', '5'))
+CHAT_HISTORY_TTL = int(os.getenv('CHAT_HISTORY_TTL', '3600'))  # seconds
+# Sessions older than this many days will be soft-deleted by the purge command.
+CHAT_SESSION_RETENTION_DAYS = int(os.getenv('CHAT_SESSION_RETENTION_DAYS', '7'))
+
+# --- JWT (shared symmetric key with management service) ---
+from datetime import timedelta  # noqa: E402
+
+SIMPLE_JWT = {
+    'ALGORITHM': 'HS256',
+    # Must match the SIMPLE_JWT signing key used in the management service.
+    'SIGNING_KEY': os.getenv('SHARED_JWT_SECRET', SECRET_KEY),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
 # DRF
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTTokenUserAuthentication',
+    ],
 }
+
+# --- CORS Configuration ---
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        'CORS_ALLOWED_ORIGINS',
+        'http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001',
+    ).split(',')
+    if origin.strip()
+]
+CORS_ALLOW_CREDENTIALS = True

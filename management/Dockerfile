@@ -6,6 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 RUN addgroup -S app && adduser -S app -G app
+RUN apk add --no-cache curl
 
 COPY requirements.txt /app/requirements.txt
 RUN python -m pip install --no-cache-dir --upgrade pip \
@@ -15,6 +16,10 @@ COPY --chown=app:app . /app
 RUN chmod +x /app/entrypoint.sh
 
 ENV DJANGO_WSGI_MODULE=management.wsgi:application
+ENV DJANGO_SETTINGS_MODULE=management.settings
+
+# Generate migrations at build time (runs as root — no permission issues)
+RUN python manage.py makemigrations --noinput
 
 USER app
 

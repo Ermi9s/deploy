@@ -1,0 +1,114 @@
+'use client'
+
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { FormEvent, useEffect, useState } from 'react'
+import { api, clearStoredTokens, isAuthenticated } from '@/lib/api'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { ShieldAlert } from 'lucide-react'
+
+const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3000'
+
+export default function AdminLoginPage() {
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!isAuthenticated()) return
+    api.getCurrentUser()
+      .then((user) => {
+        if (user.is_superuser) {
+          router.replace('/admin')
+        } else {
+          window.location.href = `${PORTAL_URL}/drive`
+        }
+      })
+      .catch(() => clearStoredTokens())
+  }, [router])
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      await api.login(email.trim(), password)
+      const user = await api.getCurrentUser()
+      if (user.is_superuser) {
+        router.replace('/admin')
+      } else {
+        setError('Your account does not have administrator privileges.')
+        clearStoredTokens()
+      }
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Login failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 sm:p-6">
+      <Card className="w-full max-w-md p-6 sm:p-8 space-y-6 border-slate-800 bg-slate-900 shadow-2xl">
+        <div className="flex flex-col items-center gap-3 mb-2">
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white font-bold text-2xl">
+            Ω
+          </div>
+          <div className="text-center">
+            <h1 className="text-xl font-bold tracking-tight text-slate-100">OKnowledge Admin</h1>
+            <p className="text-sm text-slate-400 mt-1">Sign in with your administrator credentials.</p>
+          </div>
+        </div>
+
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <Input
+            id="admin-email"
+            type="email"
+            required
+            placeholder="Email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="bg-slate-950 border-slate-800 focus:border-indigo-500 text-slate-200 placeholder:text-slate-600"
+          />
+          <Input
+            id="admin-password"
+            type="password"
+            required
+            placeholder="Password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="bg-slate-950 border-slate-800 focus:border-indigo-500 text-slate-200 placeholder:text-slate-600"
+          />
+
+          {error ? (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-red-950/30 border border-red-900/50">
+              <ShieldAlert className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+              <p className="text-sm text-red-400">{error}</p>
+            </div>
+          ) : null}
+
+          <Button
+            id="admin-login-submit"
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? 'Authenticating...' : 'Sign In to Admin Panel'}
+          </Button>
+        </form>
+
+        <p className="text-xs text-slate-600 text-center">
+          Not an admin?{' '}
+          <a href={`${PORTAL_URL}/login`} className="text-indigo-500 hover:underline">
+            Return to the user portal
+          </a>
+        </p>
+      </Card>
+    </div>
+  )
+}

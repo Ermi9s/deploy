@@ -5,6 +5,43 @@ from rest_framework import serializers
 from .models import DriveItem, FileVersion
 
 
+# ---------------------------------------------------------------------------
+# MAC helpers
+# ---------------------------------------------------------------------------
+
+class DepartmentAccessValidatorMixin:
+    """
+    Mixin for upload serializers that validates the `departmentAccess` field.
+
+    Rules enforced:
+      - Must be a dict (not a list, string, or other type).
+      - Every key must be a non-empty string (UUID string of a Department).
+      - Every value must be a non-negative integer (minimum ranking).
+      - The dict must NOT be empty — callers must always specify at least one
+        department (the Public department is pre-populated by the frontend).
+    """
+
+    def validate_departmentAccess(self, value):  # noqa: N802 — DRF naming convention
+        if not isinstance(value, dict):
+            raise serializers.ValidationError(
+                'departmentAccess must be a JSON object mapping department UUIDs to integer rankings.'
+            )
+        if not value:
+            raise serializers.ValidationError(
+                'departmentAccess must not be empty. Include at least the Public department.'
+            )
+        for key, ranking in value.items():
+            if not isinstance(key, str) or not key.strip():
+                raise serializers.ValidationError(
+                    f'departmentAccess key {key!r} must be a non-empty string (department UUID).'
+                )
+            if not isinstance(ranking, int) or isinstance(ranking, bool) or ranking < 0:
+                raise serializers.ValidationError(
+                    f'departmentAccess value for {key!r} must be a non-negative integer, got {ranking!r}.'
+                )
+        return value
+
+
 class DriveItemSerializer(serializers.ModelSerializer):
     type = serializers.CharField(source='item_type', read_only=True)
     parentId = serializers.UUIDField(source='parent_id', allow_null=True, required=False)
@@ -15,6 +52,7 @@ class DriveItemSerializer(serializers.ModelSerializer):
     fileSize = serializers.IntegerField(source='file_size', read_only=True)
     sourceDocumentId = serializers.UUIDField(source='source_document_id', allow_null=True, read_only=True)
     taskId = serializers.CharField(source='task_id', read_only=True)
+    departmentAccess = serializers.JSONField(source='department_access', read_only=True)
 
     class Meta:
         model = DriveItem
@@ -30,6 +68,7 @@ class DriveItemSerializer(serializers.ModelSerializer):
             'fileSize',
             'sourceDocumentId',
             'taskId',
+            'departmentAccess',
         )
 
 
@@ -46,7 +85,7 @@ class MoveItemSerializer(serializers.Serializer):
     parentId = serializers.UUIDField(required=False, allow_null=True)
 
 
-class RegisterUploadSerializer(serializers.Serializer):
+class RegisterUploadSerializer(DepartmentAccessValidatorMixin, serializers.Serializer):
     documentId = serializers.UUIDField()
     taskId = serializers.CharField()
     name = serializers.CharField(max_length=255)
@@ -54,6 +93,8 @@ class RegisterUploadSerializer(serializers.Serializer):
     fileSize = serializers.IntegerField(min_value=0)
     parentId = serializers.UUIDField(required=False, allow_null=True)
     storagePath = serializers.CharField(required=False, allow_blank=True)
+    # MAC: {"<dept-uuid>": <min_ranking_int>, ...} — required, validated by mixin
+    departmentAccess = serializers.JSONField()
 
 
 class RequestUploadSerializer(serializers.Serializer):
@@ -63,11 +104,13 @@ class RequestUploadSerializer(serializers.Serializer):
     size = serializers.IntegerField(min_value=1)
 
 
-class ConfirmUploadSerializer(serializers.Serializer):
+class ConfirmUploadSerializer(DepartmentAccessValidatorMixin, serializers.Serializer):
     storageKey = serializers.CharField(max_length=1024)
     checksum = serializers.CharField(max_length=128, allow_blank=True, required=False)
     documentId = serializers.UUIDField(required=False, allow_null=True)
     taskId = serializers.CharField(required=False, allow_blank=True)
+    # MAC: {"<dept-uuid>": <min_ranking_int>, ...} — required, validated by mixin
+    departmentAccess = serializers.JSONField()
 
 
 class FileVersionSerializer(serializers.ModelSerializer):
