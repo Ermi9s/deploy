@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import DriveLayout from '@/components/drive/drive-layout'
+import { AppLayout } from '@/components/layout/AppLayout'
 import AuthGuard from '@/components/auth/auth-guard'
 import { api, AuthUser, UserProfile } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Shield, Lock, Building2, User } from 'lucide-react'
+import { Shield, Lock, Building2, User, Save, X } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface ProfileDraft {
   email: string
@@ -27,11 +28,11 @@ const RANK_LABELS: Record<number, string> = {
   5: 'Top Secret',
 }
 const RANK_COLORS: Record<number, string> = {
-  1: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-  2: 'bg-sky-100 text-sky-800 border-sky-200',
-  3: 'bg-amber-100 text-amber-800 border-amber-200',
-  4: 'bg-orange-100 text-orange-800 border-orange-200',
-  5: 'bg-red-100 text-red-800 border-red-200',
+  1: 'bg-emerald-500/10 text-emerald-600 border-emerald-200/50',
+  2: 'bg-sky-500/10 text-sky-600 border-sky-200/50',
+  3: 'bg-amber-500/10 text-amber-600 border-amber-200/50',
+  4: 'bg-orange-500/10 text-orange-600 border-orange-200/50',
+  5: 'bg-red-500/10 text-red-600 border-red-200/50',
 }
 
 export default function ProfilePage() {
@@ -122,157 +123,199 @@ export default function ProfilePage() {
 
   const permRanking = profile?.permission_level?.ranking ?? null
   const rankLabel = permRanking !== null ? (RANK_LABELS[permRanking] ?? `Rank ${permRanking}`) : null
-  const rankColor = permRanking !== null ? (RANK_COLORS[permRanking] ?? 'bg-slate-100 text-slate-700 border-slate-200') : ''
+  const rankColor = permRanking !== null ? (RANK_COLORS[permRanking] ?? 'bg-muted text-muted-foreground border-border') : ''
 
   return (
     <AuthGuard>
-      <DriveLayout>
+      <AppLayout>
         {loading || !user || !profile || !draft ? (
-          <div className="py-12 text-center text-slate-500">Loading account data…</div>
+          <div className="py-12 flex justify-center items-center h-[50vh]">
+            <div className="animate-pulse flex flex-col items-center gap-4">
+              <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
+              <p className="text-muted-foreground font-medium">Loading account data...</p>
+            </div>
+          </div>
         ) : (
-          <div className="space-y-6 max-w-3xl">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6 max-w-4xl mx-auto p-4 md:p-6 lg:p-8"
+          >
             <div className="space-y-1">
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">My profile</h1>
-              <p className="text-sm text-slate-500">View your details and access clearance.</p>
+              <h1 className="text-3xl font-display font-semibold tracking-tight text-foreground">My Profile</h1>
+              <p className="text-muted-foreground">Manage your account settings and clearance levels.</p>
             </div>
 
             {/* ── MAC Clearance Card ─────────────────────────────────────── */}
-            <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-white shadow-none p-5">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
-                  <Shield className="w-5 h-5 text-indigo-600" />
+            <Card className="border-primary/20 bg-primary/5 shadow-sm p-6 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+              
+              <div className="flex flex-col sm:flex-row items-start gap-6 relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center shrink-0 border border-primary/30">
+                  <Shield className="w-6 h-6 text-primary" />
                 </div>
-                <div className="flex-1 space-y-3">
+                <div className="flex-1 space-y-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400 mb-0.5">
+                    <p className="text-xs font-bold uppercase tracking-widest text-primary mb-1">
                       Access Clearance
                     </p>
-                    <p className="text-sm text-slate-500">
-                      Your department and clearance level determine which documents the
-                      RAG assistant can retrieve on your behalf.
+                    <p className="text-sm text-foreground/80 leading-relaxed max-w-2xl">
+                      Your department and clearance level determine which documents you can access and which documents the AI can retrieve for you.
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Department */}
-                    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
-                      <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
+                    <div className="flex items-center gap-4 rounded-xl border border-primary/10 bg-background/50 backdrop-blur-sm px-4 py-3">
+                      <Building2 className="w-5 h-5 text-primary/60 shrink-0" />
                       <div>
-                        <p className="text-[10px] uppercase font-semibold tracking-wide text-slate-400">Department</p>
-                        <p className="text-sm font-semibold text-slate-800">
+                        <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Department</p>
+                        <p className="text-sm font-medium text-foreground">
                           {profile.department?.name ?? (
-                            <span className="text-slate-400 font-normal italic">Not assigned</span>
+                            <span className="text-muted-foreground italic">Not assigned</span>
                           )}
                         </p>
                       </div>
                     </div>
 
                     {/* Clearance level */}
-                    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
-                      <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+                    <div className="flex items-center gap-4 rounded-xl border border-primary/10 bg-background/50 backdrop-blur-sm px-4 py-3">
+                      <Lock className="w-5 h-5 text-primary/60 shrink-0" />
                       <div>
-                        <p className="text-[10px] uppercase font-semibold tracking-wide text-slate-400">Clearance Level</p>
+                        <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Clearance Level</p>
                         {rankLabel ? (
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold ${rankColor}`}>
                               {rankLabel}
                             </span>
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-muted-foreground font-medium">
                               rank {permRanking}
                             </span>
                           </div>
                         ) : (
-                          <p className="text-sm text-slate-400 italic font-normal">Not assigned</p>
-                        )}
-                        {profile.permission_level?.name && (
-                          <p className="text-[11px] text-slate-400 mt-0.5">{profile.permission_level.name}</p>
+                          <p className="text-sm text-muted-foreground italic">Not assigned</p>
                         )}
                       </div>
                     </div>
                   </div>
-
-                  <p className="text-[11px] text-indigo-400 flex items-center gap-1">
-                    <Shield className="w-3 h-3" />
-                    Contact your administrator to change your department or clearance level.
-                  </p>
                 </div>
               </div>
             </Card>
 
             {/* ── Profile Details Card ───────────────────────────────────── */}
-            <Card className="p-6 sm:p-8 space-y-5 border-slate-200 shadow-none">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-slate-500" />
-                  <h2 className="text-base font-semibold text-slate-900">Profile details</h2>
+            <Card className="p-6 sm:p-8 space-y-6 border-border shadow-sm bg-card">
+              <div className="flex items-center justify-between border-b border-border pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-accent rounded-lg">
+                    <User className="w-5 h-5 text-foreground" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-display font-semibold text-foreground">Personal Information</h2>
+                    <p className="text-sm text-muted-foreground hidden sm:block">Update your contact details and emergency info.</p>
+                  </div>
                 </div>
                 {!editing ? (
-                  <Button type="button" size="sm" onClick={handleStartEdit} className="rounded-lg">Edit</Button>
+                  <Button type="button" variant="outline" onClick={handleStartEdit} className="rounded-full px-6">Edit Profile</Button>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" size="sm" onClick={handleDiscard} disabled={saving} className="rounded-lg">
-                      Discard
+                    <Button type="button" variant="ghost" onClick={handleDiscard} disabled={saving} className="rounded-full text-muted-foreground hover:text-foreground">
+                      <X className="w-4 h-4 mr-2" /> Discard
                     </Button>
-                    <Button type="button" size="sm" onClick={handleSave} disabled={saving} className="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">
-                      {saving ? 'Saving…' : 'Save'}
+                    <Button type="button" onClick={handleSave} disabled={saving} className="rounded-full">
+                      <Save className="w-4 h-4 mr-2" /> {saving ? 'Saving...' : 'Save Changes'}
                     </Button>
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Input type="email" value={draft.email} disabled className="bg-slate-50" />
-                <Input
-                  type="text"
-                  placeholder="First name"
-                  value={draft.first_name}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Email Address</label>
+                  <Input type="email" value={draft.email} disabled className="bg-muted/50 font-mono text-sm" />
+                </div>
+                <div className="hidden md:block"></div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">First Name</label>
+                  <Input
+                    type="text"
+                    value={draft.first_name}
+                    disabled={!editing || saving}
+                    className="focus-visible:ring-primary/50"
+                    onChange={(e) => setDraft((p) => p ? { ...p, first_name: e.target.value } : p)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Last Name</label>
+                  <Input
+                    type="text"
+                    value={draft.last_name}
+                    disabled={!editing || saving}
+                    className="focus-visible:ring-primary/50"
+                    onChange={(e) => setDraft((p) => p ? { ...p, last_name: e.target.value } : p)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Phone Number</label>
+                  <Input
+                    type="text"
+                    placeholder="+1 (555) 000-0000"
+                    value={draft.contact_info}
+                    disabled={!editing || saving}
+                    className="focus-visible:ring-primary/50"
+                    onChange={(e) => setDraft((p) => p ? { ...p, contact_info: e.target.value } : p)}
+                  />
+                </div>
+                <div className="hidden md:block"></div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Emergency Contact Name</label>
+                  <Input
+                    type="text"
+                    value={draft.emergency_contact_name}
+                    disabled={!editing || saving}
+                    className="focus-visible:ring-primary/50"
+                    onChange={(e) => setDraft((p) => p ? { ...p, emergency_contact_name: e.target.value } : p)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Emergency Number</label>
+                  <Input
+                    type="text"
+                    value={draft.emergency_number}
+                    disabled={!editing || saving}
+                    className="focus-visible:ring-primary/50"
+                    onChange={(e) => setDraft((p) => p ? { ...p, emergency_number: e.target.value } : p)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <label className="text-sm font-medium text-foreground">Physical Address</label>
+                <textarea
+                  className="w-full min-h-[100px] rounded-xl border border-input bg-transparent px-3 py-2 text-sm disabled:opacity-50 disabled:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow resize-y"
+                  placeholder="123 Main St..."
+                  value={draft.address}
                   disabled={!editing || saving}
-                  onChange={(e) => setDraft((p) => p ? { ...p, first_name: e.target.value } : p)}
-                />
-                <Input
-                  type="text"
-                  placeholder="Last name"
-                  value={draft.last_name}
-                  disabled={!editing || saving}
-                  onChange={(e) => setDraft((p) => p ? { ...p, last_name: e.target.value } : p)}
-                />
-                <Input
-                  type="text"
-                  placeholder="Contact info"
-                  value={draft.contact_info}
-                  disabled={!editing || saving}
-                  onChange={(e) => setDraft((p) => p ? { ...p, contact_info: e.target.value } : p)}
-                />
-                <Input
-                  type="text"
-                  placeholder="Emergency contact name"
-                  value={draft.emergency_contact_name}
-                  disabled={!editing || saving}
-                  onChange={(e) => setDraft((p) => p ? { ...p, emergency_contact_name: e.target.value } : p)}
-                />
-                <Input
-                  type="text"
-                  placeholder="Emergency number"
-                  value={draft.emergency_number}
-                  disabled={!editing || saving}
-                  onChange={(e) => setDraft((p) => p ? { ...p, emergency_number: e.target.value } : p)}
+                  onChange={(e) => setDraft((p) => p ? { ...p, address: e.target.value } : p)}
                 />
               </div>
 
-              <textarea
-                className="w-full min-h-24 rounded-lg border border-input bg-transparent px-3 py-2 text-sm disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                placeholder="Address"
-                value={draft.address}
-                disabled={!editing || saving}
-                onChange={(e) => setDraft((p) => p ? { ...p, address: e.target.value } : p)}
-              />
-
-              {error ? <p className="text-sm text-red-600">{error}</p> : null}
-              {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
+              {error && (
+                <motion.div initial={{opacity:0, y:-10}} animate={{opacity:1,y:0}} className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
+                  {error}
+                </motion.div>
+              )}
+              {success && (
+                <motion.div initial={{opacity:0, y:-10}} animate={{opacity:1,y:0}} className="p-3 text-sm text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                  {success}
+                </motion.div>
+              )}
             </Card>
-          </div>
+          </motion.div>
         )}
-      </DriveLayout>
+      </AppLayout>
     </AuthGuard>
   )
 }
