@@ -1,6 +1,9 @@
-const MANAGEMENT_API = process.env.NEXT_PUBLIC_MANAGEMENT_API || 'http://localhost:8002'
-const INGESTION_API = process.env.NEXT_PUBLIC_INGESTION_API || 'http://localhost:8001'
-const RAG_API = process.env.NEXT_PUBLIC_RAG_API || 'http://localhost:8004'
+// Relative proxy base paths — all requests go to the same origin and are
+// forwarded by Next.js rewrites to the internal Docker services.
+// Never use NEXT_PUBLIC_ here: these values are the same in every environment.
+const MANAGEMENT_API = '/api/proxy/management'
+const INGESTION_API = '/api/proxy/ingestion'
+const RAG_API = '/api/proxy/rag'
 
 const TOKEN_STORAGE_KEY = 'okm_tokens'
 
@@ -489,7 +492,7 @@ export const api = {
     const formData = new FormData()
     formData.append('profile_pic', file)
 
-    const response = await fetch(`${MANAGEMENT_API}/auth/profile/picture/`, {
+    const response = await fetch('/api/proxy/management/auth/profile/picture/', {
       method: 'PUT',
       headers: tokens?.access ? { Authorization: `Bearer ${tokens.access}` } : undefined,
       body: formData,
@@ -602,7 +605,7 @@ export const api = {
     formData.append('file', file)
     formData.append('departmentAccess', JSON.stringify(accessMap))
 
-    const ingestionResponse = await fetch(`${INGESTION_API}/api/v1/documents/upload/`, {
+    const ingestionResponse = await fetch('/api/proxy/ingestion/api/v1/documents/upload/', {
       method: 'POST',
       body: formData,
     })
@@ -619,8 +622,13 @@ export const api = {
       body: { name: file.name, mimeType, size: file.size, parentId: parent },
     })
 
+    let uploadUrl = reqData.uploadUrl
+    if (typeof window !== 'undefined' && uploadUrl.includes('minio:9000')) {
+      uploadUrl = uploadUrl.replace('minio:9000', `${window.location.hostname}:9000`)
+    }
+
     // Step 3: Stream directly to MinIO
-    const putRes = await fetch(reqData.uploadUrl, {
+    const putRes = await fetch(uploadUrl, {
       method: 'PUT',
       body: file,
       headers: { 'Content-Type': mimeType },
@@ -651,10 +659,16 @@ export const api = {
     })
   },
 
+  /**
+   * Builds a WebSocket URL for ingestion status updates.
+   * Derives the WS protocol and host from the current browser location so it
+   * works in both HTTP (ws://) and HTTPS (wss://) deployments without any
+   * hardcoded hostnames or port numbers.
+   */
   getIngestionWsUrl(documentId: string): string {
-    const baseUrl = new URL(INGESTION_API)
-    const protocol = baseUrl.protocol === 'https:' ? 'wss:' : 'ws:'
-    return `${protocol}//${baseUrl.host}/ws/uploads/${encodeURIComponent(documentId)}/`
+    if (typeof window === 'undefined') return ''
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    return `${protocol}//${window.location.host}/api/proxy/ingestion/ws/uploads/${encodeURIComponent(documentId)}/`
   },
 
   /**
@@ -669,9 +683,9 @@ export const api = {
    *   const ws = new WebSocket(api.getChatWsUrl(), ['access_token', jwtToken])
    */
   getChatWsUrl(): string {
-    const baseUrl = new URL(RAG_API)
-    const protocol = baseUrl.protocol === 'https:' ? 'wss:' : 'ws:'
-    return `${protocol}//${baseUrl.host}/ws/chat/`
+    if (typeof window === 'undefined') return ''
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    return `${protocol}//${window.location.host}/api/proxy/rag/ws/chat/`
   },
 
   chat: {
