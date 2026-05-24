@@ -111,31 +111,31 @@ export function ChatWindow() {
 
   return (
     <>
-      <div className="flex h-[calc(100vh-7rem)] rounded-2xl overflow-hidden border border-slate-200/70 shadow-sm bg-white relative">
+      <div className="flex h-full min-h-[500px] rounded-3xl overflow-hidden border border-border shadow-sm bg-card relative">
 
         {/* ── Desktop Sidebar ────────────────────────────────────── */}
-        <div className="hidden md:flex flex-col w-64 bg-slate-900 border-r border-slate-800 text-slate-300 select-none">
+        <div className="hidden md:flex flex-col w-72 bg-accent/30 border-r border-border text-foreground select-none">
           {/* Sidebar Header */}
-          <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Conversations</span>
+          <div className="p-5 border-b border-border flex items-center justify-between bg-background/50 backdrop-blur-sm">
+            <span className="text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Conversations</span>
             <Button
               variant="ghost"
               size="icon"
               onClick={startNewSession}
               disabled={isStreaming}
               title="Start a new conversation"
-              className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full bg-background/80 cursor-pointer"
             >
               <Plus className="h-4 w-4" />
             </Button>
           </div>
 
           {/* Sidebar Chat List */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
             {isSessionsLoading ? (
               <div className="space-y-2 p-2">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-9 w-full bg-slate-800/60 rounded-lg animate-pulse" />
+                  <div key={i} className="h-10 w-full bg-accent/50 rounded-xl animate-pulse" />
                 ))}
               </div>
             ) : (
@@ -144,14 +144,14 @@ export function ChatWindow() {
                 return (
                   <div
                     key={session.id}
-                    className={`group flex items-center justify-between p-2.5 rounded-lg text-sm transition cursor-pointer ${active
-                        ? 'bg-indigo-600 text-white font-medium shadow-md'
-                        : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                    className={`group flex items-center justify-between p-3 rounded-xl text-sm transition-all cursor-pointer ${active
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                       }`}
                     onClick={() => switchSession(session.id)}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <MessageSquare className="h-4 w-4 shrink-0 opacity-70" />
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <MessageSquare className="h-4 w-4 shrink-0 opacity-80" />
                       <span className="truncate pr-2">{session.title}</span>
                     </div>
                     <button
@@ -160,7 +160,7 @@ export function ChatWindow() {
                         deleteSession(session.id)
                       }}
                       disabled={isStreaming}
-                      className={`shrink-0 opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-700/60 rounded text-slate-400 hover:text-rose-400 transition cursor-pointer disabled:cursor-not-allowed`}
+                      className={`shrink-0 opacity-0 group-hover:opacity-100 p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-destructive transition-all cursor-pointer disabled:cursor-not-allowed`}
                       title="Delete conversation"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -172,25 +172,25 @@ export function ChatWindow() {
           </div>
 
           {/* Sidebar Footer */}
-          <div className="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500 bg-slate-950/40">
-            <span>Connection</span>
+          <div className="p-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground bg-background/50">
+            <span className="font-medium">Connection</span>
             <ConnectionBadge isConnected={isConnected} />
           </div>
         </div>
 
         {/* ── Mobile Sidebar Drawer ──────────────────────────────── */}
         {mobileSidebarOpen && (
-          <div className="absolute inset-0 z-40 flex md:hidden bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-64 bg-slate-900 h-full flex flex-col text-slate-300 animate-in slide-in-from-left duration-300">
-              <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/20">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Conversations</span>
-                <div className="flex items-center gap-1">
+          <div className="absolute inset-0 z-40 flex md:hidden bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="w-72 bg-card h-full flex flex-col border-r border-border shadow-xl animate-in slide-in-from-left duration-300">
+              <div className="p-5 border-b border-border flex items-center justify-between bg-accent/30">
+                <span className="text-xs font-display font-semibold uppercase tracking-wider text-muted-foreground">Conversations</span>
+                <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={startNewSession}
                     disabled={isStreaming}
-                    className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full bg-background"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -198,18 +198,18 @@ export function ChatWindow() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setMobileSidebarOpen(false)}
-                    className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full bg-background"
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
                 {isSessionsLoading ? (
                   <div className="space-y-2 p-2">
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="h-9 w-full bg-slate-800/60 rounded-lg animate-pulse" />
+                      <div key={i} className="h-10 w-full bg-accent/50 rounded-xl animate-pulse" />
                     ))}
                   </div>
                 ) : (
@@ -218,17 +218,17 @@ export function ChatWindow() {
                     return (
                       <div
                         key={session.id}
-                        className={`group flex items-center justify-between p-2.5 rounded-lg text-sm cursor-pointer ${active
-                            ? 'bg-indigo-600 text-white font-medium shadow-md'
-                            : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                        className={`group flex items-center justify-between p-3 rounded-xl text-sm transition-all cursor-pointer ${active
+                            ? 'bg-primary/10 text-primary font-medium'
+                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                           }`}
                         onClick={() => {
                           switchSession(session.id)
                           setMobileSidebarOpen(false)
                         }}
                       >
-                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                          <MessageSquare className="h-4 w-4 shrink-0 opacity-70" />
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <MessageSquare className="h-4 w-4 shrink-0 opacity-80" />
                           <span className="truncate pr-2">{session.title}</span>
                         </div>
                         <button
@@ -237,7 +237,7 @@ export function ChatWindow() {
                             deleteSession(session.id)
                           }}
                           disabled={isStreaming}
-                          className="shrink-0 p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-rose-400 transition cursor-pointer"
+                          className="shrink-0 p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-destructive transition-all cursor-pointer"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -247,8 +247,8 @@ export function ChatWindow() {
                 )}
               </div>
 
-              <div className="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500 bg-slate-950/40">
-                <span>Connection</span>
+              <div className="p-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground bg-accent/30">
+                <span className="font-medium">Connection</span>
                 <ConnectionBadge isConnected={isConnected} />
               </div>
             </div>
@@ -258,40 +258,40 @@ export function ChatWindow() {
         )}
 
         {/* ── Main Chat Pane ─────────────────────────────────────── */}
-        <div className="flex flex-col flex-1 min-w-0 h-full bg-white">
+        <div className="flex flex-col flex-1 min-w-0 h-full bg-background">
 
           {/* Header */}
-          <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-slate-100 bg-slate-50/80 shrink-0">
-            <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-border bg-card/50 backdrop-blur-sm shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
               <button
                 onClick={() => setMobileSidebarOpen(true)}
-                className="md:hidden shrink-0 rounded-lg p-1.5 text-slate-500 hover:bg-slate-200/60 active:scale-95 transition cursor-pointer"
+                className="md:hidden shrink-0 rounded-full p-2 bg-accent text-muted-foreground hover:text-foreground active:scale-95 transition-all cursor-pointer"
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-4 w-4" />
               </button>
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-sm">
-                <MessageSquare className="h-4 w-4 text-white" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md">
+                <MessageSquare className="h-5 w-5 text-white" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-sm font-bold text-slate-800 leading-tight truncate">
+                <h1 className="text-base font-display font-semibold text-foreground leading-tight truncate">
                   {sessions.find((s) => s.id === currentSessionId)?.title || 'Knowledge Assistant'}
                 </h1>
-                <p className="text-[10px] text-slate-400">Permission-filtered RAG · Live Streaming</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Permission-filtered RAG · Live Streaming</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-3 shrink-0">
               <div className="md:hidden">
                 <ConnectionBadge isConnected={isConnected} />
               </div>
               <Button
                 id="chat-new-session"
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={startNewSession}
                 disabled={isStreaming}
                 title="Start a new conversation"
-                className="text-xs text-slate-500 gap-1.5 hover:text-slate-800 cursor-pointer hidden md:flex"
+                className="text-xs rounded-full gap-2 hidden md:flex bg-background"
               >
                 <Plus className="h-3.5 w-3.5" />
                 New chat
@@ -300,11 +300,11 @@ export function ChatWindow() {
           </div>
 
           {/* Message list */}
-          <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5 scroll-smooth">
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 scroll-smooth">
             {isMessagesLoading ? (
-              <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-400 select-none">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-                <span className="text-xs font-medium">Loading history…</span>
+              <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground select-none">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="text-sm font-medium">Loading history…</span>
               </div>
             ) : messages.length === 0 ? (
               <EmptyState />
@@ -320,9 +320,9 @@ export function ChatWindow() {
 
             {/* Streaming typing indicator — shown while waiting for first token */}
             {isStreaming && messages[messages.length - 1]?.content === '' && (
-              <div className="flex items-center gap-2 text-slate-400">
-                <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
-                <span className="text-xs">Thinking…</span>
+              <div className="flex items-center gap-3 text-muted-foreground ml-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary/70" />
+                <span className="text-sm">Thinking…</span>
               </div>
             )}
 
@@ -330,8 +330,8 @@ export function ChatWindow() {
           </div>
 
           {/* Input bar */}
-          <div className="shrink-0 border-t border-slate-100 bg-white px-4 py-3">
-            <div className="flex items-end gap-2 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 transition">
+          <div className="shrink-0 border-t border-border bg-card/50 backdrop-blur-sm px-6 py-4">
+            <div className="flex items-end gap-3 rounded-2xl border border-border bg-background px-4 py-3 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary shadow-sm transition-all">
               <textarea
                 ref={textareaRef}
                 id="chat-input"
@@ -346,10 +346,10 @@ export function ChatWindow() {
                 }
                 disabled={!isConnected || isStreaming}
                 className="
-                  flex-1 resize-none bg-transparent text-sm text-slate-800
-                  placeholder:text-slate-400 focus:outline-none
+                  flex-1 resize-none bg-transparent text-sm text-foreground
+                  placeholder:text-muted-foreground focus:outline-none
                   disabled:opacity-50 leading-relaxed
-                  max-h-40 overflow-y-auto
+                  max-h-40 overflow-y-auto py-1
                 "
               />
               <button
@@ -357,20 +357,20 @@ export function ChatWindow() {
                 onClick={handleSend}
                 disabled={!inputValue.trim() || !isConnected || isStreaming}
                 className="
-                  flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
-                  bg-indigo-600 text-white shadow-sm
-                  hover:bg-indigo-700 active:scale-95
+                  flex h-10 w-10 shrink-0 items-center justify-center rounded-xl
+                  bg-primary text-primary-foreground shadow-md
+                  hover:bg-primary/90 active:scale-95
                   disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100
-                  transition-all duration-150 cursor-pointer
+                  transition-all duration-200 cursor-pointer mb-0.5
                 "
                 title="Send (Enter)"
               >
                 {isStreaming
-                  ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <Send className="h-4 w-4" />}
+                  ? <Loader2 className="h-5 w-5 animate-spin" />
+                  : <Send className="h-4 w-4 ml-0.5" />}
               </button>
             </div>
-            <p className="mt-1.5 text-center text-[10px] text-slate-400 select-none">
+            <p className="mt-2.5 text-center text-xs text-muted-foreground select-none">
               Responses are grounded in documents you are authorised to access.
             </p>
           </div>

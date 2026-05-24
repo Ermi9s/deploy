@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import DriveLayout from '@/components/drive/drive-layout'
+import { AppLayout } from '@/components/layout/AppLayout'
+import AuthGuard from '@/components/auth/auth-guard'
 import { ChatWindow } from '@/components/chat/ChatWindow'
 
 export const metadata: Metadata = {
@@ -10,8 +11,12 @@ export const metadata: Metadata = {
 
 export default function ChatPage() {
   return (
-    <DriveLayout>
-      <ChatWindow />
-    </DriveLayout>
+    <AuthGuard>
+      <AppLayout>
+        <div className="h-full p-4 md:p-6 lg:p-8">
+          <ChatWindow />
+        </div>
+      </AppLayout>
+    </AuthGuard>
   )
 }
