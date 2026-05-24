@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle2, Loader2, RefreshCw, XCircle } from 'lucide-react'
 import AuthGuard from '@/components/auth/auth-guard'
-import DriveLayout from '@/components/drive/drive-layout'
+import { AppLayout } from '@/components/layout/AppLayout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -141,85 +141,85 @@ export default function IngestionProgressPage() {
 
   return (
     <AuthGuard>
-      <DriveLayout>
-        <div className="mx-auto max-w-3xl space-y-4">
-          <header className="rounded-xl border border-slate-200 bg-white p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
+      <AppLayout title="Ingestion Progress">
+        <div className="mx-auto max-w-3xl space-y-6">
+          <header className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h1 className="text-xl font-semibold text-slate-800">Ingestion Progress</h1>
-                <p className="mt-1 text-sm text-slate-500">Track indexing and vectorization for your uploaded file.</p>
+                <h1 className="text-2xl font-display font-semibold text-foreground tracking-tight">Ingestion Progress</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Track indexing and vectorization for your uploaded file.</p>
               </div>
-              <Badge variant="outline" className="text-xs">Document {documentId}</Badge>
+              <Badge variant="outline" className="text-xs bg-background">Document {documentId}</Badge>
             </div>
           </header>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5">
+          <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             {loading ? (
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <Loader2 className="h-4 w-4 animate-spin" />
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 Loading ingestion status...
               </div>
             ) : error ? (
-              <div className="space-y-3">
-                <p className="text-sm text-red-600">{error}</p>
-                <Button variant="outline" onClick={() => router.refresh()}>
+              <div className="space-y-4">
+                <p className="text-sm text-destructive">{error}</p>
+                <Button variant="outline" onClick={() => router.refresh()} className="rounded-full">
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Retry
                 </Button>
               </div>
             ) : snapshot ? (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex flex-wrap items-center gap-2">
                   {snapshot.status.toLowerCase() === 'completed' ? (
-                    <Badge className="bg-emerald-600 text-white">
-                      <CheckCircle2 className="mr-1 h-3 w-3" />
+                    <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-200/50 hover:bg-emerald-500/20">
+                      <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
                       Completed
                     </Badge>
                   ) : snapshot.status.toLowerCase() === 'failed' ? (
-                    <Badge variant="destructive">
-                      <XCircle className="mr-1 h-3 w-3" />
+                    <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20">
+                      <XCircle className="mr-1.5 h-3.5 w-3.5" />
                       Failed
                     </Badge>
                   ) : (
-                    <Badge variant="outline">{snapshot.status}</Badge>
+                    <Badge variant="outline" className="bg-background">{snapshot.status}</Badge>
                   )}
-                  <Badge variant="outline">Stage: {formatStage(snapshot.stage)}</Badge>
-                  {itemId ? <Badge variant="outline">File: {itemId}</Badge> : null}
+                  <Badge variant="outline" className="bg-background">Stage: {formatStage(snapshot.stage)}</Badge>
+                  {itemId ? <Badge variant="outline" className="bg-background">File: {itemId}</Badge> : null}
                 </div>
 
-                <div>
-                  <div className="mb-1 flex items-center justify-between text-sm text-slate-600">
+                <div className="bg-accent/50 p-4 rounded-xl border border-border/50">
+                  <div className="mb-2 flex items-center justify-between text-sm font-medium text-foreground">
                     <span>Progress</span>
-                    <span>{progress}%</span>
+                    <span className="text-primary">{progress}%</span>
                   </div>
-                  <Progress value={progress} className="h-2" />
+                  <Progress value={progress} className="h-2 bg-background" />
                 </div>
 
                 {snapshot.message ? (
-                  <p className="text-sm text-slate-600">{snapshot.message}</p>
+                  <p className="text-sm text-muted-foreground">{snapshot.message}</p>
                 ) : null}
 
                 {snapshot.error_message ? (
-                  <p className="text-sm text-red-600">{snapshot.error_message}</p>
+                  <p className="text-sm text-destructive font-medium">{snapshot.error_message}</p>
                 ) : null}
               </div>
             ) : (
-              <p className="text-sm text-slate-500">No ingestion status available yet.</p>
+              <p className="text-sm text-muted-foreground">No ingestion status available yet.</p>
             )}
           </section>
 
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => router.push('/drive')}>
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Button variant="outline" onClick={() => router.push('/drive')} className="rounded-full px-6">
               Back to Drive
             </Button>
             {isComplete ? (
-              <Button onClick={() => router.push('/drive')}>
+              <Button onClick={() => router.push('/drive')} className="rounded-full px-6">
                 Continue
               </Button>
             ) : null}
           </div>
         </div>
-      </DriveLayout>
+      </AppLayout>
     </AuthGuard>
   )
 }
