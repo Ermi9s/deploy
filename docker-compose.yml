@@ -149,9 +149,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     environment:
-      - NEXT_PUBLIC_MANAGEMENT_API=http://localhost:8002
-      - NEXT_PUBLIC_INGESTION_API=http://localhost:8001
-      - NEXT_PUBLIC_RAG_API=http://localhost:8004
+      - MANAGEMENT_API=http://management:8000
+      - INGESTION_API=http://ingestion:8000
+      - RAG_API=http://rag:8000
     ports:
       - "3000:3000"
     depends_on:
