@@ -100,13 +100,13 @@ def get_milestone_relevant_chunks(
     department_ids: list[str],
     rejected_document_ids: list[str],
     top_k: int = _SWEEP_TOP_K,
-) -> tuple[str, str | None, str | None]:
+) -> tuple[str, str | None, str | None, int | None]:
     """
     For the periodic sweep.  Embeds the milestone description and performs a
     department-filtered kNN search to find the most relevant document chunks.
 
-    Returns (concatenated_text, best_document_id, best_filename).
-    Text is truncated to _MAX_DOC_TEXT_CHARS.  Returns ('', None, None) on error.
+    Returns (concatenated_text, best_document_id, best_filename, best_mac_ranking).
+    Text is truncated to _MAX_DOC_TEXT_CHARS.  Returns ('', None, None, None) on error.
     """
     try:
         client = get_genai_client()
@@ -120,7 +120,7 @@ def get_milestone_relevant_chunks(
         vector = [float(v) for v in embeddings[0].values]
     except Exception as exc:
         logger.error('Embedding failed for milestone sweep: %s', exc)
-        return '', None, None
+        return '', None, None, None
 
     es = get_es_client()
     # Build a department filter that also excludes rejected documents.
@@ -154,25 +154,34 @@ def get_milestone_relevant_chunks(
                     'num_candidates': top_k * 10,
                     'filter': dept_filter,
                 },
-                '_source': ['text', 'document_id', 'filename'],
+                '_source': ['text', 'document_id', 'filename', 'department_access'],
                 'size': top_k,
             },
         )
         hits = response['hits']['hits']
         if not hits:
-            return '', None, None
+            return '', None, None, None
 
         parts = [hit['_source'].get('text', '') for hit in hits]
         best_hit = hits[0]['_source']
         best_doc_id = best_hit.get('document_id')
         best_filename = best_hit.get('filename')
 
+        # Extract best_mac_ranking by checking department_access list for matches
+        best_mac_ranking = None
+        dept_access_list = best_hit.get('department_access') or []
+        if isinstance(dept_access_list, list):
+            for entry in dept_access_list:
+                if isinstance(entry, dict) and entry.get('dept_id') in department_ids:
+                    best_mac_ranking = entry.get('min_ranking')
+                    break
+
         full_text = '\n'.join(parts)
-        return full_text[:_MAX_DOC_TEXT_CHARS], best_doc_id, best_filename
+        return full_text[:_MAX_DOC_TEXT_CHARS], best_doc_id, best_filename, best_mac_ranking
 
     except Exception as exc:
         logger.error('ES kNN sweep search failed: %s', exc)
-        return '', None, None
+        return '', None, None, None
 
 
 # ---------------------------------------------------------------------------
@@ -238,9 +247,9 @@ def check_milestone_against_text(
 # ---------------------------------------------------------------------------
 
 def _create_notification(milestone: Milestone) -> None:
-    """Create an in-app PlanningNotification for the plan owner."""
+    """Create an in-app PlanningNotification for the plan owner and push via WebSocket."""
     plan = milestone.plan
-    PlanningNotification.objects.create(
+    notification = PlanningNotification.objects.create(
         user_id=plan.created_by_user_id,
         milestone=milestone,
         message=(
@@ -250,6 +259,44 @@ def _create_notification(milestone: Milestone) -> None:
             f'You may reject this if it is incorrect.'
         ),
     )
+
+    # Push to the plan owner's live WebSocket connection (if any).
+    # Failures are swallowed — the DB record is the source of truth.
+    try:
+        from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
+
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            async_to_sync(channel_layer.group_send)(
+                f"notif_user_{notification.user_id}",
+                {
+                    "type": "notification.message",
+                    "data": {
+                        "id": str(notification.id),
+                        "message": notification.message,
+                        "is_read": notification.is_read,
+                        "created_at": notification.created_at.isoformat(),
+                        "notification_type": "milestone_auto_completed",
+                        "milestone": {
+                            "id": str(milestone.id),
+                            "title": milestone.title,
+                            "plan_id": str(plan.id),
+                            "plan_title": plan.title,
+                            "status": milestone.status,
+                            "reference_document_id": milestone.reference_document_id,
+                            "reference_filename": milestone.reference_filename,
+                            "reference_mac_ranking": getattr(milestone, "reference_mac_ranking", None),
+                        },
+                    },
+                },
+            )
+            logger.debug(
+                "WS push sent for notification user_id=%s milestone=%s",
+                notification.user_id, milestone.id,
+            )
+    except Exception as exc:
+        logger.warning("WS push failed (non-fatal): %s", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -266,6 +313,7 @@ def _maybe_auto_complete(
     is_satisfied: bool,
     confidence: str,
     summary: str,
+    mac_ranking: int | None = None,
 ) -> bool:
     """
     Apply auto-completion if conditions are met.
@@ -290,11 +338,12 @@ def _maybe_auto_complete(
         filename=filename,
         summary=summary,
         confidence=confidence,
+        mac_ranking=mac_ranking,
     )
     _create_notification(milestone)
     logger.info(
-        'Milestone %s auto-completed by document %s (confidence=%s)',
-        milestone.id, document_id, confidence,
+        'Milestone %s auto-completed by document %s (confidence=%s mac_ranking=%s)',
+        milestone.id, document_id, confidence, mac_ranking,
     )
     return True
 
@@ -307,6 +356,7 @@ def process_document_for_milestones(
     document_id: str,
     filename: str,
     department_ids: list[str],
+    min_ranking: int = 0,
 ) -> list[dict]:
     """
     Per-upload trigger:
@@ -314,7 +364,8 @@ def process_document_for_milestones(
     2. Find all OPEN milestones whose plan.department_id is in department_ids
        and where document_id is NOT in their rejected_document_ids.
     3. For each, ask Gemini if the document satisfies it.
-    4. Auto-complete on high/medium confidence.
+    4. Auto-complete on high/medium confidence, storing mac_ranking so lower-ranked
+       users cannot see the reference filename.
     5. Return a summary list of results.
     """
     document_text = get_document_chunks_text(document_id)
@@ -341,7 +392,8 @@ def process_document_for_milestones(
             milestone, document_text
         )
         completed = _maybe_auto_complete(
-            milestone, document_id, filename, is_satisfied, confidence, summary
+            milestone, document_id, filename, is_satisfied, confidence, summary,
+            mac_ranking=min_ranking if min_ranking else None,
         )
         results.append({
             'milestone_id': str(milestone.id),
@@ -390,7 +442,7 @@ def sweep_all_open_milestones() -> dict:
         department_ids = [plan.department_id]
         rejected_ids: list[str] = milestone.rejected_document_ids or []
 
-        doc_text, best_doc_id, best_filename = get_milestone_relevant_chunks(
+        doc_text, best_doc_id, best_filename, best_mac_ranking = get_milestone_relevant_chunks(
             milestone_description=milestone.description,
             department_ids=department_ids,
             rejected_document_ids=rejected_ids,
@@ -409,7 +461,8 @@ def sweep_all_open_milestones() -> dict:
             milestone, doc_text
         )
         completed = _maybe_auto_complete(
-            milestone, best_doc_id, best_filename or '', is_satisfied, confidence, summary
+            milestone, best_doc_id, best_filename or '', is_satisfied, confidence, summary,
+            mac_ranking=best_mac_ranking,
         )
         if completed:
             completed_count += 1

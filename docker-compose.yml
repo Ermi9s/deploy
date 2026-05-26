@@ -83,6 +83,7 @@ services:
     build:
       context: ./ingestion
       dockerfile: Dockerfile
+    command: daphne -b 0.0.0.0 -p 8000 ingestion.asgi:application
     env_file:
       - ./ingestion/.env
     volumes:

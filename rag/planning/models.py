@@ -79,6 +79,9 @@ class Milestone(models.Model):
     # The document that triggered auto-completion.
     reference_document_id = models.CharField(max_length=255, blank=True)
     reference_filename = models.CharField(max_length=512, blank=True)
+    # Minimum MAC ranking required to view the reference document.
+    # Null means unrestricted (public document or pre-migration data).
+    reference_mac_ranking = models.PositiveSmallIntegerField(null=True, blank=True)
 
     # --- Rejection tracking ---
     # List of document_id strings whose AI completions were rejected by the
@@ -110,6 +113,7 @@ class Milestone(models.Model):
         filename: str,
         summary: str,
         confidence: str,
+        mac_ranking: int | None = None,
     ) -> None:
         """Transition milestone to AUTO_COMPLETED and save."""
         self.status = self.Status.AUTO_COMPLETED
@@ -118,10 +122,11 @@ class Milestone(models.Model):
         self.completion_confidence = confidence
         self.reference_document_id = document_id
         self.reference_filename = filename
+        self.reference_mac_ranking = mac_ranking
         self.save(update_fields=[
             'status', 'completed_at', 'completion_summary',
             'completion_confidence', 'reference_document_id',
-            'reference_filename', 'updated_at',
+            'reference_filename', 'reference_mac_ranking', 'updated_at',
         ])
 
     def reject_completion(self) -> None:
@@ -139,10 +144,12 @@ class Milestone(models.Model):
         self.completion_confidence = ''
         self.reference_document_id = ''
         self.reference_filename = ''
+        self.reference_mac_ranking = None
         self.save(update_fields=[
             'status', 'completed_at', 'completion_summary',
             'completion_confidence', 'reference_document_id',
-            'reference_filename', 'rejected_document_ids', 'updated_at',
+            'reference_filename', 'reference_mac_ranking',
+            'rejected_document_ids', 'updated_at',
         ])
 
     def mark_manually_complete(self) -> None:

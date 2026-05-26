@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { 
-  FolderClosed, 
   MessageSquare, 
   Settings, 
   Sparkles, 
@@ -29,8 +28,9 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
-import { clearStoredTokens, api, PlanningNotification } from '@/lib/api'
+import { clearStoredTokens, api } from '@/lib/api'
 import { useRouter } from 'next/navigation'
+import { useNotificationSocket } from '@/hooks/useNotificationSocket'
 
 
 interface SidebarProps {
@@ -42,6 +42,7 @@ const NAV_ITEMS = [
   { name: 'My Drive', href: '/drive', icon: HardDrive },
   { name: 'AI Chat', href: '/chat', icon: MessageSquare },
   { name: 'Planning', href: '/planning', icon: ClipboardList },
+  { name: 'Notifications', href: '/notifications', icon: Bell },
   { name: 'Settings', href: '/profile', icon: Settings },
 ]
 
@@ -49,30 +50,12 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { setTheme, theme } = useTheme()
-  const [notifications, setNotifications] = useState<PlanningNotification[]>([])
-  const [hasUnread, setHasUnread] = useState(false)
-
-  const fetchNotifications = async () => {
-    try {
-      const data = await api.planning.listNotifications()
-      const list = data.results || []
-      setNotifications(list)
-      setHasUnread(list.some(n => !n.is_read))
-    } catch (err) {
-      console.error('Failed to load notifications', err)
-    }
-  }
-
-  useEffect(() => {
-    fetchNotifications()
-    const interval = setInterval(fetchNotifications, 10000)
-    return () => clearInterval(interval)
-  }, [])
+  const { notifications, unreadCount, markRead } = useNotificationSocket()
+  const hasUnread = unreadCount > 0
 
   const handleMarkRead = async (uuid: string) => {
     try {
-      await api.planning.markNotificationRead(uuid)
-      fetchNotifications()
+      await markRead(uuid)
     } catch (err) {
       console.error('Failed to mark read', err)
     }
@@ -173,7 +156,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                 <span>Planning Alerts</span>
                 {hasUnread && (
                   <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-normal">
-                    New alerts
+                    {notifications.filter(n => !n.is_read).length} new
                   </span>
                 )}
               </DropdownMenuLabel>
@@ -183,7 +166,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                   No notifications yet.
                 </div>
               ) : (
-                notifications.map((notif) => (
+                notifications.slice(0, 5).map((notif) => (
                   <DropdownMenuItem 
                     key={notif.id} 
                     onClick={() => !notif.is_read && handleMarkRead(notif.id)}
@@ -202,17 +185,24 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                         {new Date(notif.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="line-clamp-3 text-muted-foreground leading-normal mt-0.5 text-[11px]">
+                    <p className="line-clamp-2 text-muted-foreground leading-normal mt-0.5 text-[11px]">
                       {notif.message}
                     </p>
                     {!notif.is_read && (
-                      <span className="text-[10px] text-primary hover:underline mt-1 font-semibold block">
+                      <span className="text-[10px] text-primary mt-1 font-semibold block">
                         Mark as read
                       </span>
                     )}
                   </DropdownMenuItem>
                 ))
               )}
+              <DropdownMenuSeparator className="my-1" />
+              <DropdownMenuItem asChild>
+                <a href="/notifications" className="flex items-center justify-center gap-1.5 text-xs font-semibold text-primary py-1.5 rounded-md hover:bg-primary/5 cursor-pointer">
+                  View all notifications
+                  <Bell className="h-3 w-3" />
+                </a>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 

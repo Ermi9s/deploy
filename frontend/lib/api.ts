@@ -687,6 +687,11 @@ export const api = {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     return `${protocol}//${window.location.host}/api/proxy/rag/ws/chat/`
   },
+  getNotificationWsUrl(): string {
+    if (typeof window === 'undefined') return ''
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    return `${protocol}//${window.location.host}/api/proxy/rag/ws/notifications/`
+  },
 
   chat: {
     async listSessions(page?: number): Promise<{
@@ -853,6 +858,13 @@ export const api = {
         baseUrl: RAG_API,
       })
     },
+    async markAllNotificationsRead(): Promise<void> {
+      await request<void>('/api/planning/notifications/read-all/', {
+        method: 'POST',
+        body: {},
+        baseUrl: RAG_API,
+      })
+    },
   },
 }
 
@@ -866,6 +878,7 @@ export interface Milestone {
   completion_summary: string | null
   reference_document_id: string | null
   reference_filename: string | null
+  reference_mac_ranking: number | null
   completed_at: string | null
   rejected_document_ids: string[]
 }
@@ -886,10 +899,17 @@ export interface PlanningNotification {
   message: string
   is_read: boolean
   created_at: string
+  /** e.g. 'milestone_auto_completed' | 'milestone_manually_completed' | 'milestone_rejected' */
+  notification_type?: string
   milestone: {
     id: string
     title: string
     plan_title: string
+    plan_id?: string
+    status?: 'open' | 'auto_completed' | 'manually_completed'
+    reference_document_id?: string | null
+    reference_filename?: string | null
+    reference_mac_ranking?: number | null
   }
 }
 

@@ -141,7 +141,7 @@ class PlanDetailView(APIView):
         plan = self._get_plan(pk, dept_id)
         if not plan:
             return Response({'detail': 'Plan not found.'}, status=status.HTTP_404_NOT_FOUND)
-        return Response(PlanSerializer(plan).data)
+        return Response(PlanSerializer(plan, context={'request': request}).data)
 
     @extend_schema(
         summary='Update plan',
@@ -159,10 +159,10 @@ class PlanDetailView(APIView):
                 {'detail': 'Only the plan creator can edit this plan.'},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        serializer = PlanSerializer(plan, data=request.data, partial=True)
+        serializer = PlanSerializer(plan, data=request.data, partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(PlanSerializer(plan).data)
+        return Response(PlanSerializer(plan, context={'request': request}).data)
 
     @extend_schema(
         summary='Deactivate plan',
@@ -210,7 +210,7 @@ class MilestoneListCreateView(APIView):
         if not plan:
             return Response({'detail': 'Plan not found.'}, status=status.HTTP_404_NOT_FOUND)
         milestones = plan.milestones.all()
-        return Response(MilestoneSerializer(milestones, many=True).data)
+        return Response(MilestoneSerializer(milestones, many=True, context={'request': request}).data)
 
     @extend_schema(
         summary='Create milestone',
@@ -265,7 +265,7 @@ class MilestoneDetailView(APIView):
         if manually_complete:
             milestone.mark_manually_complete()
 
-        return Response(MilestoneSerializer(milestone).data)
+        return Response(MilestoneSerializer(milestone, context={'request': request}).data)
 
     @extend_schema(
         summary='Delete milestone',
@@ -323,7 +323,7 @@ class MilestoneRejectView(APIView):
 
         milestone.reject_completion()
         logger.info('Milestone %s rejected by user %s', milestone.id, user_id)
-        return Response(MilestoneSerializer(milestone).data)
+        return Response(MilestoneSerializer(milestone, context={'request': request}).data)
 
 
 # ---------------------------------------------------------------------------
@@ -348,7 +348,7 @@ class NotificationListView(APIView):
         paginator = PlanPagination()
         page = paginator.paginate_queryset(qs, request)
         return paginator.get_paginated_response(
-            PlanningNotificationSerializer(page, many=True).data
+            PlanningNotificationSerializer(page, many=True, context={'request': request}).data
         )
 
 
@@ -367,7 +367,7 @@ class NotificationMarkReadView(APIView):
             return Response({'detail': 'Notification not found.'}, status=status.HTTP_404_NOT_FOUND)
         notification.is_read = True
         notification.save(update_fields=['is_read'])
-        return Response(PlanningNotificationSerializer(notification).data)
+        return Response(PlanningNotificationSerializer(notification, context={'request': request}).data)
 
 
 class NotificationMarkAllReadView(APIView):
@@ -409,12 +409,14 @@ class InternalCheckDocumentView(APIView):
         document_id: str = serializer.validated_data['document_id']
         filename: str = serializer.validated_data['filename']
         department_ids: list[str] = serializer.validated_data['department_ids']
+        min_ranking: int = serializer.validated_data.get('min_ranking', 0)
 
         try:
             results = process_document_for_milestones(
                 document_id=document_id,
                 filename=filename,
                 department_ids=department_ids,
+                min_ranking=min_ranking,
             )
             completed = sum(1 for r in results if r['completed'])
             return Response({

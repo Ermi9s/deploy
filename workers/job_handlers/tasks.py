@@ -319,10 +319,12 @@ def handle_document_ingestion_job(self, payload: dict[str, Any]) -> dict[str, An
     logger.info('Document ingestion completed document_id=%s chunks=%s', document_id, indexed_chunks)
 
     # --- Trigger milestone check (fire-and-forget, non-blocking) ---
+    min_ranking = min((e['min_ranking'] for e in access_list), default=0)
     _trigger_milestone_check(
         document_id=document_id,
         filename=original_filename,
         department_ids=[e['dept_id'] for e in access_list],
+        min_ranking=min_ranking,
     )
 
     return result
@@ -336,6 +338,7 @@ def _trigger_milestone_check(
     document_id: str,
     filename: str,
     department_ids: list[str],
+    min_ranking: int = 0,
 ) -> None:
     """
     Non-blocking HTTP call to the RAG planning service.
@@ -353,6 +356,7 @@ def _trigger_milestone_check(
                 'document_id': document_id,
                 'filename': filename,
                 'department_ids': department_ids,
+                'min_ranking': min_ranking,
             },
             headers={'X-Service-Secret': secret},
             timeout=10,
