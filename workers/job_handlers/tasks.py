@@ -9,6 +9,7 @@ from typing import Any
 
 import fitz
 import pytesseract
+import requests
 from celery import shared_task
 from elasticsearch import Elasticsearch
 from google import genai
@@ -316,4 +317,86 @@ def handle_document_ingestion_job(self, payload: dict[str, Any]) -> dict[str, An
     }
 
     logger.info('Document ingestion completed document_id=%s chunks=%s', document_id, indexed_chunks)
+
+    # --- Trigger milestone check (fire-and-forget, non-blocking) ---
+    _trigger_milestone_check(
+        document_id=document_id,
+        filename=original_filename,
+        department_ids=[e['dept_id'] for e in access_list],
+    )
+
     return result
+
+
+# ---------------------------------------------------------------------------
+# Helpers: milestone integration
+# ---------------------------------------------------------------------------
+
+def _trigger_milestone_check(
+    document_id: str,
+    filename: str,
+    department_ids: list[str],
+) -> None:
+    """
+    Non-blocking HTTP call to the RAG planning service.
+    Failures are logged but never propagate to the ingestion pipeline.
+    """
+    rag_url = os.getenv('RAG_INTERNAL_URL', 'http://rag:8000')
+    secret = os.getenv('PLANNING_SERVICE_SECRET', '')
+    if not secret:
+        logger.debug('PLANNING_SERVICE_SECRET not set — skipping milestone check.')
+        return
+    try:
+        requests.post(
+            f'{rag_url}/api/planning/internal/check-document/',
+            json={
+                'document_id': document_id,
+                'filename': filename,
+                'department_ids': department_ids,
+            },
+            headers={'X-Service-Secret': secret},
+            timeout=10,
+        )
+        logger.debug('Milestone check triggered for document_id=%s', document_id)
+    except Exception as exc:
+        logger.warning('Milestone check call failed (non-fatal): %s', exc)
+
+
+@shared_task(
+    name='planning.trigger_milestone_sweep',
+    bind=False,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    max_retries=2,
+)
+def trigger_milestone_sweep() -> dict:
+    """
+    Celery Beat periodic task (fired hourly by default).
+    Calls the RAG service's internal sweep endpoint so all AI logic
+    remains within the planning app.
+    """
+    rag_url = os.getenv('RAG_INTERNAL_URL', 'http://rag:8000')
+    secret = os.getenv('PLANNING_SERVICE_SECRET', '')
+
+    if not secret:
+        logger.error('PLANNING_SERVICE_SECRET is not set — skipping sweep.')
+        return {'error': 'PLANNING_SERVICE_SECRET not configured'}
+
+    try:
+        resp = requests.post(
+            f'{rag_url}/api/planning/internal/sweep/',
+            headers={'X-Service-Secret': secret},
+            timeout=300,
+        )
+        resp.raise_for_status()
+        result = resp.json()
+        logger.info('Periodic milestone sweep complete: %s', result)
+        return result
+    except requests.HTTPError as exc:
+        logger.error(
+            'Sweep HTTP error %s: %s', exc.response.status_code, exc.response.text[:200]
+        )
+        raise
+    except Exception as exc:
+        logger.error('Sweep request failed: %s', exc)
+        raise

@@ -802,5 +802,95 @@ export const api = {
       return request<PaginatedResponse<AuditLog>>(`/auth/admin/audit-logs/${query}`)
     },
   },
+  planning: {
+    async listPlans(): Promise<PaginatedResponse<Plan>> {
+      return request<PaginatedResponse<Plan>>('/api/planning/plans/', { baseUrl: RAG_API })
+    },
+    async createPlan(payload: { title: string; description: string }): Promise<Plan> {
+      return request<Plan>('/api/planning/plans/', {
+        method: 'POST',
+        body: payload as unknown as JsonObject,
+        baseUrl: RAG_API,
+      })
+    },
+    async getPlanDetails(uuid: string): Promise<Plan> {
+      return request<Plan>(`/api/planning/plans/${uuid}/`, { baseUrl: RAG_API })
+    },
+    async deletePlan(uuid: string): Promise<void> {
+      await request<void>(`/api/planning/plans/${uuid}/`, {
+        method: 'DELETE',
+        baseUrl: RAG_API,
+      })
+    },
+    async createMilestone(planUuid: string, payload: { title: string; description: string; due_date?: string | null }): Promise<Milestone> {
+      return request<Milestone>(`/api/planning/plans/${planUuid}/milestones/`, {
+        method: 'POST',
+        body: payload as unknown as JsonObject,
+        baseUrl: RAG_API,
+      })
+    },
+    async manuallyCompleteMilestone(milestoneUuid: string): Promise<Milestone> {
+      return request<Milestone>(`/api/planning/milestones/${milestoneUuid}/complete/`, {
+        method: 'POST',
+        body: {},
+        baseUrl: RAG_API,
+      })
+    },
+    async rejectMilestone(milestoneUuid: string): Promise<Milestone> {
+      return request<Milestone>(`/api/planning/milestones/${milestoneUuid}/reject/`, {
+        method: 'POST',
+        body: {},
+        baseUrl: RAG_API,
+      })
+    },
+    async listNotifications(): Promise<PaginatedResponse<PlanningNotification>> {
+      return request<PaginatedResponse<PlanningNotification>>('/api/planning/notifications/', { baseUrl: RAG_API })
+    },
+    async markNotificationRead(notificationUuid: string): Promise<void> {
+      await request<void>(`/api/planning/notifications/${notificationUuid}/read/`, {
+        method: 'POST',
+        body: {},
+        baseUrl: RAG_API,
+      })
+    },
+  },
 }
+
+export interface Milestone {
+  id: string
+  title: string
+  description: string
+  due_date: string | null
+  status: 'open' | 'auto_completed' | 'manually_completed'
+  completion_confidence: 'high' | 'medium' | 'low' | null
+  completion_summary: string | null
+  reference_document_id: string | null
+  reference_filename: string | null
+  completed_at: string | null
+  rejected_document_ids: string[]
+}
+
+export interface Plan {
+  id: string
+  title: string
+  description: string
+  department_id: string
+  is_active: boolean
+  created_by_user_id: number
+  created_at: string
+  milestones?: Milestone[]
+}
+
+export interface PlanningNotification {
+  id: string
+  message: string
+  is_read: boolean
+  created_at: string
+  milestone: {
+    id: string
+    title: string
+    plan_title: string
+  }
+}
+
 
