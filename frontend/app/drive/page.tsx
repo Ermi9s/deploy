@@ -65,7 +65,7 @@ export default function DrivePage() {
   const [sortAsc, setSortAsc] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
-  const [treePanelOpen, setTreePanelOpen] = useState(true)
+  const [previewPanelOpen, setPreviewPanelOpen] = useState(false)
   const [previewPanelOpen, setPreviewPanelOpen] = useState(false)
   const [previewPaneWidth, setPreviewPaneWidth] = useState(DEFAULT_PREVIEW_PANE_WIDTH)
   const [isResizingPreviewPane, setIsResizingPreviewPane] = useState(false)
@@ -77,7 +77,7 @@ export default function DrivePage() {
   }, [selectedItem, ensureVersionsLoaded])
 
   useEffect(() => {
-    if (currentFolderId) setTreePanelOpen(true)
+    // Tree panel is always open now
   }, [currentFolderId])
 
   useEffect(() => {
@@ -166,8 +166,8 @@ export default function DrivePage() {
   return (
     <AuthGuard>
       <AppLayout>
-        <div className="space-y-4 p-4 md:p-6 lg:p-8">
-          {/* Action bar */}
+        <div className="flex flex-col h-screen p-4 md:p-6 lg:p-8 gap-4 bg-background">
+          {/* Action bar and Breadcrumb Combined */}
             <DriveHeader
               currentFolderName={currentFolderName}
               currentPath={currentPath}
@@ -175,7 +175,6 @@ export default function DrivePage() {
               sortBy={sortBy}
               sortAsc={sortAsc}
               sortLabel={sortLabel}
-              treePanelOpen={treePanelOpen}
               previewPanelOpen={previewPanelOpen}
               isCreatingFolder={isCreatingFolder}
               folderName={folderName}
@@ -188,7 +187,6 @@ export default function DrivePage() {
               loadingTreeNodes={loadingTreeNodes}
               loadingFileVersions={loadingFileVersions}
               fileVersions={fileVersions}
-              onToggleTreePanel={() => setTreePanelOpen((p) => !p)}
               onTogglePreviewPanel={() => setPreviewPanelOpen((p) => !p)}
               onSetViewMode={setViewMode}
               onSetSortBy={setSortBy}
@@ -207,44 +205,19 @@ export default function DrivePage() {
               formatDate={formatDate}
             />
 
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-1 overflow-x-auto rounded-xl border border-border bg-card p-2 text-sm">
-              {currentPath.map((crumb, index) => (
-                <div className="flex items-center gap-1" key={`${crumb.id || ROOT_KEY}-${index}`}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7"
-                    onClick={() => void navigateToPath(currentPath.slice(0, index + 1))}
-                  >
-                    {crumb.name}
-                  </Button>
-                  {index < currentPath.length - 1 && (
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </div>
-              ))}
-            </div>
-
             {/* 3-column layout: tree | files | preview */}
             <section
               ref={browseSectionRef}
-              className={`grid gap-0 overflow-hidden rounded-xl border border-border bg-card h-[calc(100vh-14rem)] ${
-                treePanelOpen && previewPanelOpen
+              className={`grid gap-0 overflow-hidden rounded-xl border border-border bg-card flex-1 min-h-0 ${
+                previewPanelOpen
                   ? 'grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(320px,var(--preview-width))] lg:grid-cols-[minmax(200px,var(--tree-width,260px))_minmax(0,1fr)_minmax(320px,var(--preview-width))]'
-                  : treePanelOpen && !previewPanelOpen
-                    ? 'grid-cols-1 lg:grid-cols-[minmax(200px,var(--tree-width,260px))_minmax(0,1fr)]'
-                    : !treePanelOpen && previewPanelOpen
-                      ? 'grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(320px,var(--preview-width))]'
-                      : 'grid-cols-1'
+                  : 'grid-cols-1 lg:grid-cols-[minmax(200px,var(--tree-width,260px))_minmax(0,1fr)]'
               }`}
               style={{ '--preview-width': `${previewPaneWidth}px` } as React.CSSProperties}
             >
               {/* Desktop sidebar tree */}
               <aside
-                className={`hidden lg:flex flex-col border-r border-border bg-accent/30 p-3 transition-all duration-300 overflow-hidden ${
-                  treePanelOpen ? 'opacity-100' : 'w-0 border-none p-0 opacity-0'
-                }`}
+                className="hidden lg:flex flex-col border-r border-border bg-accent/30 p-3 transition-all duration-300 overflow-hidden"
               >
                 <div className="mb-1 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Locations

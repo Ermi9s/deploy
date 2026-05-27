@@ -17,9 +17,8 @@ import {
 } from '@/components/ui/sheet'
 import {
   ArrowDownUp,
-  ChevronDown,
+  ChevronRight,
   FolderPlus,
-  LayoutPanelLeft,
   List,
   Grid3X3,
   Menu,
@@ -44,7 +43,6 @@ interface DriveHeaderProps {
   sortBy: SortBy
   sortAsc: boolean
   sortLabel: string
-  treePanelOpen: boolean
   previewPanelOpen: boolean
   isCreatingFolder: boolean
   folderName: string
@@ -58,7 +56,6 @@ interface DriveHeaderProps {
   loadingTreeNodes: Set<string>
   loadingFileVersions: Set<string>
   fileVersions: Record<string, FileVersion[]>
-  onToggleTreePanel: () => void
   onTogglePreviewPanel: () => void
   onSetViewMode: (mode: ViewMode) => void
   onSetSortBy: (by: SortBy) => void
@@ -89,7 +86,6 @@ export function DriveHeader({
   sortBy,
   sortAsc,
   sortLabel,
-  treePanelOpen,
   previewPanelOpen,
   isCreatingFolder,
   folderName,
@@ -102,7 +98,6 @@ export function DriveHeader({
   loadingTreeNodes,
   loadingFileVersions,
   fileVersions,
-  onToggleTreePanel,
   onTogglePreviewPanel,
   onSetViewMode,
   onSetSortBy,
@@ -121,24 +116,28 @@ export function DriveHeader({
   formatDate,
 }: DriveHeaderProps) {
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 py-3 px-4 border-b border-border bg-background shadow-sm z-10 sticky top-0 rounded-t-xl">
-      <div className="min-w-0 flex items-center gap-2">
-        <h1 className="text-lg font-display font-semibold text-foreground tracking-tight">{currentFolderName}</h1>
-      </div>
+    <header className="flex flex-col gap-3 py-3 px-4 border-b border-border bg-background shadow-sm z-10 sticky top-0 rounded-t-xl">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0 flex items-center gap-1 overflow-x-auto">
+          {currentPath.map((crumb, index) => (
+            <div className="flex items-center gap-1" key={`${crumb.id || '__ROOT__'}-${index}`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+                onClick={() => onNavigate(currentPath.slice(0, index + 1))}
+              >
+                {crumb.name}
+              </Button>
+              {index < currentPath.length - 1 && (
+                <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+              )}
+            </div>
+          ))}
+        </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Desktop: toggle sidebar tree panel */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="hidden lg:inline-flex rounded-full bg-background"
-          onClick={onToggleTreePanel}
-        >
-          <LayoutPanelLeft className="mr-2 h-4 w-4" />
-          {treePanelOpen ? 'Hide Tree' : 'Show Tree'}
-        </Button>
-
-        {/* Mobile: sidebar tree in a Sheet */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Mobile: sidebar tree in a Sheet */}
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="sm" className="lg:hidden rounded-full bg-background">
@@ -289,6 +288,7 @@ export function DriveHeader({
         >
           <PanelRight className="h-4 w-4" />
         </Button>
+      </div>
       </div>
     </header>
   )
