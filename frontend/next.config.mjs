@@ -5,6 +5,7 @@
 const MANAGEMENT_API = process.env.MANAGEMENT_API || 'http://localhost:8002'
 const INGESTION_API = process.env.INGESTION_API || 'http://localhost:8001'
 const RAG_API = process.env.RAG_API || 'http://localhost:8004'
+const NOTIFICATION_API = process.env.NOTIFICATION_API || 'http://localhost:8003'
 
 const nextConfig = {
   // Django requires trailing slashes — prevent Next.js from stripping them
@@ -49,6 +50,15 @@ const nextConfig = {
       {
         source: '/api/proxy/rag/:path*',
         destination: `${RAG_API}/:path*`,
+      },
+      // Notification service (in-app notifications + websocket)
+      {
+        source: '/api/proxy/notification/:path*/',
+        destination: `${NOTIFICATION_API}/:path*/`,
+      },
+      {
+        source: '/api/proxy/notification/:path*',
+        destination: `${NOTIFICATION_API}/:path*`,
       },
     ]
   },

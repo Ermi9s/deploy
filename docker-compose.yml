@@ -64,7 +64,6 @@ services:
     build:
       context: ./management
       dockerfile: Dockerfile
-    command: python manage.py runserver 0.0.0.0:8000
     env_file:
       - ./management/.env
     volumes:
@@ -105,10 +104,18 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./notification/.env
+    environment:
+      - PLANNING_SERVICE_SECRET=${PLANNING_SERVICE_SECRET}
     volumes:
       - ./notification:/app
     ports:
       - "8003:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health/').read()\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     depends_on:
       management:
         condition: service_started
@@ -124,16 +131,24 @@ services:
     build:
       context: ./rag
       dockerfile: Dockerfile
-    command: daphne -b 0.0.0.0 -p 8000 rag.asgi:application
     env_file:
       - .env
       - ./rag/.env
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - PLANNING_SERVICE_SECRET=${PLANNING_SERVICE_SECRET}
+      - MILESTONE_SWEEP_INTERVAL_HOURS=${MILESTONE_SWEEP_INTERVAL_HOURS:-1}
+      - NOTIFICATION_EVENT_URL=http://notification:8000/api/internal/notifications/planning-event/
     volumes:
       - ./rag:/app
     ports:
       - "8004:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health/').read()\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -142,6 +157,8 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      notification:
         condition: service_healthy
 
 
@@ -153,6 +170,7 @@ services:
       - MANAGEMENT_API=http://management:8000
       - INGESTION_API=http://ingestion:8000
       - RAG_API=http://rag:8000
+      - NOTIFICATION_API=http://notification:8000
     ports:
       - "3000:3000"
     depends_on:
@@ -161,6 +179,8 @@ services:
       ingestion:
         condition: service_started
       rag:
+        condition: service_healthy
+      notification:
         condition: service_started
 
   admin-frontend:
@@ -184,6 +204,9 @@ services:
     env_file:
       - .env
       - ./workers/.env
+    environment:
+      - RAG_INTERNAL_URL=http://rag:8000
+      - PLANNING_SERVICE_SECRET=${PLANNING_SERVICE_SECRET}
     volumes:
       - ./workers:/app
       - shared_uploads:/shared/uploads
@@ -196,6 +219,8 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
+      rag:
+        condition: service_started
 
 
 volumes:

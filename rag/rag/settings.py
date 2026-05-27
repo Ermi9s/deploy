@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'query',
     'report',
+    'planning',
 ]
 
 ASGI_APPLICATION = 'rag.asgi.application'
@@ -203,3 +204,13 @@ CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
 # --- Report generation ---
 REPORT_TOP_K_PER_AGENDA = int(os.getenv('REPORT_TOP_K_PER_AGENDA', '3'))
 REPORT_MAX_AGENDAS = int(os.getenv('REPORT_MAX_AGENDAS', '10'))
+# --- Planning App ---
+# Shared secret used by the workers service to authenticate internal
+# HTTP calls to /api/planning/internal/* without a user JWT.
+PLANNING_SERVICE_SECRET = os.getenv('PLANNING_SERVICE_SECRET', '')
+
+# Internal notification event sink (notification service).
+NOTIFICATION_EVENT_URL = os.getenv(
+    'NOTIFICATION_EVENT_URL',
+    'http://notification:8000/api/internal/notifications/planning-event/',
+)

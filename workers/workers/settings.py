@@ -141,6 +141,25 @@ CELERY_TASK_ROUTES = {
     'job_handlers.tasks.generate_report_task': {'queue': 'report_generation_jobs'},
 }
 
+# --- Celery Beat Periodic Milestone Sweep ---
+CELERY_BEAT_SCHEDULE_FILENAME = '/tmp/celerybeat-schedule'
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+_SWEEP_MINUTES = float(
+    os.getenv(
+        'MILESTONE_SWEEP_INTERVAL_MINUTES',
+        str(float(os.getenv('MILESTONE_SWEEP_INTERVAL_HOURS', '1')) * 60.0),
+    )
+)
+
+from datetime import timedelta  # noqa: E402
+CELERY_BEAT_SCHEDULE = {
+    'sweep-open-milestones': {
+        'task': 'planning.trigger_milestone_sweep',
+        'schedule': timedelta(minutes=_SWEEP_MINUTES),
+    },
+}
+
 ELASTICSEARCH_URL = os.getenv('ELASTICSEARCH_URL', 'http://elasticsearch:9200')
 ELASTICSEARCH_INDEX = os.getenv('ELASTICSEARCH_INDEX', 'documents_chunks')
 GEMINI_EMBEDDING_MODEL = os.getenv('GEMINI_EMBEDDING_MODEL', 'text-embedding-004')
