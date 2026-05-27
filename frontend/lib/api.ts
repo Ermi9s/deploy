@@ -4,6 +4,7 @@
 const MANAGEMENT_API = '/api/proxy/management'
 const INGESTION_API = '/api/proxy/ingestion'
 const RAG_API = '/api/proxy/rag'
+const NOTIFICATION_API = '/api/proxy/notification'
 
 const TOKEN_STORAGE_KEY = 'okm_tokens'
 
@@ -690,7 +691,7 @@ export const api = {
   getNotificationWsUrl(): string {
     if (typeof window === 'undefined') return ''
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    return `${protocol}//${window.location.host}/api/proxy/rag/ws/notifications/`
+    return `${protocol}//${window.location.host}/api/proxy/notification/ws/notifications/`
   },
 
   chat: {
@@ -835,9 +836,9 @@ export const api = {
       })
     },
     async manuallyCompleteMilestone(milestoneUuid: string): Promise<Milestone> {
-      return request<Milestone>(`/api/planning/milestones/${milestoneUuid}/complete/`, {
+      return request<Milestone>(`/api/planning/milestones/${milestoneUuid}/`, {
         method: 'POST',
-        body: {},
+        body: { manually_complete: true },
         baseUrl: RAG_API,
       })
     },
@@ -849,20 +850,20 @@ export const api = {
       })
     },
     async listNotifications(): Promise<PaginatedResponse<PlanningNotification>> {
-      return request<PaginatedResponse<PlanningNotification>>('/api/planning/notifications/', { baseUrl: RAG_API })
+      return request<PaginatedResponse<PlanningNotification>>('/api/notifications/', { baseUrl: NOTIFICATION_API })
     },
     async markNotificationRead(notificationUuid: string): Promise<void> {
-      await request<void>(`/api/planning/notifications/${notificationUuid}/read/`, {
+      await request<void>(`/api/notifications/${notificationUuid}/read/`, {
         method: 'POST',
         body: {},
-        baseUrl: RAG_API,
+        baseUrl: NOTIFICATION_API,
       })
     },
     async markAllNotificationsRead(): Promise<void> {
-      await request<void>('/api/planning/notifications/read-all/', {
+      await request<void>('/api/notifications/read-all/', {
         method: 'POST',
         body: {},
-        baseUrl: RAG_API,
+        baseUrl: NOTIFICATION_API,
       })
     },
   },

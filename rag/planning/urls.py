@@ -4,11 +4,9 @@ from .views import (
     InternalCheckDocumentView,
     InternalSweepView,
     MilestoneDetailView,
+    MilestoneCompleteView,
     MilestoneListCreateView,
     MilestoneRejectView,
-    NotificationListView,
-    NotificationMarkAllReadView,
-    NotificationMarkReadView,
     PlanDetailView,
     PlanListCreateView,
 )
@@ -23,12 +21,8 @@ urlpatterns = [
 
     # Milestone operations
     path('milestones/<uuid:pk>/', MilestoneDetailView.as_view(), name='milestone-detail'),
+    path('milestones/<uuid:pk>/complete/', MilestoneCompleteView.as_view(), name='milestone-complete'),
     path('milestones/<uuid:pk>/reject/', MilestoneRejectView.as_view(), name='milestone-reject'),
-
-    # Notifications
-    path('notifications/', NotificationListView.as_view(), name='notification-list'),
-    path('notifications/read-all/', NotificationMarkAllReadView.as_view(), name='notification-read-all'),
-    path('notifications/<uuid:pk>/read/', NotificationMarkReadView.as_view(), name='notification-read'),
 
     # Internal (service-to-service, X-Service-Secret header)
     path('internal/check-document/', InternalCheckDocumentView.as_view(), name='internal-check-document'),

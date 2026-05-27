@@ -16,12 +16,14 @@ from __future__ import annotations
 
 import json
 import logging
+from urllib import error as urllib_error
+from urllib import request as urllib_request
 
 from django.conf import settings
 
 from query.clients import get_es_client, get_genai_client
 
-from .models import Milestone, Plan, PlanningNotification
+from .models import Milestone, Plan
 
 logger = logging.getLogger(__name__)
 
@@ -247,56 +249,55 @@ def check_milestone_against_text(
 # ---------------------------------------------------------------------------
 
 def _create_notification(milestone: Milestone) -> None:
-    """Create an in-app PlanningNotification for the plan owner and push via WebSocket."""
+    """Publish a notification event to the notification service."""
     plan = milestone.plan
-    notification = PlanningNotification.objects.create(
-        user_id=plan.created_by_user_id,
-        milestone=milestone,
-        message=(
+    payload = {
+        'user_id': plan.created_by_user_id,
+        'message': (
             f'Milestone "{milestone.title}" in plan "{plan.title}" was automatically '
             f'marked complete (confidence: {milestone.completion_confidence}). '
             f'Reference: {milestone.reference_filename or milestone.reference_document_id}. '
             f'You may reject this if it is incorrect.'
         ),
+        'notification_type': 'milestone_auto_completed',
+        'milestone': {
+            'id': str(milestone.id),
+            'title': milestone.title,
+            'plan_id': str(plan.id),
+            'plan_title': plan.title,
+            'status': milestone.status,
+            'reference_document_id': milestone.reference_document_id,
+            'reference_filename': milestone.reference_filename,
+            'reference_mac_ranking': getattr(milestone, 'reference_mac_ranking', None),
+        },
+    }
+
+    body = json.dumps(payload).encode('utf-8')
+    secret = getattr(settings, 'PLANNING_SERVICE_SECRET', '')
+    endpoint = getattr(
+        settings,
+        'NOTIFICATION_EVENT_URL',
+        'http://notification:8000/api/internal/notifications/planning-event/',
     )
 
-    # Push to the plan owner's live WebSocket connection (if any).
-    # Failures are swallowed — the DB record is the source of truth.
-    try:
-        from asgiref.sync import async_to_sync
-        from channels.layers import get_channel_layer
+    headers = {
+        'Content-Type': 'application/json',
+        'X-Service-Secret': secret,
+    }
 
-        channel_layer = get_channel_layer()
-        if channel_layer:
-            async_to_sync(channel_layer.group_send)(
-                f"notif_user_{notification.user_id}",
-                {
-                    "type": "notification.message",
-                    "data": {
-                        "id": str(notification.id),
-                        "message": notification.message,
-                        "is_read": notification.is_read,
-                        "created_at": notification.created_at.isoformat(),
-                        "notification_type": "milestone_auto_completed",
-                        "milestone": {
-                            "id": str(milestone.id),
-                            "title": milestone.title,
-                            "plan_id": str(plan.id),
-                            "plan_title": plan.title,
-                            "status": milestone.status,
-                            "reference_document_id": milestone.reference_document_id,
-                            "reference_filename": milestone.reference_filename,
-                            "reference_mac_ranking": getattr(milestone, "reference_mac_ranking", None),
-                        },
-                    },
-                },
-            )
-            logger.debug(
-                "WS push sent for notification user_id=%s milestone=%s",
-                notification.user_id, milestone.id,
-            )
+    try:
+        req = urllib_request.Request(endpoint, data=body, headers=headers, method='POST')
+        with urllib_request.urlopen(req, timeout=10) as response:
+            if response.status not in (200, 201, 202):
+                logger.warning(
+                    'Notification event returned non-success status=%s milestone=%s',
+                    response.status,
+                    milestone.id,
+                )
+    except urllib_error.HTTPError as exc:
+        logger.warning('Notification event publish failed with status=%s: %s', exc.code, exc)
     except Exception as exc:
-        logger.warning("WS push failed (non-fatal): %s", exc)
+        logger.warning('Notification event publish failed (non-fatal): %s', exc)
 
 
 # ---------------------------------------------------------------------------
