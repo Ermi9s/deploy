@@ -66,7 +66,6 @@ export default function DrivePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [previewPanelOpen, setPreviewPanelOpen] = useState(false)
-  const [previewPanelOpen, setPreviewPanelOpen] = useState(false)
   const [previewPaneWidth, setPreviewPaneWidth] = useState(DEFAULT_PREVIEW_PANE_WIDTH)
   const [isResizingPreviewPane, setIsResizingPreviewPane] = useState(false)
   const browseSectionRef = useRef<HTMLElement | null>(null)
