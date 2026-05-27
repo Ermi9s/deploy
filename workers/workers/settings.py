@@ -132,6 +132,20 @@ CELERY_TASK_ROUTES = {
     'workers.handle_document_ingestion_job': {'queue': 'document_ingestion_jobs'},
 }
 
+# --- Celery Beat Periodic Milestone Sweep ---
+CELERY_BEAT_SCHEDULE_FILENAME = '/tmp/celerybeat-schedule'
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+_SWEEP_HOURS = int(os.getenv('MILESTONE_SWEEP_INTERVAL_HOURS', '1'))
+
+from celery.schedules import crontab  # noqa: E402
+CELERY_BEAT_SCHEDULE = {
+    'sweep-open-milestones': {
+        'task': 'planning.trigger_milestone_sweep',
+        'schedule': crontab(minute=0, hour=f'*/{_SWEEP_HOURS}'),
+    },
+}
+
 ELASTICSEARCH_URL = os.getenv('ELASTICSEARCH_URL', 'http://elasticsearch:9200')
 ELASTICSEARCH_INDEX = os.getenv('ELASTICSEARCH_INDEX', 'documents_chunks')
 GEMINI_EMBEDDING_MODEL = os.getenv('GEMINI_EMBEDDING_MODEL', 'text-embedding-004')

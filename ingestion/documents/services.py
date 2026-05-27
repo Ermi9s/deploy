@@ -78,6 +78,24 @@ def get_task_progress(task_id: str | None) -> dict[str, Any]:
 
 
 def sync_document_status(document: UploadedDocument) -> dict[str, Any]:
+    # Auto-heal documents that were corrupted by the old Redis expiration bug.
+    # If a document is 'queued' but has a completed_at timestamp, we restore its status.
+    if document.status == UploadedDocument.Status.QUEUED and document.completed_at is not None:
+        restored_status = UploadedDocument.Status.FAILED if document.error_message else UploadedDocument.Status.COMPLETED
+        document.status = restored_status
+        document.progress = 100
+        document.stage = 'completed' if restored_status == UploadedDocument.Status.COMPLETED else 'failed'
+        document.save(update_fields=['status', 'progress', 'stage', 'updated_at'])
+
+    # Prevent reverting terminal states if Celery drops the result from Redis over time.
+    if document.status in {UploadedDocument.Status.COMPLETED, UploadedDocument.Status.FAILED}:
+        return {
+            'status': document.status,
+            'progress': document.progress,
+            'stage': document.stage,
+            'message': 'Completed' if document.status == UploadedDocument.Status.COMPLETED else document.error_message,
+        }
+
     progress_data = get_task_progress(document.task_id)
     status = progress_data['status']
 

@@ -83,6 +83,7 @@ services:
     build:
       context: ./ingestion
       dockerfile: Dockerfile
+    command: daphne -b 0.0.0.0 -p 8000 ingestion.asgi:application
     env_file:
       - ./ingestion/.env
     volumes:
@@ -129,6 +130,8 @@ services:
       - ./rag/.env
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - PLANNING_SERVICE_SECRET=${PLANNING_SERVICE_SECRET}
+      - MILESTONE_SWEEP_INTERVAL_HOURS=${MILESTONE_SWEEP_INTERVAL_HOURS:-1}
     volumes:
       - ./rag:/app
     ports:
@@ -179,9 +182,12 @@ services:
     build:
       context: ./workers
       dockerfile: Dockerfile
-    command: celery -A workers worker --loglevel=info --queues=document_ingestion_jobs,default
+    command: celery -A workers worker -B --loglevel=info --queues=document_ingestion_jobs,default
     env_file:
       - ./workers/.env
+    environment:
+      - RAG_INTERNAL_URL=http://rag:8000
+      - PLANNING_SERVICE_SECRET=${PLANNING_SERVICE_SECRET}
     volumes:
       - ./workers:/app
       - shared_uploads:/shared/uploads
@@ -194,6 +200,8 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
+      rag:
+        condition: service_started
 
 
 volumes:

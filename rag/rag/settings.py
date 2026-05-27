@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'corsheaders',
     'query',
+    'planning',
 ]
 
 ASGI_APPLICATION = 'rag.asgi.application'
@@ -190,3 +191,8 @@ CORS_ALLOWED_ORIGINS = [
     if origin.strip()
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+# --- Planning App ---
+# Shared secret used by the workers service to authenticate internal
+# HTTP calls to /api/planning/internal/* without a user JWT.
+PLANNING_SERVICE_SECRET = os.getenv('PLANNING_SERVICE_SECRET', '')
