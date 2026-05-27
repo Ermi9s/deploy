@@ -40,6 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'job_handlers',
+    'channels',
+    # Mirror of the RAG service's report app — managed=False, so workers
+    # never run migrations for it. Required for ORM access to shared tables.
+    'rag_report',
 ]
 
 MIDDLEWARE = [
@@ -77,8 +81,12 @@ WSGI_APPLICATION = 'workers.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'okm'),
+        'USER': os.getenv('DB_USER', 'okm'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'postgres'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
@@ -130,6 +138,7 @@ CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_DEFAULT_QUEUE = 'default'
 CELERY_TASK_ROUTES = {
     'workers.handle_document_ingestion_job': {'queue': 'document_ingestion_jobs'},
+    'job_handlers.tasks.generate_report_task': {'queue': 'report_generation_jobs'},
 }
 
 # --- Celery Beat Periodic Milestone Sweep ---
@@ -154,4 +163,21 @@ CELERY_BEAT_SCHEDULE = {
 ELASTICSEARCH_URL = os.getenv('ELASTICSEARCH_URL', 'http://elasticsearch:9200')
 ELASTICSEARCH_INDEX = os.getenv('ELASTICSEARCH_INDEX', 'documents_chunks')
 GEMINI_EMBEDDING_MODEL = os.getenv('GEMINI_EMBEDDING_MODEL', 'text-embedding-004')
+GEMINI_GENERATIVE_MODEL = os.getenv('GEMINI_GENERATIVE_MODEL', 'gemini-2.0-flash')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 UPLOAD_ROOT = os.getenv('UPLOAD_ROOT', '/shared/uploads')
+
+# Report generation
+REPORT_TOP_K_PER_AGENDA = int(os.getenv('REPORT_TOP_K_PER_AGENDA', '8'))
+REPORT_MAX_AGENDAS = int(os.getenv('REPORT_MAX_AGENDAS', '10'))
+
+# Redis channel layer (for pushing WS progress from Celery tasks)
+REDIS_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [REDIS_URL],
+        },
+    }
+}

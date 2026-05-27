@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'corsheaders',
     'query',
+    'report',
     'planning',
 ]
 
@@ -192,6 +193,17 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
+# --- Internal service URLs (server-to-server, not proxied via Next.js) ---
+MANAGEMENT_API_INTERNAL = os.getenv('MANAGEMENT_API_INTERNAL', 'http://management:8000')
+INGESTION_API_INTERNAL = os.getenv('INGESTION_API_INTERNAL', 'http://ingestion:8000')
+
+# --- Celery broker (RAG only dispatches tasks — workers service runs the workers) ---
+# Only the broker URL is needed here; the full Celery config lives in the workers service.
+CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
+
+# --- Report generation ---
+REPORT_TOP_K_PER_AGENDA = int(os.getenv('REPORT_TOP_K_PER_AGENDA', '3'))
+REPORT_MAX_AGENDAS = int(os.getenv('REPORT_MAX_AGENDAS', '10'))
 # --- Planning App ---
 # Shared secret used by the workers service to authenticate internal
 # HTTP calls to /api/planning/internal/* without a user JWT.
