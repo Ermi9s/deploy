@@ -66,6 +66,7 @@ export default function DrivePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [treePanelOpen, setTreePanelOpen] = useState(true)
+  const [previewPanelOpen, setPreviewPanelOpen] = useState(false)
   const [previewPaneWidth, setPreviewPaneWidth] = useState(DEFAULT_PREVIEW_PANE_WIDTH)
   const [isResizingPreviewPane, setIsResizingPreviewPane] = useState(false)
   const browseSectionRef = useRef<HTMLElement | null>(null)
@@ -175,6 +176,7 @@ export default function DrivePage() {
               sortAsc={sortAsc}
               sortLabel={sortLabel}
               treePanelOpen={treePanelOpen}
+              previewPanelOpen={previewPanelOpen}
               isCreatingFolder={isCreatingFolder}
               folderName={folderName}
               searchQuery={searchQuery}
@@ -187,6 +189,7 @@ export default function DrivePage() {
               loadingFileVersions={loadingFileVersions}
               fileVersions={fileVersions}
               onToggleTreePanel={() => setTreePanelOpen((p) => !p)}
+              onTogglePreviewPanel={() => setPreviewPanelOpen((p) => !p)}
               onSetViewMode={setViewMode}
               onSetSortBy={setSortBy}
               onToggleSortAsc={() => setSortAsc((p) => !p)}
@@ -226,23 +229,34 @@ export default function DrivePage() {
             {/* 3-column layout: tree | files | preview */}
             <section
               ref={browseSectionRef}
-              className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(320px,var(--preview-width))] lg:grid-cols-[minmax(0,var(--tree-width,260px))_minmax(0,1fr)_minmax(320px,var(--preview-width))]"
+              className={`grid gap-0 overflow-hidden rounded-xl border border-slate-200 bg-white h-[calc(100vh-14rem)] ${
+                treePanelOpen && previewPanelOpen
+                  ? 'grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(320px,var(--preview-width))] lg:grid-cols-[minmax(200px,var(--tree-width,260px))_minmax(0,1fr)_minmax(320px,var(--preview-width))]'
+                  : treePanelOpen && !previewPanelOpen
+                    ? 'grid-cols-1 lg:grid-cols-[minmax(200px,var(--tree-width,260px))_minmax(0,1fr)]'
+                    : !treePanelOpen && previewPanelOpen
+                      ? 'grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(320px,var(--preview-width))]'
+                      : 'grid-cols-1'
+              }`}
               style={{ '--preview-width': `${previewPaneWidth}px` } as React.CSSProperties}
             >
               {/* Desktop sidebar tree */}
               <aside
-                className={`hidden rounded-xl border border-slate-200 bg-white p-3 lg:block transition-all duration-300 ${
-                  treePanelOpen ? 'opacity-100' : 'w-0 overflow-hidden border-none p-0 opacity-0'
+                className={`hidden lg:flex flex-col border-r border-slate-200 bg-slate-50/50 p-3 transition-all duration-300 overflow-hidden ${
+                  treePanelOpen ? 'opacity-100' : 'w-0 border-none p-0 opacity-0'
                 }`}
               >
+                <div className="mb-1 px-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  Locations
+                </div>
                 <button
                   type="button"
                   onClick={() => void navigateToPath([ROOT_CRUMB])}
-                  className={`mb-2 flex w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-sm ${
-                    !currentFolderId ? 'bg-blue-100 text-blue-900' : 'text-slate-700 hover:bg-slate-100'
+                  className={`mb-2 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-medium transition-colors ${
+                    !currentFolderId ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-200/50 hover:text-slate-900'
                   }`}
                 >
-                  <Folder className="h-4 w-4" />
+                  <Folder className={`h-4 w-4 ${!currentFolderId ? 'text-primary' : 'text-slate-400'}`} fill={!currentFolderId ? 'currentColor' : 'none'} fillOpacity={0.2} />
                   {ROOT_CRUMB.name}
                 </button>
                 {loadingTreeNodes.has(ROOT_KEY) ? (
@@ -269,7 +283,7 @@ export default function DrivePage() {
               </aside>
 
               {/* File list / grid */}
-              <div className="rounded-xl border border-slate-200 bg-white lg:h-[calc(100vh-7.5rem)] lg:overflow-y-auto">
+              <div className="bg-white overflow-y-auto flex-1 min-w-0">
                 <DriveContent
                   items={filteredAndSortedItems}
                   loading={loading}
@@ -290,22 +304,26 @@ export default function DrivePage() {
               </div>
 
               {/* Right-hand preview / metadata panel */}
-              <PreviewPanel
-                selectedItem={selectedItem}
-                previewUrl={previewUrl}
-                previewLoading={previewLoading}
-                previewError={previewError}
-                previewVersion={previewVersion}
-                selectedVersions={selectedVersions}
-                ingestionByDocumentId={ingestionByDocumentId}
-                onDownload={(item, v) => void handleDownload(item, v)}
-                onPreviewVersion={(item, v) => void openPreview(item, v)}
-                onRefreshVersions={(id) => void ensureVersionsLoaded(id, true)}
-                onStartResize={() => setIsResizingPreviewPane(true)}
-                onResetWidth={() => setPreviewPaneWidth(DEFAULT_PREVIEW_PANE_WIDTH)}
-                formatDate={formatDate}
-                formatFileSize={formatFileSize}
-              />
+              {previewPanelOpen && (
+                <div className="border-l border-slate-200 bg-slate-50/50">
+                  <PreviewPanel
+                    selectedItem={selectedItem}
+                    previewUrl={previewUrl}
+                    previewLoading={previewLoading}
+                    previewError={previewError}
+                    previewVersion={previewVersion}
+                    selectedVersions={selectedVersions}
+                    ingestionByDocumentId={ingestionByDocumentId}
+                    onDownload={(item, v) => void handleDownload(item, v)}
+                    onPreviewVersion={(item, v) => void openPreview(item, v)}
+                    onRefreshVersions={(id) => void ensureVersionsLoaded(id, true)}
+                    onStartResize={() => setIsResizingPreviewPane(true)}
+                    onResetWidth={() => setPreviewPaneWidth(DEFAULT_PREVIEW_PANE_WIDTH)}
+                    formatDate={formatDate}
+                    formatFileSize={formatFileSize}
+                  />
+                </div>
+              )}
             </section>
         </div>
 

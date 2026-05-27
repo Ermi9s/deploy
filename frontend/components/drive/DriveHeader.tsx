@@ -23,6 +23,7 @@ import {
   List,
   Grid3X3,
   Menu,
+  PanelRight,
   Plus,
   RefreshCw,
   Upload,
@@ -44,6 +45,7 @@ interface DriveHeaderProps {
   sortAsc: boolean
   sortLabel: string
   treePanelOpen: boolean
+  previewPanelOpen: boolean
   isCreatingFolder: boolean
   folderName: string
   searchQuery: string
@@ -57,6 +59,7 @@ interface DriveHeaderProps {
   loadingFileVersions: Set<string>
   fileVersions: Record<string, FileVersion[]>
   onToggleTreePanel: () => void
+  onTogglePreviewPanel: () => void
   onSetViewMode: (mode: ViewMode) => void
   onSetSortBy: (by: SortBy) => void
   onToggleSortAsc: () => void
@@ -87,6 +90,7 @@ export function DriveHeader({
   sortAsc,
   sortLabel,
   treePanelOpen,
+  previewPanelOpen,
   isCreatingFolder,
   folderName,
   searchQuery,
@@ -99,6 +103,7 @@ export function DriveHeader({
   loadingFileVersions,
   fileVersions,
   onToggleTreePanel,
+  onTogglePreviewPanel,
   onSetViewMode,
   onSetSortBy,
   onToggleSortAsc,
@@ -116,10 +121,9 @@ export function DriveHeader({
   formatDate,
 }: DriveHeaderProps) {
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-4 shadow-sm">
-      <div className="min-w-0">
-        <h1 className="text-xl font-display font-semibold text-foreground tracking-tight">Object Browser</h1>
-        <p className="text-sm text-muted-foreground">{currentFolderName}</p>
+    <header className="flex flex-wrap items-center justify-between gap-4 py-3 px-4 border-b border-border bg-background shadow-sm z-10 sticky top-0 rounded-t-xl">
+      <div className="min-w-0 flex items-center gap-2">
+        <h1 className="text-lg font-display font-semibold text-foreground tracking-tight">{currentFolderName}</h1>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -173,8 +177,51 @@ export function DriveHeader({
           </SheetContent>
         </Sheet>
 
+        {/* Action Buttons */}
+        <div className="flex items-center gap-1">
+          {/* New Folder */}
+          {isCreatingFolder ? (
+            <div className="flex items-center gap-2">
+              <Input
+                id="new-folder-name"
+                autoFocus
+                placeholder="Folder name"
+                value={folderName}
+                onChange={(e) => onFolderNameChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') onCreateFolder()
+                  if (e.key === 'Escape') onCancelFolder()
+                }}
+                className="h-8 w-32 text-sm rounded-md"
+              />
+              <Button size="sm" onClick={onCreateFolder} className="h-8 rounded-md px-2">
+                Create
+              </Button>
+              <Button size="sm" variant="ghost" onClick={onCancelFolder} className="h-8 rounded-md px-2 text-muted-foreground">
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button size="sm" variant="ghost" onClick={onNewFolderClick} className="rounded-md h-8 px-2 text-muted-foreground hover:bg-accent hover:text-foreground">
+              <FolderPlus className="h-4 w-4" />
+            </Button>
+          )}
+
+          {/* Upload */}
+          <Button size="sm" variant="ghost" onClick={onUploadClick} className="rounded-md h-8 px-2 text-muted-foreground hover:bg-accent hover:text-foreground">
+            <Upload className="h-4 w-4" />
+          </Button>
+
+          {/* Refresh */}
+          <Button size="sm" variant="ghost" onClick={onRefresh} aria-label="Refresh" className="rounded-md h-8 px-2 text-muted-foreground hover:bg-accent hover:text-foreground">
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="h-4 w-px bg-border mx-1" />
+
         {/* View mode toggle */}
-        <div className="flex items-center rounded-full border border-border bg-accent/50 p-1">
+        <div className="flex items-center rounded-md border border-border bg-accent/50 p-0.5">
           <button
             type="button"
             onClick={() => onSetViewMode('list')}
@@ -204,10 +251,8 @@ export function DriveHeader({
         {/* Sort dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="rounded-full bg-background">
-              <ArrowDownUp className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
-              {sortLabel}
-              <ChevronDown className="ml-1 h-3.5 w-3.5 opacity-60" />
+            <Button variant="ghost" size="sm" className="rounded-md h-8 px-2 text-muted-foreground hover:bg-accent hover:text-foreground">
+              <ArrowDownUp className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44 rounded-xl">
@@ -227,51 +272,22 @@ export function DriveHeader({
         <div className="relative hidden md:block">
           <Input
             id="drive-search"
-            placeholder="Search files…"
+            placeholder="Search"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="h-9 w-48 text-sm rounded-full bg-accent/50 border-transparent focus-visible:bg-background focus-visible:border-primary transition-all"
+            className="h-8 w-48 text-sm rounded-md bg-accent/50 border-transparent focus-visible:bg-background focus-visible:border-primary transition-all"
           />
         </div>
-
-        {/* Upload */}
-        <Button size="sm" onClick={onUploadClick} className="rounded-full h-9">
-          <Upload className="mr-1.5 h-4 w-4" />
-          Upload
-        </Button>
-
-        {/* New Folder */}
-        {isCreatingFolder ? (
-          <div className="flex items-center gap-2">
-            <Input
-              id="new-folder-name"
-              autoFocus
-              placeholder="Folder name"
-              value={folderName}
-              onChange={(e) => onFolderNameChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') onCreateFolder()
-                if (e.key === 'Escape') onCancelFolder()
-              }}
-              className="h-9 w-36 text-sm rounded-full"
-            />
-            <Button size="sm" onClick={onCreateFolder} className="h-9 rounded-full">
-              Create
-            </Button>
-            <Button size="sm" variant="ghost" onClick={onCancelFolder} className="h-9 rounded-full text-muted-foreground">
-              Cancel
-            </Button>
-          </div>
-        ) : (
-          <Button size="sm" variant="outline" onClick={onNewFolderClick} className="rounded-full bg-background h-9">
-            <FolderPlus className="mr-1.5 h-4 w-4 text-muted-foreground" />
-            New Folder
-          </Button>
-        )}
-
-        {/* Refresh */}
-        <Button size="sm" variant="ghost" onClick={onRefresh} aria-label="Refresh" className="rounded-full h-9 w-9 p-0 text-muted-foreground">
-          <RefreshCw className="h-4 w-4" />
+        
+        {/* Preview Panel Toggle */}
+        <Button
+          variant={previewPanelOpen ? "secondary" : "ghost"}
+          size="sm"
+          onClick={onTogglePreviewPanel}
+          className="rounded-md h-8 px-2"
+          aria-label="Toggle Preview Panel"
+        >
+          <PanelRight className="h-4 w-4" />
         </Button>
       </div>
     </header>
