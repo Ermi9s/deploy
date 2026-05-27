@@ -14,7 +14,7 @@ RUN python -m pip install --default-timeout=100 --retries=10 --no-cache-dir --up
 COPY --chown=app:app . /app
 RUN chmod +x /app/entrypoint.sh
 
-ENV DJANGO_WSGI_MODULE=notification.wsgi:application
+ENV ASGI_APP=notification.asgi:application
 ENV DJANGO_SETTINGS_MODULE=notification.settings
 
 # Generate migrations at build time (runs as root — no permission issues)

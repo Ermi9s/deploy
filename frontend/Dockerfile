@@ -12,9 +12,11 @@ COPY . .
 ARG MANAGEMENT_API=http://management:8000
 ARG INGESTION_API=http://ingestion:8000
 ARG RAG_API=http://rag:8000
+ARG NOTIFICATION_API=http://notification:8000
 ENV MANAGEMENT_API=$MANAGEMENT_API
 ENV INGESTION_API=$INGESTION_API
 ENV RAG_API=$RAG_API
+ENV NOTIFICATION_API=$NOTIFICATION_API
 
 RUN pnpm build
 
@@ -26,6 +28,7 @@ WORKDIR /app
 ENV MANAGEMENT_API=http://management:8000
 ENV INGESTION_API=http://ingestion:8000
 ENV RAG_API=http://rag:8000
+ENV NOTIFICATION_API=http://notification:8000
 
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/package.json ./

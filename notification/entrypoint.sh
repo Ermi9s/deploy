@@ -15,9 +15,8 @@ if [ "$#" -gt 0 ]; then
   exec "$@"
 fi
 
-: "${DJANGO_WSGI_MODULE:=notification.wsgi:application}"
-: "${GUNICORN_BIND:=0.0.0.0:8000}"
-: "${GUNICORN_WORKERS:=3}"
-: "${GUNICORN_TIMEOUT:=120}"
+: "${ASGI_APP:=notification.asgi:application}"
+: "${DAPHNE_BIND:=0.0.0.0}"
+: "${DAPHNE_PORT:=8000}"
 
-exec gunicorn "$DJANGO_WSGI_MODULE" --bind "$GUNICORN_BIND" --workers "$GUNICORN_WORKERS" --timeout "$GUNICORN_TIMEOUT"
+exec daphne -b "$DAPHNE_BIND" -p "$DAPHNE_PORT" "$ASGI_APP"

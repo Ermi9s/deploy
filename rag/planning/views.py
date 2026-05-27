@@ -7,9 +7,8 @@ Public endpoints (JWT required):
   GET  POST  /api/planning/plans/{id}/milestones/
   PATCH DELETE  /api/planning/milestones/{id}/
   POST  /api/planning/milestones/{id}/reject/
-  GET  /api/planning/notifications/
-  POST /api/planning/notifications/{id}/read/
-  POST /api/planning/notifications/read-all/
+
+Notification REST + WebSocket endpoints are served by the notification service.
 
 Internal endpoints (X-Service-Secret header required):
   POST /api/planning/internal/check-document/
@@ -26,14 +25,13 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Milestone, Plan, PlanningNotification
+from .models import Milestone, Plan
 from .serializers import (
     DocumentCheckRequestSerializer,
     MilestoneCreateSerializer,
     MilestoneSerializer,
     MilestoneUpdateSerializer,
     PlanListSerializer,
-    PlanningNotificationSerializer,
     PlanSerializer,
 )
 from .services import process_document_for_milestones, sweep_all_open_milestones
@@ -239,6 +237,15 @@ class MilestoneDetailView(APIView):
         except Milestone.DoesNotExist:
             return None
 
+    def _apply_manual_completion(self, request, pk):
+        dept_id = _department_id_from_request(request)
+        milestone = self._get_milestone(pk, dept_id)
+        if not milestone:
+            return Response({'detail': 'Milestone not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        milestone.mark_manually_complete()
+        return Response(MilestoneSerializer(milestone, context={'request': request}).data)
+
     @extend_schema(
         summary='Update or manually complete a milestone',
         request=MilestoneUpdateSerializer,
@@ -268,6 +275,13 @@ class MilestoneDetailView(APIView):
         return Response(MilestoneSerializer(milestone, context={'request': request}).data)
 
     @extend_schema(
+        summary='Mark milestone as manually completed',
+        responses={200: MilestoneSerializer},
+    )
+    def post(self, request, pk):
+        return self._apply_manual_completion(request, pk)
+
+    @extend_schema(
         summary='Delete milestone',
         responses={204: OpenApiResponse(description='Deleted')},
     )
@@ -278,6 +292,19 @@ class MilestoneDetailView(APIView):
             return Response({'detail': 'Milestone not found.'}, status=status.HTTP_404_NOT_FOUND)
         milestone.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MilestoneCompleteView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        summary='Mark milestone as manually completed',
+        responses={200: MilestoneSerializer},
+    )
+    def post(self, request, pk):
+        detail_view = MilestoneDetailView()
+        detail_view.request = request
+        return detail_view._apply_manual_completion(request, pk)
 
 
 class MilestoneRejectView(APIView):
@@ -324,65 +351,6 @@ class MilestoneRejectView(APIView):
         milestone.reject_completion()
         logger.info('Milestone %s rejected by user %s', milestone.id, user_id)
         return Response(MilestoneSerializer(milestone, context={'request': request}).data)
-
-
-# ---------------------------------------------------------------------------
-# Notifications
-# ---------------------------------------------------------------------------
-
-class NotificationListView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    @extend_schema(
-        summary='List in-app notifications',
-        description='Returns planning notifications for the authenticated user, newest first.',
-        responses={200: PlanningNotificationSerializer(many=True)},
-    )
-    def get(self, request):
-        user_id = _user_id_from_request(request)
-        qs = PlanningNotification.objects.filter(user_id=user_id).select_related('milestone__plan')
-        # Optionally filter by unread only
-        unread_only = request.query_params.get('unread', '').lower() == 'true'
-        if unread_only:
-            qs = qs.filter(is_read=False)
-        paginator = PlanPagination()
-        page = paginator.paginate_queryset(qs, request)
-        return paginator.get_paginated_response(
-            PlanningNotificationSerializer(page, many=True, context={'request': request}).data
-        )
-
-
-class NotificationMarkReadView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    @extend_schema(
-        summary='Mark notification as read',
-        responses={200: PlanningNotificationSerializer},
-    )
-    def post(self, request, pk):
-        user_id = _user_id_from_request(request)
-        try:
-            notification = PlanningNotification.objects.get(id=pk, user_id=user_id)
-        except PlanningNotification.DoesNotExist:
-            return Response({'detail': 'Notification not found.'}, status=status.HTTP_404_NOT_FOUND)
-        notification.is_read = True
-        notification.save(update_fields=['is_read'])
-        return Response(PlanningNotificationSerializer(notification, context={'request': request}).data)
-
-
-class NotificationMarkAllReadView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    @extend_schema(
-        summary='Mark all notifications as read',
-        responses={200: {'type': 'object', 'properties': {'marked': {'type': 'integer'}}}},
-    )
-    def post(self, request):
-        user_id = _user_id_from_request(request)
-        count = PlanningNotification.objects.filter(
-            user_id=user_id, is_read=False
-        ).update(is_read=True)
-        return Response({'marked': count})
 
 
 # ---------------------------------------------------------------------------

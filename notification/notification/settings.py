@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,13 +33,20 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     # 'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'channels',
+    'notifications',
 ]
+
+ASGI_APPLICATION = 'notification.asgi.application'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -121,3 +129,30 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.getenv('STATIC_ROOT', '/tmp/staticfiles')
+
+ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', '*').split(',') if host.strip()]
+
+REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [REDIS_URL],
+        },
+    }
+}
+
+SIMPLE_JWT = {
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': os.getenv('SHARED_JWT_SECRET', SECRET_KEY),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTTokenUserAuthentication',
+    ],
+}
+
+PLANNING_SERVICE_SECRET = os.getenv('PLANNING_SERVICE_SECRET', '')

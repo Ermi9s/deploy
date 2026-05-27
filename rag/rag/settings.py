@@ -196,3 +196,9 @@ CORS_ALLOW_CREDENTIALS = True
 # Shared secret used by the workers service to authenticate internal
 # HTTP calls to /api/planning/internal/* without a user JWT.
 PLANNING_SERVICE_SECRET = os.getenv('PLANNING_SERVICE_SECRET', '')
+
+# Internal notification event sink (notification service).
+NOTIFICATION_EVENT_URL = os.getenv(
+    'NOTIFICATION_EVENT_URL',
+    'http://notification:8000/api/internal/notifications/planning-event/',
+)
