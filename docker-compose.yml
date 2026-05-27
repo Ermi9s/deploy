@@ -200,7 +200,6 @@ services:
     build:
       context: ./workers
       dockerfile: Dockerfile
-    command: celery -A workers worker --loglevel=info --queues=document_ingestion_jobs,report_generation_jobs,default
     env_file:
       - .env
       - ./workers/.env
