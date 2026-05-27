@@ -126,6 +126,7 @@ services:
       dockerfile: Dockerfile
     command: daphne -b 0.0.0.0 -p 8000 rag.asgi:application
     env_file:
+      - .env
       - ./rag/.env
     environment:
       - REDIS_URL=redis://redis:6379/0
@@ -179,8 +180,9 @@ services:
     build:
       context: ./workers
       dockerfile: Dockerfile
-    command: celery -A workers worker --loglevel=info --queues=document_ingestion_jobs,default
+    command: celery -A workers worker --loglevel=info --queues=document_ingestion_jobs,report_generation_jobs,default
     env_file:
+      - .env
       - ./workers/.env
     volumes:
       - ./workers:/app

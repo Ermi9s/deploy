@@ -317,3 +317,357 @@ def handle_document_ingestion_job(self, payload: dict[str, Any]) -> dict[str, An
 
     logger.info('Document ingestion completed document_id=%s chunks=%s', document_id, indexed_chunks)
     return result
+
+
+# ---------------------------------------------------------------------------
+# Report generation — Scatter-Gather RAG
+# ---------------------------------------------------------------------------
+
+import asyncio
+import uuid as _uuid
+from channels.layers import get_channel_layer
+
+
+
+def _push_ws_event(group_name: str, event: dict) -> None:
+    """Send a message to a Django-Channels group from synchronous Celery code."""
+    channel_layer = get_channel_layer()
+    if channel_layer is None:
+        return
+    loop = asyncio.new_event_loop()
+    try:
+        loop.run_until_complete(
+            channel_layer.group_send(group_name, {"type": "report.progress", **event})
+        )
+    finally:
+        loop.close()
+
+
+def _embed_query_sync(question: str) -> list[float]:
+    """Embed a query synchronously using the Gemini embedding model."""
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        raise RuntimeError('GEMINI_API_KEY is not set.')
+    model = os.getenv('GEMINI_EMBEDDING_MODEL', 'text-embedding-004')
+    client = genai.Client(api_key=api_key)
+    response = client.models.embed_content(model=model, contents=question)
+    return _embedding_values(response)
+
+
+def _retrieve_chunks_sync(
+    query_vector: list[float],
+    top_k: int,
+    department_id: str | None,
+    permission_ranking: int | None,
+) -> list[dict]:
+    """
+    Perform MAC-filtered k-NN search against Elasticsearch.
+
+    Applies the same nested-filter pattern used by the RAG chat consumer so
+    that department access rules are never violated during report generation.
+    """
+    es_url = os.getenv('ELASTICSEARCH_URL', 'http://elasticsearch:9200')
+    index_name = os.getenv('ELASTICSEARCH_INDEX', 'documents_chunks')
+    es = Elasticsearch(es_url)
+
+    knn_clause: dict = {
+        "field": "embedding",
+        "query_vector": query_vector,
+        "k": top_k,
+        "num_candidates": top_k * 10,
+    }
+
+    # MAC filter — mirrors retrieve_chunks() in the RAG service
+    if department_id and permission_ranking is not None:
+        knn_clause["filter"] = {
+            "nested": {
+                "path": "department_access",
+                "query": {
+                    "bool": {
+                        "must": [
+                            {"term": {"department_access.dept_id": str(department_id)}},
+                            {"range": {"department_access.min_ranking": {"lte": int(permission_ranking)}}},
+                        ]
+                    }
+                },
+            }
+        }
+
+    body = {
+        "knn": knn_clause,
+        "_source": ["document_id", "chunk_id", "text", "filename", "source_type"],
+        "size": top_k,
+    }
+
+    response = es.search(index=index_name, body=body)
+    chunks = []
+    for hit in response["hits"]["hits"]:
+        src = hit["_source"]
+        chunks.append({
+            "chunk_id": src.get("chunk_id", hit["_id"]),
+            "document_id": src.get("document_id", ""),
+            "filename": src.get("filename", ""),
+            "text": src.get("text", ""),
+            "score": hit["_score"],
+        })
+    return chunks
+
+
+def _draft_sub_report(agenda_text: str, chunks: list[dict]) -> str:
+    """Call Gemini to generate a focused sub-report section for one agenda."""
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        raise RuntimeError('GEMINI_API_KEY is not set.')
+    model = os.getenv('GEMINI_GENERATIVE_MODEL', 'gemini-2.0-flash')
+    client = genai.Client(api_key=api_key)
+
+    context_parts = [
+        f"--- Source {i} (file: {c['filename']}) ---\n{c['text']}"
+        for i, c in enumerate(chunks, start=1)
+    ]
+    context_block = "\n\n".join(context_parts)
+
+    prompt = (
+        "You are an expert analyst drafting a section of a formal organizational report. "
+        "Write a thorough, well-structured section ONLY for the agenda item below, "
+        "using ONLY the provided context. Use Markdown formatting (headers, bullets, bold). "
+        "If the context lacks sufficient information, state that clearly.\n\n"
+        f"### Agenda Item\n{agenda_text}\n\n"
+        f"### Context\n{context_block}\n\n"
+        "### Section Report"
+    )
+
+    response = client.models.generate_content(model=model, contents=prompt)
+    return (getattr(response, "text", None) or "").strip()
+
+
+def _synthesise_report(title: str, sections: list[tuple[str, str]]) -> str:
+    """Call Gemini to stitch sub-reports into a cohesive final report."""
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        raise RuntimeError('GEMINI_API_KEY is not set.')
+    model = os.getenv('GEMINI_GENERATIVE_MODEL', 'gemini-2.0-flash')
+    client = genai.Client(api_key=api_key)
+
+    sections_block = "\n\n".join(
+        f"## {agenda}\n{sub_report}" for agenda, sub_report in sections
+    )
+
+    prompt = (
+        "You are a senior technical writer. You have been given a set of independently "
+        "drafted sub-reports, one per agenda item. Your task is to synthesise them into "
+        "a single, cohesive, professionally formatted report with smooth transitions, "
+        "an executive summary, and a conclusion. Use Markdown. Do NOT add information "
+        "that is not present in the sub-reports.\n\n"
+        f"# Report Title: {title}\n\n"
+        f"{sections_block}\n\n"
+        "---\n"
+        "Now write the final synthesised report:"
+    )
+
+    response = client.models.generate_content(model=model, contents=prompt)
+    return (getattr(response, "text", None) or "").strip()
+
+
+def _process_one_agenda(
+    agenda_id: str,
+    agenda_text: str,
+    order: int,
+    department_id: str | None,
+    permission_ranking: int | None,
+    top_k: int,
+    group_name: str,
+) -> tuple[str, list[dict], str]:
+    """
+    Full pipeline for one agenda item (runs in a thread-pool executor):
+      embed → retrieve (MAC-filtered) → draft sub-report
+    Returns (sub_report_text, sources_list, error_message)
+    """
+    try:
+        _push_ws_event(group_name, {
+            "event_type": "agenda_progress",
+            "agenda_id": agenda_id,
+            "order": order,
+            "message": f"Retrieving documents for agenda {order + 1}…",
+        })
+
+        vector = _embed_query_sync(agenda_text)
+        chunks = _retrieve_chunks_sync(vector, top_k, department_id, permission_ranking)
+
+        sources = [
+            {
+                "document_id": c["document_id"],
+                "chunk_id": c["chunk_id"],
+                "filename": c["filename"],
+                "score": round(c.get("score", 0.0), 4),
+            }
+            for c in chunks
+        ]
+
+        _push_ws_event(group_name, {
+            "event_type": "agenda_progress",
+            "agenda_id": agenda_id,
+            "order": order,
+            "message": f"Drafting sub-report for agenda {order + 1}…",
+        })
+
+        sub_report = _draft_sub_report(agenda_text, chunks) if chunks else (
+            f"*No accessible documents found for agenda item: {agenda_text}*"
+        )
+
+        return sub_report, sources, ""
+
+    except Exception as exc:
+        logger.exception("Agenda %s processing failed: %s", agenda_id, exc)
+        return "", [], str(exc)
+
+
+@shared_task(
+    name='job_handlers.tasks.generate_report_task',
+    bind=True,
+    max_retries=0,
+)
+def generate_report_task(self, payload: dict) -> dict:
+    """
+    Scatter-Gather RAG report generation.
+
+    Receives a self-contained payload from the RAG service:
+      {
+        "job_id":             str (UUID),
+        "title":              str,
+        "department_id":      str | None,
+        "permission_ranking": int | None,
+        "top_k":              int,
+        "agendas": [{"id": str, "order": int, "text": str}, ...]
+      }
+
+    The worker reads everything it needs from the payload -- NO DB reads.
+    It only writes back results (status, sub_reports, final_report) via the
+    rag_report mirror models using .update() queryset calls.
+
+    Pipeline:
+      1. Mark job as running.
+      2. SCATTER: process each agenda in parallel (embed -> MAC-filtered ES -> draft).
+      3. GATHER: synthesise sub-reports into final report via Gemini.
+      4. Persist results; push WebSocket completion event.
+    """
+    from rag_report.models import ReportAgenda, ReportJob
+
+    job_id: str = payload["job_id"]
+    title: str = payload["title"]
+    department_id: str | None = payload.get("department_id")
+    permission_ranking: int | None = payload.get("permission_ranking")
+    top_k: int = int(payload.get("top_k", os.getenv("REPORT_TOP_K_PER_AGENDA", "8")))
+    agenda_items: list[dict] = payload.get("agendas", [])
+    group_name = f"report_{job_id}"
+    total = len(agenda_items)
+
+    # Mark job running (write-only -- no SELECT needed)
+    ReportJob.objects.filter(id=job_id).update(status="running")
+
+    _push_ws_event(group_name, {
+        "event_type": "progress",
+        "percent": 5,
+        "message": f"Starting report generation for {total} agenda(s)...",
+    })
+
+    # Mark all agendas running upfront so the UI shows live status immediately
+    agenda_ids = [a["id"] for a in agenda_items]
+    ReportAgenda.objects.filter(id__in=agenda_ids).update(status="running")
+
+    # -- SCATTER: parallel agenda processing ----------------------------------
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    futures_map: dict = {}
+    results: dict[str, tuple[str, list, str]] = {}  # agenda_id -> (sub_report, sources, error)
+
+    with ThreadPoolExecutor(max_workers=min(total, 5)) as executor:
+        for agenda in agenda_items:
+            future = executor.submit(
+                _process_one_agenda,
+                agenda["id"],
+                agenda["text"],
+                agenda["order"],
+                department_id,
+                permission_ranking,
+                top_k,
+                group_name,
+            )
+            futures_map[future] = agenda
+
+        completed_count = 0
+        for future in as_completed(futures_map):
+            agenda = futures_map[future]
+            sub_report, sources, error = future.result()
+            completed_count += 1
+            percent = 10 + int((completed_count / total) * 70)
+
+            if error:
+                ReportAgenda.objects.filter(id=agenda["id"]).update(
+                    status="failed",
+                    sub_report=f"*Error: {error}*",
+                    sources=[],
+                )
+            else:
+                ReportAgenda.objects.filter(id=agenda["id"]).update(
+                    status="completed",
+                    sub_report=sub_report,
+                    sources=sources,
+                )
+
+            results[agenda["id"]] = (sub_report, sources, error)
+
+            _push_ws_event(group_name, {
+                "event_type": "agenda_done",
+                "agenda_id": agenda["id"],
+                "order": agenda["order"],
+                "sub_report": sub_report,
+                "sources": sources,
+                "percent": percent,
+            })
+
+    # -- GATHER: synthesise ---------------------------------------------------
+    _push_ws_event(group_name, {
+        "event_type": "progress",
+        "percent": 85,
+        "message": "Synthesising final report...",
+    })
+
+    sections = [
+        (a["text"], results[a["id"]][0])
+        for a in agenda_items
+        if a["id"] in results and not results[a["id"]][2]  # no error
+    ]
+
+    if not sections:
+        error_msg = "All agenda items failed to retrieve content."
+        ReportJob.objects.filter(id=job_id).update(
+            status="failed", error_message=error_msg
+        )
+        _push_ws_event(group_name, {"event_type": "error", "message": error_msg})
+        return {"error": error_msg}
+
+    try:
+        final_report = _synthesise_report(title, sections)
+    except Exception as exc:
+        logger.exception("Report synthesis failed for job %s", job_id)
+        error_msg = str(exc)
+        ReportJob.objects.filter(id=job_id).update(
+            status="failed", error_message=error_msg
+        )
+        _push_ws_event(group_name, {"event_type": "error", "message": error_msg})
+        return {"error": error_msg}
+
+    ReportJob.objects.filter(id=job_id).update(
+        final_report=final_report, status="completed"
+    )
+
+    _push_ws_event(group_name, {
+        "event_type": "report_done",
+        "job_id": job_id,
+        "final_report": final_report,
+        "percent": 100,
+    })
+
+    logger.info("Report generation completed job_id=%s", job_id)
+    return {"job_id": job_id, "status": "completed"}
