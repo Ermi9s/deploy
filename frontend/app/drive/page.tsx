@@ -208,7 +208,7 @@ export default function DrivePage() {
             />
 
             {/* Breadcrumb */}
-            <div className="flex items-center gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2 text-sm">
+            <div className="flex items-center gap-1 overflow-x-auto rounded-xl border border-border bg-card p-2 text-sm">
               {currentPath.map((crumb, index) => (
                 <div className="flex items-center gap-1" key={`${crumb.id || ROOT_KEY}-${index}`}>
                   <Button
@@ -220,7 +220,7 @@ export default function DrivePage() {
                     {crumb.name}
                   </Button>
                   {index < currentPath.length - 1 && (
-                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   )}
                 </div>
               ))}
@@ -229,7 +229,7 @@ export default function DrivePage() {
             {/* 3-column layout: tree | files | preview */}
             <section
               ref={browseSectionRef}
-              className={`grid gap-0 overflow-hidden rounded-xl border border-slate-200 bg-white h-[calc(100vh-14rem)] ${
+              className={`grid gap-0 overflow-hidden rounded-xl border border-border bg-card h-[calc(100vh-14rem)] ${
                 treePanelOpen && previewPanelOpen
                   ? 'grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(320px,var(--preview-width))] lg:grid-cols-[minmax(200px,var(--tree-width,260px))_minmax(0,1fr)_minmax(320px,var(--preview-width))]'
                   : treePanelOpen && !previewPanelOpen
@@ -242,25 +242,25 @@ export default function DrivePage() {
             >
               {/* Desktop sidebar tree */}
               <aside
-                className={`hidden lg:flex flex-col border-r border-slate-200 bg-slate-50/50 p-3 transition-all duration-300 overflow-hidden ${
+                className={`hidden lg:flex flex-col border-r border-border bg-accent/30 p-3 transition-all duration-300 overflow-hidden ${
                   treePanelOpen ? 'opacity-100' : 'w-0 border-none p-0 opacity-0'
                 }`}
               >
-                <div className="mb-1 px-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <div className="mb-1 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Locations
                 </div>
                 <button
                   type="button"
                   onClick={() => void navigateToPath([ROOT_CRUMB])}
                   className={`mb-2 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-medium transition-colors ${
-                    !currentFolderId ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-200/50 hover:text-slate-900'
+                    !currentFolderId ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                   }`}
                 >
-                  <Folder className={`h-4 w-4 ${!currentFolderId ? 'text-primary' : 'text-slate-400'}`} fill={!currentFolderId ? 'currentColor' : 'none'} fillOpacity={0.2} />
+                  <Folder className={`h-4 w-4 ${!currentFolderId ? 'text-primary' : 'text-muted-foreground/70'}`} fill={!currentFolderId ? 'currentColor' : 'none'} fillOpacity={0.2} />
                   {ROOT_CRUMB.name}
                 </button>
                 {loadingTreeNodes.has(ROOT_KEY) ? (
-                  <p className="px-2 py-1 text-xs text-slate-400">Loading structure...</p>
+                  <p className="px-2 py-1 text-xs text-muted-foreground">Loading structure...</p>
                 ) : (
                   <DriveSidebarTree
                     parentId={null}
@@ -283,7 +283,7 @@ export default function DrivePage() {
               </aside>
 
               {/* File list / grid */}
-              <div className="bg-white overflow-y-auto flex-1 min-w-0">
+              <div className="bg-card overflow-y-auto flex-1 min-w-0">
                 <DriveContent
                   items={filteredAndSortedItems}
                   loading={loading}
@@ -305,7 +305,7 @@ export default function DrivePage() {
 
               {/* Right-hand preview / metadata panel */}
               {previewPanelOpen && (
-                <div className="border-l border-slate-200 bg-slate-50/50">
+                <div className="border-l border-border bg-accent/30">
                   <PreviewPanel
                     selectedItem={selectedItem}
                     previewUrl={previewUrl}

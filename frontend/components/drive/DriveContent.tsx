@@ -157,8 +157,8 @@ export function DriveContent({
   if (items.length === 0) {
     return (
       <div className="px-4 py-10 text-center">
-        <p className="font-medium text-slate-700">No items here yet</p>
-        <p className="text-sm text-slate-500">Upload files or create a folder to get started.</p>
+        <p className="font-medium text-foreground">No items here yet</p>
+        <p className="text-sm text-muted-foreground">Upload files or create a folder to get started.</p>
       </div>
     )
   }
@@ -175,21 +175,21 @@ export function DriveContent({
 
   if (viewMode === 'grid') {
     return (
-      <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2 p-4">
         {items.map((item) => (
           <button
             key={item.id}
             type="button"
-            className={`group relative flex flex-col items-center rounded-lg p-3 text-center transition-all duration-200 ${
+            className={`group relative flex flex-col items-center rounded-lg p-2 text-center transition-all duration-200 ${
               selectedItem?.id === item.id
                 ? 'bg-primary/10 ring-1 ring-primary/20'
-                : 'hover:bg-slate-100'
+                : 'hover:bg-accent/50'
             }`}
             onClick={() => handleClick(item)}
             onDoubleClick={() => handleDoubleClick(item)}
           >
             <div className="relative mb-2 flex items-center justify-center h-16 w-16">
-              <div className={`p-3 rounded-2xl transition-colors ${selectedItem?.id === item.id ? 'bg-primary/20' : 'bg-slate-100 group-hover:bg-white'}`}>
+              <div className={`p-3 rounded-2xl transition-colors ${selectedItem?.id === item.id ? 'bg-primary/20' : 'bg-muted group-hover:bg-background'}`}>
                 {item.type === 'folder' ? (
                   <Folder className="h-10 w-10 text-primary" fill="currentColor" fillOpacity={0.2} />
                 ) : (
@@ -204,7 +204,7 @@ export function DriveContent({
                     size="sm"
                     variant="ghost"
                     onClick={(e) => e.stopPropagation()}
-                    className="absolute -top-1 -right-1 h-6 w-6 p-0 rounded-full bg-white border border-slate-200 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity shadow-sm"
+                    className="absolute -top-1 -right-1 h-6 w-6 p-0 rounded-full bg-background border border-border opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity shadow-sm"
                   >
                     <MoreHorizontal className="h-3 w-3" />
                   </Button>
@@ -226,7 +226,7 @@ export function DriveContent({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <p className={`w-full truncate text-xs font-medium px-1 py-0.5 rounded ${selectedItem?.id === item.id ? 'bg-primary text-white' : 'text-slate-800'}`}>
+            <p className={`w-full truncate text-xs font-medium px-1 py-0.5 rounded ${selectedItem?.id === item.id ? 'bg-primary text-primary-foreground' : 'text-foreground'}`}>
               {item.name}
             </p>
             {item.type === 'file' && item.sourceDocumentId && (
@@ -243,18 +243,18 @@ export function DriveContent({
   // List view
   return (
     <div className="w-full">
-      <div className="grid grid-cols-12 border-b border-slate-200 bg-white px-4 py-2 text-[11px] font-semibold text-slate-500 sticky top-0 z-10">
+      <div className="grid grid-cols-12 border-b border-border bg-background px-4 py-2 text-[11px] font-semibold text-muted-foreground sticky top-0 z-10">
         <div className="col-span-6">Name</div>
         <div className="col-span-2">Date Modified</div>
         <div className="col-span-2">Size</div>
         <div className="col-span-2">Kind</div>
       </div>
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-border">
         {items.map((item) => (
           <div
             key={item.id}
             className={`group grid cursor-pointer grid-cols-12 items-center px-4 py-1.5 text-sm transition-colors ${
-              selectedItem?.id === item.id ? 'bg-primary/10' : 'hover:bg-slate-50'
+              selectedItem?.id === item.id ? 'bg-primary/10' : 'hover:bg-accent/30'
             }`}
             onClick={() => handleClick(item)}
             onDoubleClick={() => handleDoubleClick(item)}
@@ -268,18 +268,18 @@ export function DriveContent({
                 )}
               </div>
               <div className="min-w-0 flex-1 flex items-center gap-2">
-                <span className={`block truncate font-medium ${selectedItem?.id === item.id ? 'text-primary' : 'text-slate-800'}`}>
+                <span className={`block truncate font-medium ${selectedItem?.id === item.id ? 'text-primary' : 'text-foreground'}`}>
                   {item.name}
                 </span>
               </div>
             </div>
-            <div className="col-span-2 text-slate-500 text-xs">
+            <div className="col-span-2 text-muted-foreground text-xs">
               {formatDate(item.updatedAt || item.createdAt)}
             </div>
-            <div className="col-span-2 text-slate-500 text-xs">
+            <div className="col-span-2 text-muted-foreground text-xs">
               {item.type === 'folder' ? '--' : formatFileSize(item.fileSize)}
             </div>
-            <div className="col-span-2 flex items-center justify-between text-slate-500 text-xs capitalize pr-2">
+            <div className="col-span-2 flex items-center justify-between text-muted-foreground text-xs capitalize pr-2">
               <span>{item.type === 'folder' ? 'Folder' : item.fileType?.split('/')[1] || 'File'}</span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
