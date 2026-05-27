@@ -804,3 +804,82 @@ export const api = {
   },
 }
 
+
+// ---------------------------------------------------------------------------
+// Report module types
+// ---------------------------------------------------------------------------
+
+export interface ReportAgenda {
+  id: string
+  order: number
+  text: string
+  sub_report: string
+  sources: { document_id: string; chunk_id: string; filename: string; score: number }[]
+  status: 'pending' | 'running' | 'completed' | 'failed'
+}
+
+export interface ReportJobList {
+  id: string
+  title: string
+  status: 'pending' | 'running' | 'completed' | 'failed'
+  agendas_count: number
+  drive_item_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ReportJobDetail {
+  id: string
+  title: string
+  status: 'pending' | 'running' | 'completed' | 'failed'
+  final_report: string
+  error_message: string
+  agendas: ReportAgenda[]
+  drive_item_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+// ---------------------------------------------------------------------------
+// api.report — appended separately so it's tree-shakeable as a namespace
+// ---------------------------------------------------------------------------
+
+export const reportApi = {
+  async listJobs(): Promise<PaginatedResponse<ReportJobList>> {
+    return request<PaginatedResponse<ReportJobList>>('/api/report/jobs/', { baseUrl: RAG_API })
+  },
+
+  async createJob(payload: { title: string; agendas: string[] }): Promise<ReportJobDetail> {
+    return request<ReportJobDetail>('/api/report/jobs/', {
+      method: 'POST',
+      body: payload as unknown as JsonObject,
+      baseUrl: RAG_API,
+    })
+  },
+
+  async getJob(id: string): Promise<ReportJobDetail> {
+    return request<ReportJobDetail>(`/api/report/jobs/${id}/`, { baseUrl: RAG_API })
+  },
+
+  async deleteJob(id: string): Promise<void> {
+    return request<void>(`/api/report/jobs/${id}/`, {
+      method: 'DELETE',
+      baseUrl: RAG_API,
+    })
+  },
+
+  async storeToDrive(id: string): Promise<{ drive_item_id: string }> {
+    return request<{ drive_item_id: string }>(`/api/report/jobs/${id}/store/`, {
+      method: 'POST',
+      body: {},
+      baseUrl: RAG_API,
+    })
+  },
+
+  /** WebSocket URL for real-time report generation progress. */
+  getReportWsUrl(jobId: string): string {
+    if (typeof window === 'undefined') return ''
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    return `${protocol}//${window.location.host}/api/proxy/rag/ws/report/${jobId}/`
+  },
+}

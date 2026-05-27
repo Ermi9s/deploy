@@ -35,6 +35,7 @@ interface UploadModalProps {
   onOpenChange: (open: boolean) => void
   currentFolderId: string | null
   onUploadSuccess: () => void
+  initialFiles?: File[]
 }
 
 type Step = 'select' | 'classify' | 'review' | 'uploading'
@@ -51,12 +52,30 @@ export default function UploadModal({
   onOpenChange,
   currentFolderId,
   onUploadSuccess,
+  initialFiles,
 }: UploadModalProps) {
   const [step, setStep] = useState<Step>('select')
   const [fileQueue, setFileQueue] = useState<QueuedFile[]>([])
   const [departmentAccess, setDepartmentAccess] = useState<DepartmentAccessMap>({})
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  // Initialize with initialFiles when modal opens
+  React.useEffect(() => {
+    if (open && initialFiles && initialFiles.length > 0) {
+      const newFiles: QueuedFile[] = []
+      for (let i = 0; i < initialFiles.length; i++) {
+        const file = initialFiles[i]
+        newFiles.push({
+          id: `${file.name}-${file.size}-${Date.now()}-${i}`,
+          file,
+          status: 'queued',
+        })
+      }
+      setFileQueue(newFiles)
+      setStep('classify') // Skip select step if files are pre-provided
+    }
+  }, [open, initialFiles])
 
   // Drag and Drop handlers
   const handleDragOver = (e: React.DragEvent) => {
@@ -76,11 +95,14 @@ export default function UploadModal({
       const mime = file.type.toLowerCase()
       const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
 
-      // Validate: PDF or Images only
+      // Validate: PDF, Images, or Text/Markdown
       const isValid =
         mime === 'application/pdf' ||
         mime.startsWith('image/') ||
+        mime.startsWith('text/') ||
         ext === '.pdf' ||
+        ext === '.md' ||
+        ext === '.txt' ||
         ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.tiff'].some((e) => ext.endsWith(e))
 
       if (isValid) {

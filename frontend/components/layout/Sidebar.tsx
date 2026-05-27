@@ -16,7 +16,9 @@ import {
   Bell,
   Sun,
   Moon,
-  User
+  User,
+  FileText,
+  Calendar,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { 
@@ -38,6 +40,8 @@ interface SidebarProps {
 const NAV_ITEMS = [
   { name: 'My Drive', href: '/drive', icon: HardDrive },
   { name: 'AI Chat', href: '/chat', icon: MessageSquare },
+  { name: 'Planning', href: '/planning', icon: Calendar },
+  { name: 'Report', href: '/report', icon: FileText },
   { name: 'Settings', href: '/profile', icon: Settings },
 ]
 
