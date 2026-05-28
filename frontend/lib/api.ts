@@ -668,6 +668,9 @@ export const api = {
    */
   getIngestionWsUrl(documentId: string): string {
     if (typeof window === 'undefined') return ''
+    if (process.env.NODE_ENV === 'development' && window.location.hostname === 'localhost') {
+      return `ws://localhost:8001/ws/uploads/${encodeURIComponent(documentId)}/`
+    }
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     return `${protocol}//${window.location.host}/api/proxy/ingestion/ws/uploads/${encodeURIComponent(documentId)}/`
   },
@@ -685,11 +688,17 @@ export const api = {
    */
   getChatWsUrl(): string {
     if (typeof window === 'undefined') return ''
+    if (process.env.NODE_ENV === 'development' && window.location.hostname === 'localhost') {
+      return `ws://localhost:8004/ws/chat/`
+    }
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     return `${protocol}//${window.location.host}/api/proxy/rag/ws/chat/`
   },
   getNotificationWsUrl(): string {
     if (typeof window === 'undefined') return ''
+    if (process.env.NODE_ENV === 'development' && window.location.hostname === 'localhost') {
+      return `ws://localhost:8003/ws/notifications/`
+    }
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     return `${protocol}//${window.location.host}/api/proxy/notification/ws/notifications/`
   },
@@ -989,6 +998,9 @@ export const reportApi = {
   /** WebSocket URL for real-time report generation progress. */
   getReportWsUrl(jobId: string): string {
     if (typeof window === 'undefined') return ''
+    if (process.env.NODE_ENV === 'development' && window.location.hostname === 'localhost') {
+      return `ws://localhost:8004/ws/report/${jobId}/`
+    }
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     return `${protocol}//${window.location.host}/api/proxy/rag/ws/report/${jobId}/`
   },

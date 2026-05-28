@@ -165,7 +165,7 @@ export default function DrivePage() {
   return (
     <AuthGuard>
       <AppLayout>
-        <div className="flex flex-col h-screen p-4 md:p-6 lg:p-8 gap-4 bg-background">
+        <div className="flex flex-col h-screen p-4 md:p-6 lg:p-8 gap-0 bg-background">
           {/* Action bar and Breadcrumb Combined */}
             <DriveHeader
               currentFolderName={currentFolderName}
