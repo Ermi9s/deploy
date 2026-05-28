@@ -165,8 +165,9 @@ export default function DrivePage() {
   return (
     <AuthGuard>
       <AppLayout>
-        <div className="flex flex-col h-screen p-4 md:p-6 lg:p-8 gap-0 bg-background">
-          {/* Action bar and Breadcrumb Combined */}
+        <div className="flex flex-col h-screen p-4 md:p-6 lg:p-8 bg-background">
+          <div className="flex flex-col flex-1 border border-border rounded-xl shadow-xl overflow-hidden bg-card min-h-0">
+            {/* Action bar and Breadcrumb Combined */}
             <DriveHeader
               currentFolderName={currentFolderName}
               currentPath={currentPath}
@@ -207,7 +208,7 @@ export default function DrivePage() {
             {/* 3-column layout: tree | files | preview */}
             <section
               ref={browseSectionRef}
-              className={`grid gap-0 overflow-hidden rounded-xl border border-border bg-card flex-1 min-h-0 ${
+              className={`grid gap-0 overflow-hidden flex-1 min-h-0 ${
                 previewPanelOpen
                   ? 'grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(320px,var(--preview-width))] lg:grid-cols-[minmax(200px,var(--tree-width,260px))_minmax(0,1fr)_minmax(320px,var(--preview-width))]'
                   : 'grid-cols-1 lg:grid-cols-[minmax(200px,var(--tree-width,260px))_minmax(0,1fr)]'
@@ -297,6 +298,7 @@ export default function DrivePage() {
                 </div>
               )}
             </section>
+          </div>
         </div>
 
         <UploadModal

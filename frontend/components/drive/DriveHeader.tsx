@@ -116,7 +116,7 @@ export function DriveHeader({
   formatDate,
 }: DriveHeaderProps) {
   return (
-    <header className="flex flex-col gap-3 py-3 px-4 border-b border-border bg-background shadow-sm z-10 sticky top-0 rounded-t-xl">
+    <header className="flex flex-col gap-3 py-3 px-4 border-b border-border bg-accent/30 z-10 sticky top-0">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0 flex items-center gap-1 overflow-x-auto">
           {currentPath.map((crumb, index) => (
