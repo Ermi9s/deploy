@@ -14,6 +14,7 @@ function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams?.get('token')
+  const uidb64 = searchParams?.get('uidb64')
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -39,7 +40,11 @@ function ResetPasswordForm() {
     setLoading(true)
 
     try {
-      await api.resetPassword(token, password)
+      await api.resetPassword({
+        uidb64: uidb64 || '',
+        token,
+        new_password: password,
+      })
       setSuccess('Password has been reset successfully.')
       setTimeout(() => {
         router.replace('/login')

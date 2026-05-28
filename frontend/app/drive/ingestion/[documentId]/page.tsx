@@ -141,7 +141,7 @@ export default function IngestionProgressPage() {
 
   return (
     <AuthGuard>
-      <AppLayout title="Ingestion Progress">
+      <AppLayout>
         <div className="mx-auto max-w-3xl space-y-6">
           <header className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-4">

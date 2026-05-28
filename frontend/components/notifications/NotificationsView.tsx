@@ -155,7 +155,7 @@ export function NotificationsView() {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" size="sm" onClick={() => fetchNotifications(true)} disabled={refreshing} className="font-semibold">
+          <Button variant="outline" size="sm" onClick={() => fetchNotifications()} disabled={refreshing} className="font-semibold">
             <RefreshCw className={cn('h-3.5 w-3.5 mr-1.5', refreshing && 'animate-spin')} />
             Refresh
           </Button>
@@ -285,15 +285,15 @@ export function NotificationsView() {
                       <ArrowRight className="h-3.5 w-3.5 mr-1" />
                       View Milestone
                     </Button>
-                    {isAI && notif.reference_document_id && (
+                    {isAI && notif.milestone.reference_document_id && (
                       <Button
                         variant="outline"
                         size="sm"
                         className="h-7 text-xs font-semibold border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
-                        onClick={() => handleViewSourceFile(notif.reference_document_id!)}
-                        disabled={busy || downloadingIds.has(notif.reference_document_id)}
+                        onClick={() => handleViewSourceFile(notif.milestone.reference_document_id!)}
+                        disabled={busy || downloadingIds.has(notif.milestone.reference_document_id)}
                       >
-                        {downloadingIds.has(notif.reference_document_id) ? (
+                        {downloadingIds.has(notif.milestone.reference_document_id) ? (
                           <Spinner className="h-3 w-3 mr-1" />
                         ) : (
                           <FileText className="h-3.5 w-3.5 mr-1" />
