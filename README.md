@@ -1,7 +1,7 @@
-# OKnowledge-Management (OKM) Platform
+# AI Office Knowledge Hub Platform
 
 ## Overview
-OKnowledge-Management (OKM) is a robust, microservices-based enterprise document management and Retrieval-Augmented Generation (RAG) system. Designed to handle large volumes of documents, OKM automatically ingests, processes, embeds, and indexes your files to make them instantly searchable and accessible to generative AI models.
+AI Office Knowledge Hub is a robust, microservices-based enterprise document management and Retrieval-Augmented Generation (RAG) system. Designed to handle large volumes of documents, OKM automatically ingests, processes, embeds, and indexes your files to make them instantly searchable and accessible to generative AI models.
 
 **Technologies Used:**
 *   Python and Django (Backend Microservices)
@@ -11,23 +11,6 @@ OKnowledge-Management (OKM) is a robust, microservices-based enterprise document
 *   PostgreSQL (Relational Database)
 *   MinIO (Object Storage)
 *   Docker & Docker Compose (Containerization & Orchestration)
-
-## 📋 Table of Contents
-- [Overview](#overview)
-- [Installation Guide](#installation-guide)
-  - [Prerequisites](#prerequisites)
-  - [Method 1: Docker Compose (Full Stack)](#method-1-docker-compose-full-stack)
-  - [Method 2: Local Development (Manual Installation)](#method-2-local-development-manual-installation)
-- [System Architecture](#system-architecture)
-- [Development Commands](#development-commands)
-- [Configuration Options](#configuration-options)
-- [Key Features](#key-features)
-- [Contributing](#contributing)
-
-## Quick Links
-*   [GitHub Repository](#)
-*   [API Documentation](#)
-*   [Issue Tracker](#)
 
 ## Installation Guide
 
@@ -41,7 +24,7 @@ This is the recommended approach to set up the entire OKM platform (Frontend, Ba
 
 1. **Clone the repository:**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/OKnowledge-Management/OKM-Codebase.git
    cd OKM-Codebase
    ```
 2. **Set Environment Variables:**
