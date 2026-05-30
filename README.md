@@ -1,152 +1,132 @@
-# Project Structure and Run Guide
+# OKnowledge-Management (OKM) Platform
 
-This repository contains 4 Django API services, a Next.js frontend, a dedicated Celery workers service, and a root Docker Compose setup.
+## Overview
+OKnowledge-Management (OKM) is a robust, microservices-based enterprise document management and Retrieval-Augmented Generation (RAG) system. Designed to handle large volumes of documents, OKM automatically ingests, processes, embeds, and indexes your files to make them instantly searchable and accessible to generative AI models.
 
-## Structure
+**Technologies Used:**
+*   Python and Django (Backend Microservices)
+*   Next.js, HTML5, SCSS, and TypeScript (Frontend)
+*   Celery & Redis (Asynchronous Workers & Message Broker)
+*   Elasticsearch (Vector Database & Search)
+*   PostgreSQL (Relational Database)
+*   MinIO (Object Storage)
+*   Docker & Docker Compose (Containerization & Orchestration)
 
-- `ingestion/`
-- `management/`
-- `notification/`
-- `rag/`
-- `workers/`
-- `frontend/`
-- `docker-compose.yml`
+## 📋 Table of Contents
+- [Overview](#overview)
+- [Installation Guide](#installation-guide)
+  - [Prerequisites](#prerequisites)
+  - [Method 1: Docker Compose (Full Stack)](#method-1-docker-compose-full-stack)
+  - [Method 2: Local Development (Manual Installation)](#method-2-local-development-manual-installation)
+- [System Architecture](#system-architecture)
+- [Development Commands](#development-commands)
+- [Configuration Options](#configuration-options)
+- [Key Features](#key-features)
+- [Contributing](#contributing)
 
-Each service folder has:
+## Quick Links
+*   [GitHub Repository](#)
+*   [API Documentation](#)
+*   [Issue Tracker](#)
 
-- `manage.py`
-- `<service_name>/settings.py`
-- `<service_name>/urls.py`
-- `<service_name>/asgi.py`
-- `<service_name>/wsgi.py`
-- `Dockerfile`
+## Installation Guide
 
-## Ports
+### Prerequisites
+*   [Git](https://git-scm.com/downloads)
+*   [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+*   Google Gemini API Key (Required for embeddings and RAG inference)
 
-Docker Compose maps each service to a different host port:
+### Method 1: Docker Compose (Full Stack)
+This is the recommended approach to set up the entire OKM platform (Frontend, Backend Microservices, and Infrastructure):
 
-- Ingestion: `http://localhost:8001`
-- Management: `http://localhost:8002`
-- Notification: `http://localhost:8003`
-- RAG: `http://localhost:8004`
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd OKM-Codebase
+   ```
+2. **Set Environment Variables:**
+   Export your Gemini API Key in your terminal:
+   ```bash
+   export GEMINI_API_KEY="your-api-key-here"
+   ```
+3. **Start Docker Compose:**
+   ```bash
+   docker compose up --build -d
+   ```
+4. **Run Database Migrations:**
+   ```bash
+   docker compose run --rm ingestion python manage.py migrate
+   docker compose run --rm management python manage.py migrate
+   # Repeat for notification and rag services
+   ```
+5. **Access the Application:**
+   * Frontend: `http://localhost:3000`
+   * Ingestion API: `http://localhost:8001`
+   * Management API: `http://localhost:8002`
 
-The workers service is a background Celery worker process (no HTTP port).
-Redis is exposed on `localhost:6379` for local enqueue/testing.
-Elasticsearch is exposed on `localhost:9200`.
+### Method 2: Local Development (Manual Installation)
+To run individual services locally for debugging, use standard Django commands. Make sure you have local instances of Redis, PostgreSQL, and Elasticsearch running.
 
-## Workers Service (Celery)
-
-The `workers` service is responsible for consuming background jobs enqueued by other services.
-
-Broker/backend defaults:
-
-- `CELERY_BROKER_URL=redis://redis:6379/0`
-- `CELERY_RESULT_BACKEND=redis://redis:6379/0`
-
-Registered task names and queue mapping:
-
-- `workers.handle_document_ingestion_job` -> `document_ingestion_jobs`
-
-Each task expects a JSON-serializable payload dictionary.
-
-The worker pipeline:
-
-- For PDFs: direct text extraction, then OCR fallback if extraction is low quality.
-- For images: OCR extraction with Tesseract.
-- Extracted text is chunked, embedded using Gemini, and indexed in Elasticsearch.
-
-Example enqueue from another service:
-
-```python
-from celery import Celery
-
-celery_app = Celery('producer')
-celery_app.conf.broker_url = 'redis://redis:6379/0'
-
-celery_app.send_task(
-    'workers.handle_document_ingestion_job',
-    kwargs={
-        'payload': {
-            'document_id': 'uuid-here',
-            'file_path': '/shared/uploads/uuid-here.pdf',
-            'mime_type': 'application/pdf',
-            'original_filename': 'contract.pdf',
-        }
-    },
-)
-```
-
-## Frontend Integration
-
-The frontend uses the backend as the source of truth:
-
-- `GET /api/drive/` lists drive items
-- `POST /api/drive/create_folder/` creates folders
-- `PATCH /api/drive/{id}/rename/` renames items
-- `PATCH /api/drive/{id}/move/` moves items
-- `DELETE /api/drive/{id}/delete_item/` sends items to trash
-- `POST /api/drive/{id}/restore/` restores trashed items
-- `POST /api/drive/upload_document/` registers uploads after ingestion
-- `POST /auth/token/` and `POST /auth/refresh/` handle JWT auth
-
-## Ingestion API
-
-Upload endpoint:
-
-- `POST /api/v1/documents/upload/`
-- Content type: `multipart/form-data`
-- Form field: `file`
-- Supported file types: `application/pdf`, common image MIME types (`png`, `jpg`, `jpeg`, `tiff`, `bmp`, `webp`)
-
-Status endpoint:
-
-- `GET /api/v1/documents/{document_id}/status/`
-
-WebSocket progress endpoint:
-
-- `ws://localhost:8001/ws/uploads/{document_id}/`
-
-WebSocket emits JSON snapshots containing `status`, `progress`, `stage`, and message fields until completion/failure.
-
-## Run with Docker Compose
-
-From the project root:
-
-```bash
-docker compose up --build
-```
-
-To run in detached mode:
-
-```bash
-docker compose up --build -d
-```
-
-To stop:
-
-```bash
-docker compose down
-```
-
-## Run a Single Service Without Docker
-
-Example for `notification`:
-
+Example for the `notification` service:
 ```bash
 cd notification
-../okmenv/bin/python manage.py runserver 0.0.0.0:8000
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python manage.py runserver 0.0.0.0:8000
 ```
 
-Repeat the same pattern for `ingestion`, `management`, and `rag` by changing directories.
+## System Architecture
 
-For ingestion metadata tracking, apply migrations:
+The OKM platform uses a loosely coupled microservices architecture:
 
-```bash
-docker compose run --rm ingestion python manage.py migrate
-```
+*   **`frontend` (Port 3000):** Next.js web application for user interaction.
+*   **`ingestion` (Port 8001):** API for document uploads and WebSocket progress tracking.
+*   **`management` (Port 8002):** Core business logic, authentication (JWT), and Drive/File management.
+*   **`notification` (Port 8003):** System alerts and user notifications.
+*   **`rag` (Port 8004):** Queries the vector database and generates answers using LLMs.
+*   **`workers`:** Celery application that executes heavy asynchronous tasks (OCR, chunking, embedding, indexing).
 
-Before starting full ingestion flow, set Gemini API key in your shell:
+## Development Commands
 
-```bash
-export GEMINI_API_KEY="your-api-key"
-```
+**Docker Management:**
+*   Start all services: `docker compose up --build`
+*   Stop all services: `docker compose down`
+
+**Django Operations (Inside Container):**
+*   Create migrations: `docker compose run --rm <service_name> python manage.py makemigrations`
+*   Apply migrations: `docker compose run --rm <service_name> python manage.py migrate`
+*   Create superuser: `docker compose run --rm management python manage.py createsuperuser`
+
+## Configuration Options
+
+### Environment Variables
+These variables can be set in your `.env` file or exported to your shell before running Docker Compose:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `GEMINI_API_KEY` | Required API key for Google Gemini (`text-embedding-004`). | `AIzaSy...` |
+| `CELERY_BROKER_URL` | Redis broker URL for Celery workers. | `redis://redis:6379/0` |
+| `CELERY_RESULT_BACKEND` | Redis backend URL for Celery workers. | `redis://redis:6379/0` |
+
+*(Additional database and MinIO credentials should be configured in their respective `.env` files per service).*
+
+## Key Features
+
+### Document Ingestion Pipeline
+*   **Automated Processing:** Seamlessly handles PDFs and images via `multipart/form-data` uploads.
+*   **Smart Extraction:** Uses `PyMuPDF` for standard text and falls back to `pytesseract` (OCR) for low-quality documents or images.
+*   **Chunking & Embedding:** Splits documents into manageable chunks and generates embeddings via Gemini.
+
+### RAG & Search Integration
+*   **High-Performance Search:** Uses Elasticsearch to index chunks for rapid similarity search.
+*   **LLM Answers:** Generates contextual answers using retrieval-augmented generation.
+
+### Real-Time Tracking
+*   **WebSockets:** Track the real-time status of file processing (extraction, chunking, embedding) via `ws://localhost:8001/ws/uploads/{document_id}/`.
+
+### Comprehensive Drive Management
+*   Complete API for creating folders, renaming items, moving files, and managing the trash bin.
+
+## Contributing
+We welcome contributions! Please read our contribution guidelines before submitting pull requests. Ensure all tests pass and your code adheres to standard styling guidelines.
