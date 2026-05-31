@@ -1,0 +1,12 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# Everything (including node_modules) comes from the bind mount.
+# No COPY, no pnpm install needed inside Docker.
+EXPOSE 3000
+
+CMD ["pnpm", "dev"]
