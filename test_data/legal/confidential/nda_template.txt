@@ -1,0 +1,122 @@
+APEX SOLUTIONS INC. — MUTUAL NON-DISCLOSURE AGREEMENT (TEMPLATE)
+==================================================================
+Classification: CONFIDENTIAL — Legal & Compliance Department Only
+Author: Julia Santos (Head of Legal)
+Version: 3.2
+Date: 2025-01-10
+
+---
+
+NOTE TO LEGAL TEAM
+-------------------
+Use this template for all standard mutual NDA requests.  Any modifications
+to Clauses 3, 5, or 7 require sign-off by the Head of Legal before execution.
+Do not distribute this template outside the Legal department.
+
+
+MUTUAL NON-DISCLOSURE AGREEMENT
+
+This Mutual Non-Disclosure Agreement ("Agreement") is entered into as of
+[EFFECTIVE DATE] ("Effective Date") by and between:
+
+  Apex Solutions Inc., a company incorporated under the laws of [JURISDICTION],
+  with registered address at [APEX ADDRESS] ("Apex"),
+
+  AND
+
+  [COUNTERPARTY FULL LEGAL NAME], a company incorporated under the laws of
+  [COUNTERPARTY JURISDICTION], with registered address at [COUNTERPARTY ADDRESS]
+  ("Counterparty").
+
+Collectively referred to as "Parties."
+
+
+1. PURPOSE
+----------
+The Parties wish to explore a potential business relationship (the "Purpose")
+and may disclose to each other certain confidential and proprietary information
+in connection therewith.
+
+
+2. DEFINITION OF CONFIDENTIAL INFORMATION
+------------------------------------------
+"Confidential Information" means any non-public information disclosed by
+either Party to the other, either directly or indirectly, in writing, orally,
+or by inspection of tangible objects, which is designated as "Confidential"
+or which the receiving Party knows or reasonably should know to be confidential
+given the nature of the information and circumstances of disclosure.
+
+Confidential Information does not include information that:
+  (a) is or becomes publicly known through no breach by the receiving Party;
+  (b) was already known by the receiving Party prior to disclosure;
+  (c) is lawfully received from a third party without restriction;
+  (d) is independently developed without use of the Confidential Information.
+
+
+3. OBLIGATIONS OF RECEIVING PARTY
+-----------------------------------
+Each Party agrees to:
+  (a) Hold the other Party's Confidential Information in strict confidence;
+  (b) Not disclose Confidential Information to any third party without prior
+      written consent of the disclosing Party;
+  (c) Use Confidential Information solely for the Purpose;
+  (d) Protect Confidential Information with the same degree of care (but no
+      less than reasonable care) as it uses to protect its own confidential
+      information;
+  (e) Limit access to Confidential Information to employees or contractors
+      with a need-to-know basis.
+
+
+4. TERM
+-------
+This Agreement shall commence on the Effective Date and continue for a period
+of [DURATION, e.g. 2 years], unless earlier terminated by either Party upon
+30 days' written notice.
+
+Obligations of confidentiality shall survive termination for a period of
+5 years.
+
+
+5. RETURN OF INFORMATION
+--------------------------
+Upon request by the disclosing Party, the receiving Party shall promptly return
+or destroy all Confidential Information and certify in writing that it has done
+so.
+
+
+6. NO LICENSE
+--------------
+Nothing in this Agreement grants either Party any license or rights under any
+patent, copyright, trademark, or other intellectual property right of the
+other Party.
+
+
+7. GOVERNING LAW
+-----------------
+This Agreement shall be governed by the laws of [GOVERNING JURISDICTION],
+without regard to its conflict of laws principles.  Disputes shall be resolved
+by binding arbitration in [ARBITRATION VENUE].
+
+
+8. ENTIRE AGREEMENT
+--------------------
+This Agreement constitutes the entire agreement between the Parties with
+respect to its subject matter and supersedes all prior agreements.
+
+IN WITNESS WHEREOF, the Parties have executed this Agreement as of the
+Effective Date.
+
+  Apex Solutions Inc.
+  Signature: ______________________
+  Name:      ______________________
+  Title:     ______________________
+  Date:      ______________________
+
+  [COUNTERPARTY]
+  Signature: ______________________
+  Name:      ______________________
+  Title:     ______________________
+  Date:      ______________________
+
+---
+END OF DOCUMENT

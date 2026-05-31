@@ -1,0 +1,87 @@
+APEX SOLUTIONS INC. — CODE OF CONDUCT
+=======================================
+Classification: PUBLIC
+Department: Legal & Compliance
+Version: 5.0
+Effective Date: 2025-01-01
+
+---
+
+OUR COMMITMENT
+--------------
+Apex Solutions Inc. is committed to operating with the highest standards of
+ethics, integrity, and professionalism.  This Code of Conduct applies to all
+employees, contractors, board members, and third-party partners.
+
+
+1. ETHICAL BUSINESS CONDUCT
+-----------------------------
+1.1 Honesty and Transparency
+  Employees must be truthful in all internal and external communications.
+  Falsifying records, financial statements, or reports is grounds for
+  immediate termination and potential legal action.
+
+1.2 Conflicts of Interest
+  A conflict of interest arises when personal interests could interfere with
+  professional responsibilities.  Employees must disclose actual or potential
+  conflicts in writing to their manager and Legal before engaging in any
+  outside business activity.
+
+1.3 Anti-Bribery and Corruption
+  Apex Solutions has zero tolerance for bribery.  Employees must not offer,
+  accept, or authorise anything of value to improperly influence a business
+  decision, whether dealing with government officials or private parties.
+  All gifts over USD 50 must be reported to Legal within 5 business days.
+
+
+2. RESPECT IN THE WORKPLACE
+-----------------------------
+2.1 Equal Opportunity
+  Apex is an equal opportunity employer.  Discrimination or harassment based
+  on race, gender, age, religion, nationality, disability, or any protected
+  characteristic is strictly prohibited.
+
+2.2 Harassment and Bullying
+  All forms of workplace harassment — verbal, physical, or digital — are
+  prohibited.  Report incidents to HR (diana.osei@apexsolutions.com) or via
+  the anonymous ethics hotline (ethics@apexsolutions.com).
+
+
+3. PROTECTION OF COMPANY ASSETS
+---------------------------------
+3.1 Data and Intellectual Property
+  All data, code, designs, and business plans produced during employment are
+  the property of Apex Solutions.  Using company IP for personal gain is
+  prohibited.
+
+3.2 IT Resources
+  Company systems and devices are for business use.  Limited personal use is
+  acceptable if it does not interfere with work or violate security policies.
+
+3.3 Confidential Information
+  Do not disclose non-public information about clients, employees, financials,
+  or technology to unauthorised parties.  This obligation continues after
+  employment ends.
+
+
+4. REPORTING VIOLATIONS
+-------------------------
+Employees who become aware of a potential violation should report it:
+  • Directly to their manager or Legal
+  • Via email: ethics@apexsolutions.com
+  • Via anonymous whistleblower line: +1-800-APEX-ETH
+
+Retaliation against anyone who reports a good-faith concern is itself a
+violation of this Code and will result in disciplinary action.
+
+
+5. DISCIPLINARY PROCESS
+-------------------------
+Violations may result in:
+  • Verbal or written warning
+  • Suspension without pay
+  • Termination of employment
+  • Legal action where laws have been violated
+
+---
+END OF DOCUMENT

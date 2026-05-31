@@ -1,0 +1,69 @@
+APEX SOLUTIONS INC. — LOGISTICS PARTNER CONTRACTS SUMMARY Q2 2025
+===================================================================
+Classification: CONFIDENTIAL — Operations Department Only
+Author: Laura Mensah (Head of Operations)
+Date: 2025-04-01
+
+---
+
+PURPOSE
+-------
+This document summarises the terms and performance of all active logistics and
+facilities contracts.  Do not share with non-Operations personnel or vendors.
+
+
+ACTIVE CONTRACTS
+-----------------
+
+CONTRACT-OPS-001 — Office Lease (Nairobi HQ)
+  Landlord         : Westlands Properties Ltd.
+  Premises         : 3rd Floor, Westgate Plaza, Mombasa Road, Nairobi
+  Area             : 1 200 m²
+  Monthly Rent     : KES 480 000 (USD 3 692)
+  Lease Period     : 3 years (Jan 2024 – Dec 2026)
+  Break Clause     : 6 months' notice after 18 months
+  Service Charge   : KES 60 000 / month (included in above)
+  Renewal Option   : First right of refusal at market rent
+  Status           : Active, no issues
+
+CONTRACT-OPS-002 — IT Hardware Supplier (Swift Tech Ltd.)
+  Supplier         : Swift Tech Ltd., Nairobi
+  Services         : Laptops, monitors, peripherals (annual framework)
+  Annual Spend     : ~USD 32 000
+  Payment Terms    : Net 30
+  SLA              : Delivery within 5 business days
+  Contract Period  : Jan 2025 – Dec 2025 (annual renewal)
+  Performance      : 98 % on-time delivery (Q1 2025)
+  Next Review      : Oct 2025
+
+CONTRACT-OPS-003 — Cleaning & Facilities (ProClean Services)
+  Supplier         : ProClean Services Ltd.
+  Services         : Daily office cleaning, monthly deep clean
+  Monthly Cost     : KES 85 000 (USD 654)
+  Contract Period  : Jul 2024 – Jun 2025
+  Renewal Decision : ⚠️ Due May 2025 — Laura to obtain 2 competing quotes
+  Performance      : Satisfactory (minor complaint Q1 resolved)
+
+CONTRACT-OPS-004 — Security Services (Apex Security Ltd.)
+  Supplier         : Apex Security Ltd.
+  Services         : 24/7 guard, CCTV monitoring, access control maintenance
+  Monthly Cost     : KES 145 000 (USD 1 115)
+  Contract Period  : Jan 2025 – Dec 2025
+  Performance      : Excellent; 0 security incidents Q1 2025
+
+
+UPCOMING RENEWALS & ACTIONS
+-----------------------------
+  May 2025   : Obtain 3 quotes for ProClean replacement or renewal
+  Oct 2025   : Begin Swift Tech renegotiation (volume growth)
+  Nov 2025   : Initiate office lease break-clause review (2026 planning)
+
+
+BUDGET TRACKING
+---------------
+  Total Facilities OpEx Budget 2025 : USD 62 000
+  Spent Q1 2025                     : USD 14 100
+  Forecast Full-Year                 : USD 58 900 (4.2 % under budget)
+
+---
+END OF DOCUMENT

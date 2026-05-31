@@ -1,0 +1,60 @@
+APEX SOLUTIONS INC. — BUDGET OVERVIEW FY 2025
+==============================================
+Classification: PUBLIC
+Department: Finance
+Author: Hannah Vogel (Finance Analyst)
+Date: 2025-01-30
+
+---
+
+INTRODUCTION
+------------
+This summary provides a high-level view of Apex Solutions' approved budget for
+FY 2025.  Detailed line-item budgets are classified Confidential and available
+only to department heads and Finance staff.
+
+
+TOTAL APPROVED BUDGET: USD 12 400 000
+---------------------------------------
+
+BUDGET ALLOCATION BY CATEGORY (%)
+------------------------------------
+  Personnel (salaries + benefits)    62 %   USD  7 688 000
+  Cloud & Infrastructure             12 %   USD  1 488 000
+  Research & Development              8 %   USD    992 000
+  Sales & Marketing                   7 %   USD    868 000
+  Legal & Compliance                  4 %   USD    496 000
+  Training & Development              3 %   USD    372 000
+  Facilities & Operations             4 %   USD    496 000
+                                    ─────  ─────────────────
+  TOTAL                             100 %   USD 12 400 000
+
+
+HEADCOUNT PLAN FY 2025
+-----------------------
+  Engineering      15  → target 18  (+3 hires)
+  Human Resources   6  → target  7  (+1 hire)
+  Finance           6  → target  8  (+2 hires)
+  Legal             4  → target  5  (+1 hire)
+  Operations       10  → target 12  (+2 hires)
+                   ──           ──
+  Total            41  → target 50  (+9 hires)
+
+
+KEY FINANCIAL TARGETS
+----------------------
+  Annual Recurring Revenue (ARR) target : USD 18 000 000
+  Gross Margin target                   : 68 %
+  Operating Expenditure (OpEx) target   : USD 12 400 000
+  EBITDA target                         : USD 4 500 000
+  Cash runway (months)                  : 24+
+
+
+BUDGET GOVERNANCE
+-----------------
+  Departmental budget reviews: Monthly (first Monday of each month)
+  Variance threshold triggering escalation: ± 10 % of monthly budget
+  Finance sign-off required for unplanned spend > USD 5 000
+
+---
+END OF DOCUMENT

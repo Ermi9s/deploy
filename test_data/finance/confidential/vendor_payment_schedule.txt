@@ -1,0 +1,68 @@
+APEX SOLUTIONS INC. — VENDOR PAYMENT SCHEDULE Q2 2025
+=======================================================
+Classification: CONFIDENTIAL — Finance Department Only
+Author: Hannah Vogel (Finance Analyst)
+Date: 2025-04-01
+
+---
+
+PURPOSE
+-------
+This document tracks all scheduled vendor payments for Q2 2025 (April–June).
+Finance staff must reconcile this schedule with bank statements weekly.
+Do not share with vendors or non-Finance personnel.
+
+
+SCHEDULED PAYMENTS — APRIL 2025
+---------------------------------
+  Payment Date  Vendor                Amount (USD)  Category         Invoice Ref
+  ─────────────────────────────────────────────────────────────────────────────
+  2025-04-05    Google Cloud         48 200         Cloud Infra       GCP-Q2-001
+  2025-04-05    Elastic (ES Cloud)   12 400         Search Engine     ELS-2025-04
+  2025-04-10    CyberShield Ltd.     18 000         Security Audit    CSL-INV-789
+  2025-04-15    LinkedIn Talent      6 500          Recruitment       LI-APR-2025
+  2025-04-20    Slack Inc.           3 200          SaaS Tools        SLK-2025-04
+  2025-04-25    Twilio               1 800          Notifications     TWL-2025-04
+  2025-04-30    Payroll Run          524 000        Personnel         PAY-APR-25
+
+
+SCHEDULED PAYMENTS — MAY 2025
+---------------------------------
+  Payment Date  Vendor                Amount (USD)  Category         Invoice Ref
+  ─────────────────────────────────────────────────────────────────────────────
+  2025-05-05    Google Cloud         49 100         Cloud Infra       GCP-Q2-002
+  2025-05-05    Elastic (ES Cloud)   12 400         Search Engine     ELS-2025-05
+  2025-05-10    GitHub Inc.          4 800          Dev Tools         GH-ENT-MAY25
+  2025-05-15    Glassdoor            2 200          Recruitment       GD-2025-05
+  2025-05-30    Payroll Run          536 000        Personnel         PAY-MAY-25
+
+
+SCHEDULED PAYMENTS — JUNE 2025
+---------------------------------
+  Payment Date  Vendor                Amount (USD)  Category         Invoice Ref
+  ─────────────────────────────────────────────────────────────────────────────
+  2025-06-05    Google Cloud         50 300         Cloud Infra       GCP-Q2-003
+  2025-06-05    Elastic (ES Cloud)   12 400         Search Engine     ELS-2025-06
+  2025-06-15    Legal Firm (Osei&Co) 22 000         Legal Retainer    OLC-2025-Q2
+  2025-06-30    Payroll Run          548 000        Personnel         PAY-JUN-25
+
+
+QUARTER TOTAL
+--------------
+  Cloud Infrastructure  : USD 147 600
+  Personnel (Payroll)   : USD 1 608 000
+  Legal & Compliance    : USD 40 000
+  SaaS Tools            : USD 24 500
+  Recruitment           : USD 8 700
+                          ────────────
+  Q2 TOTAL              : USD 1 828 800
+
+
+NOTES
+-----
+  • Google Cloud invoices auto-pay on the 5th of each month.
+  • Payroll amounts will increase in May/June as new hires start.
+  • Legal retainer covers Q2 contract reviews and NDA drafting.
+
+---
+END OF DOCUMENT

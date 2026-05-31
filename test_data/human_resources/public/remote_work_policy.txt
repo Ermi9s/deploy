@@ -1,0 +1,70 @@
+APEX SOLUTIONS INC. — REMOTE WORK POLICY
+=========================================
+Classification: PUBLIC
+Department: Human Resources
+Version: 2.0
+Effective Date: 2025-02-01
+
+---
+
+POLICY STATEMENT
+----------------
+Apex Solutions supports flexible remote work arrangements that balance employee
+wellbeing with team collaboration and business continuity needs.
+
+
+1. ELIGIBILITY
+--------------
+Employees who have completed their 90-day probationary period and whose role
+does not require a physical presence (e.g. facilities, security) may apply for
+a remote or hybrid work arrangement.
+
+
+2. HYBRID WORK MODEL
+---------------------
+Our default model is hybrid: employees work from the office at least 2 days
+per week (Tuesday and Thursday are anchor days where all teams are present).
+
+Full-remote arrangements require VP-level approval and are reviewed annually.
+
+
+3. HOME OFFICE REQUIREMENTS
+-----------------------------
+Employees working remotely must ensure:
+  • A dedicated, quiet workspace free from distractions during core hours.
+  • Reliable internet connection (min. 25 Mbps download / 10 Mbps upload).
+  • A webcam and headset for video meetings.
+  • Company-issued device used for all work (personal devices require MDM
+    enrolment approval from IT Security).
+
+
+4. SECURITY & DATA PROTECTION
+-------------------------------
+  • Connect to the corporate VPN whenever accessing internal systems.
+  • Never work from unsecured public Wi-Fi without the VPN active.
+  • Lock your screen when stepping away.
+  • Report lost or stolen devices to IT immediately: it@apexsolutions.com
+  • Do not store confidential data on local drives; use the OKM Drive.
+
+
+5. MEETING ETIQUETTE
+---------------------
+  • Join video calls on time with camera on (muted until speaking).
+  • Use a virtual background if your environment is distracting.
+  • Record important meetings for colleagues in different time zones.
+  • Respect deep-work blocks (no-meeting windows: 09:00–11:00 daily).
+
+
+6. EXPENSE REIMBURSEMENT
+-------------------------
+Remote employees receive a monthly home-office allowance of USD 100,
+auto-paid with payroll.  Additional equipment purchases over USD 200
+require a pre-approval request via the HR portal.
+
+
+7. CONTACT
+----------
+For questions about this policy: hr@apexsolutions.com
+
+---
+END OF DOCUMENT

@@ -1,0 +1,62 @@
+APEX SOLUTIONS INC. — EXPENSE CLAIM POLICY
+===========================================
+Classification: PUBLIC
+Department: Finance
+Version: 3.0
+Effective Date: 2025-01-01
+
+---
+
+PURPOSE
+-------
+This policy sets out the rules for reimbursing business expenses incurred by
+employees on behalf of Apex Solutions Inc.
+
+
+1. ELIGIBLE EXPENSES
+--------------------
+The following categories are reimbursable with valid receipts:
+
+  Category              Limit (per occurrence)  Notes
+  ─────────────────────────────────────────────────────────────────────
+  Business travel       No cap                  Economy class only < 6h
+  Accommodation         USD 200 / night          Pre-approval > 3 nights
+  Meals (business)      USD 60 / day             With client/colleague only
+  Taxi / ride-share     USD 40 / trip            Airport transfers OK
+  Conference/training   No cap                   Pre-approval required
+  Team events           USD 50 / person          Manager approval required
+  Office supplies       USD 50 / month           VAT receipt required
+
+
+2. NON-REIMBURSABLE EXPENSES
+------------------------------
+  • Alcohol (except client entertainment pre-approved by Finance)
+  • Personal clothing, gym memberships (not covered here — see benefits)
+  • Traffic fines, parking violations
+  • First-class or business-class travel without VP pre-approval
+  • Expenses for family members not working at Apex
+
+
+3. SUBMISSION PROCESS
+----------------------
+  1. Collect and retain original receipts (digital scans accepted).
+  2. Submit via the Finance portal (finance.internal.apexsolutions.com)
+     within 30 calendar days of incurring the expense.
+  3. Claims exceeding USD 500 require manager approval before submission.
+  4. Finance processes approved claims within 5 working days.
+
+
+4. FOREIGN CURRENCY
+-------------------
+Expenses in foreign currencies are reimbursed at the bank exchange rate
+on the date of the expense.  Attach your bank statement or card statement
+showing the charge as evidence.
+
+
+5. CONTACT
+----------
+For questions: accounts-payable@apexsolutions.com
+Finance Manager: george.mbeki@apexsolutions.com
+
+---
+END OF DOCUMENT

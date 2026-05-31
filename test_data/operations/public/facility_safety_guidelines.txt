@@ -1,0 +1,76 @@
+APEX SOLUTIONS INC. — FACILITY SAFETY GUIDELINES
+==================================================
+Classification: PUBLIC
+Department: Operations
+Version: 4.0
+Effective Date: 2025-01-01
+
+---
+
+PURPOSE
+-------
+These guidelines protect the health and safety of all employees, visitors,
+and contractors at Apex Solutions facilities.  All personnel on-site must
+read and follow these guidelines.
+
+
+1. GENERAL RULES
+-----------------
+  • Always wear your visitor badge in visible areas.
+  • Report any hazard or unsafe condition immediately to Facilities:
+    facilities@apexsolutions.com or ext. 1001.
+  • Do not prop open secure doors.
+  • Only authorised personnel may access server rooms and utility areas.
+
+
+2. FIRE SAFETY
+--------------
+  • Know the location of the nearest fire extinguisher, fire exit, and
+    assembly point (marked on floor maps).
+  • Do not block fire exits with furniture, equipment, or boxes.
+  • In case of fire alarm:
+    1. Stay calm and stop work.
+    2. Use the nearest fire exit (not the elevator).
+    3. Proceed to the designated assembly area.
+    4. Do not re-enter until the all-clear signal is given.
+  • Fire drills are conducted quarterly.  Participation is mandatory.
+
+
+3. ELECTRICAL SAFETY
+---------------------
+  • Do not overload power sockets.
+  • Report damaged cables or flickering lights immediately.
+  • Unplug equipment at the end of each day where practical.
+  • No personal heaters or high-wattage appliances without Facilities approval.
+
+
+4. FIRST AID
+------------
+  • First-aid kits are located at reception and each floor break room.
+  • Trained first-aiders: Laura Mensah (Ops), Fiona Tanaka (HR).
+  • For medical emergencies: call the emergency line (112) first, then
+    notify Facilities.
+
+
+5. ERGONOMICS & WELLBEING
+--------------------------
+  • Adjust your chair so your feet rest flat on the floor and your screen
+    is at eye level.
+  • Take a 5-minute break every hour (the 20-20-20 rule for screen use).
+  • Report ergonomic concerns to HR for a workstation assessment.
+
+
+6. VISITORS & CONTRACTORS
+--------------------------
+  • All visitors must sign in at reception and be escorted at all times.
+  • Contractors must present a valid risk assessment and method statement
+    before commencing work.
+
+
+7. CONTACT
+----------
+  Facilities Manager : laura.mensah@apexsolutions.com
+  Emergency Line     : 112 (national) / ext. 1001 (internal)
+
+---
+END OF DOCUMENT

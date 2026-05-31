@@ -1,0 +1,94 @@
+ENGINEERING DEPARTMENT — ONBOARDING GUIDE
+==========================================
+Organisation: Apex Solutions Inc.
+Classification: PUBLIC
+Last Updated: 2025-01-15
+Author: Engineering Team
+
+---
+
+WELCOME TO THE ENGINEERING TEAM
+--------------------------------
+Congratulations on joining Apex Solutions Inc.'s Engineering Department. This
+guide covers everything you need to get started: your development environment,
+communication channels, code review practices, and team norms.
+
+
+1. DEVELOPMENT ENVIRONMENT SETUP
+---------------------------------
+All engineers work on Ubuntu 22.04 or macOS Ventura.  Follow these steps on
+your first day:
+
+  a) Clone the main monorepo:
+       git clone git@github.com:apex-solutions/platform.git
+
+  b) Install prerequisites:
+       • Docker Desktop (latest stable)
+       • Python 3.11 + poetry
+       • Node.js 20 LTS + pnpm
+       • IntelliJ IDEA or VS Code with recommended extensions
+
+  c) Spin up the local stack:
+       cd platform && docker compose up --build
+
+  d) Copy the example environment files and fill in your local credentials:
+       cp .env.example .env
+
+
+2. COMMUNICATION CHANNELS
+--------------------------
+• Slack: #engineering-general, #deployments, #incidents, #random
+• Jira: Used for sprint planning and bug tracking (board: ENG)
+• Confluence: Technical design documents and RFCs
+• GitHub: All code, pull requests, and Actions pipelines
+
+
+3. CODE REVIEW PROCESS
+------------------------
+All changes must go through a Pull Request (PR) with at least two approvals
+before merging to `main`.
+
+PR checklist:
+  ✓ Unit tests pass (pytest / Jest)
+  ✓ Linting passes (ruff, eslint)
+  ✓ Migration files included for model changes
+  ✓ No secrets committed
+  ✓ CHANGELOG entry for user-visible changes
+
+
+4. DEPLOYMENT PIPELINE
+------------------------
+Branch strategy: GitFlow
+• `feature/*` → PR to `develop`
+• `release/*` → PR to `main` after QA sign-off
+• Hotfixes branch from `main` and merge back to both `main` and `develop`
+
+CI/CD is handled by GitHub Actions.  Every push to `develop` triggers:
+  1. Lint & unit tests
+  2. Docker image build
+  3. Deployment to the Staging cluster on GKE
+
+
+5. ON-CALL ROTATION
+---------------------
+Engineers join the on-call rotation after 90 days.  The schedule is published
+in PagerDuty.  The on-call engineer responds to P0/P1 incidents within 15
+minutes.  Runbooks are stored in Confluence under "Engineering > Runbooks".
+
+
+6. KEY CONTACTS
+----------------
+• Head of Engineering : alice.chen@apexsolutions.com
+• DevOps Lead         : bob.kumar@apexsolutions.com
+• Onboarding Buddy    : carol.smith@apexsolutions.com
+
+
+7. USEFUL LINKS
+----------------
+• Internal Dashboard   : https://internal.apexsolutions.com
+• Grafana Monitoring   : https://grafana.apexsolutions.com
+• API Gateway Docs     : https://docs.apexsolutions.com/api
+• Status Page          : https://status.apexsolutions.com
+
+---
+END OF DOCUMENT

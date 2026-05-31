@@ -1,0 +1,70 @@
+APEX SOLUTIONS INC. — SUPPLY CHAIN OVERVIEW
+=============================================
+Classification: PUBLIC
+Department: Operations
+Author: Mike Ali (Operations Manager)
+Date: 2025-02-20
+
+---
+
+INTRODUCTION
+------------
+This document provides a high-level view of Apex Solutions' supply chain and
+procurement process.  It is intended for all employees and approved partners.
+
+
+PROCUREMENT CATEGORIES
+-----------------------
+  Category           Examples                         Owner
+  ─────────────────────────────────────────────────────────────────────
+  IT Hardware        Laptops, monitors, accessories   IT / Operations
+  SaaS Software      Slack, GitHub, Jira, Notion      IT / Finance
+  Office Supplies    Stationery, furniture            Operations
+  Professional Svcs  Legal counsel, auditors, HR      Legal / Finance
+  Cloud/Infra        Google Cloud, Elasticsearch      Engineering / Finance
+
+
+PROCUREMENT POLICY SUMMARY
+----------------------------
+  Spend Level          Process Required
+  ─────────────────────────────────────────────────────────────────────
+  < USD 500            Manager approval via email
+  USD 500 – 2 000      Finance portal request + manager approval
+  USD 2 001 – 10 000   Two competitive quotes + Finance Manager approval
+  > USD 10 000         RFP process + VP approval + Legal review
+
+
+KEY SUPPLIERS
+-------------
+  Supplier          Category            Contract Renewal
+  ─────────────────────────────────────────────────────────────────────
+  Google Cloud      Cloud Infra         Dec 2025 (auto-renew)
+  Elastic N.V.      Search Engine       Oct 2025
+  GitHub Inc.       Dev Platform        Mar 2026
+  Jira / Atlassian  Project Mgmt        Feb 2026
+  Twilio            Notifications API   Aug 2025
+
+
+INVENTORY MANAGEMENT
+--------------------
+  • IT hardware inventory is managed in the Asset Register (Operations portal).
+  • All assets valued > USD 500 are tagged and tracked.
+  • Annual asset audit conducted in December.
+  • End-of-life assets are disposed of via certified e-waste recycler
+    (certificate filed by Operations for compliance).
+
+
+DELIVERY & WAREHOUSING
+-----------------------
+  • Office supplies are delivered to HQ reception (Nairobi, Kenya).
+  • Hardware orders are pre-approved by IT before delivery.
+  • No personal deliveries to the office address.
+
+
+CONTACT
+-------
+  Operations Manager : mike.ali@apexsolutions.com
+  Procurement email  : procurement@apexsolutions.com
+
+---
+END OF DOCUMENT

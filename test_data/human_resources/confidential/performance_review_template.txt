@@ -1,0 +1,103 @@
+APEX SOLUTIONS INC. — ANNUAL PERFORMANCE REVIEW TEMPLATE
+==========================================================
+Classification: CONFIDENTIAL — Human Resources Department Only
+Author: Diana Osei (Head of HR)
+Version: 4.1
+Cycle: FY 2025 (January–December)
+
+---
+
+INSTRUCTIONS FOR MANAGERS
+---------------------------
+Complete one form per direct report before the review meeting.  Share the
+completed form with the employee at least 48 hours before the meeting.
+Submit the signed form to HR no later than 5 working days after the meeting.
+This document is strictly confidential; do not share with non-HR personnel.
+
+
+EMPLOYEE INFORMATION
+---------------------
+  Employee Name     : ______________________________
+  Employee ID       : ______________________________
+  Department        : ______________________________
+  Manager           : ______________________________
+  Review Period     : January 2025 – December 2025
+  Review Date       : ______________________________
+
+
+SECTION A — PERFORMANCE AGAINST OBJECTIVES (40 %)
+---------------------------------------------------
+List the objectives agreed at the start of the year and rate achievement.
+
+  Rating Scale: 1 = Did not meet | 2 = Partially met | 3 = Met |
+                4 = Exceeded | 5 = Significantly exceeded
+
+  Objective 1: ____________________________
+    Rating: ___ / 5    Comments: ______________________________
+
+  Objective 2: ____________________________
+    Rating: ___ / 5    Comments: ______________________________
+
+  Objective 3: ____________________________
+    Rating: ___ / 5    Comments: ______________________________
+
+  Average Objective Score: ___ / 5
+
+
+SECTION B — COMPETENCY EVALUATION (40 %)
+-----------------------------------------
+Rate the employee on each core competency (1–5 scale as above).
+
+  Communication         : ___ / 5
+  Teamwork & Collaboration: ___ / 5
+  Problem Solving       : ___ / 5
+  Initiative & Ownership: ___ / 5
+  Adaptability          : ___ / 5
+
+  Average Competency Score: ___ / 5
+
+
+SECTION C — DEVELOPMENT & LEARNING (20 %)
+-------------------------------------------
+  Training courses completed this year: ______________________________
+  Certifications earned: ______________________________
+  Knowledge-sharing contributions (internal talks, docs): ____________
+
+  Development Score: ___ / 5
+
+
+OVERALL PERFORMANCE RATING
+----------------------------
+  Weighted Score = (A × 0.4) + (B × 0.4) + (C × 0.2) = ___
+
+  Final Band:
+    ☐ Exceptional (4.5–5.0)
+    ☐ Exceeds Expectations (3.5–4.4)
+    ☐ Meets Expectations (2.5–3.4)
+    ☐ Needs Improvement (1.5–2.4)
+    ☐ Unsatisfactory (< 1.5)
+
+
+SECTION D — DEVELOPMENT PLAN FOR FY 2026
+------------------------------------------
+  Goal 1: ______________________________  Target Date: __________
+  Goal 2: ______________________________  Target Date: __________
+  Training recommended: ______________________________
+
+
+SECTION E — COMPENSATION RECOMMENDATION
+-----------------------------------------
+  Current Salary       : Refer to HRIS
+  Recommended Increase : ___ %   (requires VP Finance approval > 10 %)
+  Bonus Recommendation : ___ % of annual salary
+  Promotion Recommended: ☐ Yes  ☐ No   New Title: ______________________________
+
+
+SIGNATURES
+----------
+  Manager Signature    : ___________________ Date: ___________
+  Employee Signature   : ___________________ Date: ___________
+  HR Reviewed By       : ___________________ Date: ___________
+
+---
+END OF DOCUMENT

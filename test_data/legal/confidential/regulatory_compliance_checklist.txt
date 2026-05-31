@@ -1,0 +1,78 @@
+APEX SOLUTIONS INC. — REGULATORY COMPLIANCE CHECKLIST 2025
+============================================================
+Classification: CONFIDENTIAL — Legal & Compliance Department Only
+Author: Kevin Park (Compliance Officer)
+Effective Date: 2025-01-01
+Review Date: 2025-06-30
+
+---
+
+PURPOSE
+-------
+This checklist ensures Apex Solutions meets all applicable regulatory
+requirements for FY 2025.  Compliance Officers must update status
+monthly.  Non-compliance items must be escalated to the Head of Legal.
+
+
+GDPR COMPLIANCE (EU DATA SUBJECTS)
+------------------------------------
+  Item                                             Owner       Status    Due
+  ────────────────────────────────────────────────────────────────────────────
+  Privacy Policy updated for 2025                  Legal       ✓ DONE   Jan 25
+  Data Processing Register updated                 Kevin Park  ✓ DONE   Jan 25
+  DPA signed with all cloud vendors (Google, ES)   Legal       ✓ DONE   Feb 25
+  Annual DPIA for OKM platform                     Kevin Park  ⏳ WIP    Jun 25
+  Cookie consent implementation                    Eng         ✓ DONE   Mar 25
+  Data subject request SLA ≤ 30 days documented   Kevin Park  ✓ DONE   Jan 25
+
+
+CCPA COMPLIANCE (CALIFORNIA RESIDENTS)
+----------------------------------------
+  Item                                             Owner       Status    Due
+  ────────────────────────────────────────────────────────────────────────────
+  "Do Not Sell" link on website                    Legal/Eng   ✓ DONE   Jan 25
+  Consumer rights request workflow                 Kevin Park  ✓ DONE   Feb 25
+  Third-party data sharing review                  Legal       ⏳ WIP    Jun 25
+
+
+KENYA DATA PROTECTION ACT 2019
+--------------------------------
+  Item                                             Owner       Status    Due
+  ────────────────────────────────────────────────────────────────────────────
+  Registration with ODPC (Office of DPC)           Legal       ✓ DONE   2024
+  Data Protection Officer appointed                Kevin Park  ✓ DONE   2024
+  Employee data processing notices issued          HR          ✓ DONE   Jan 25
+  Cross-border transfer safeguards documented      Legal       ⏳ WIP    May 25
+
+
+SOC 2 TYPE II READINESS
+------------------------
+  Item                                             Owner       Status    Due
+  ────────────────────────────────────────────────────────────────────────────
+  Security policies reviewed and approved          Eng/Legal   ✓ DONE   Feb 25
+  Access control matrix audited                    Eng         ✓ DONE   Mar 25
+  Penetration test completed (CyberShield)         Eng         ✓ DONE   May 25
+  Pen test findings remediated (HIGH items)        Eng         ✓ DONE   May 25
+  SOC 2 Type II audit engagement                   Legal       ⏳ WIP    Q3 25
+  Vendor risk assessments (top 10 vendors)         Kevin Park  ❌ TODO   Jul 25
+
+
+INTERNAL AUDIT SCHEDULE 2025
+------------------------------
+  Quarter  Area                  Lead          Date
+  ────────────────────────────────────────────────────────
+  Q1       Financial Controls     Finance       Mar 2025 ✓
+  Q2       Data Privacy           Legal         Jun 2025 ⏳
+  Q3       IT Security            Engineering   Sep 2025
+  Q4       HR Compliance          HR            Dec 2025
+
+
+ESCALATION LOG
+--------------
+  Date        Item           Escalated To     Resolution
+  ────────────────────────────────────────────────────────────
+  2025-03-15  A-001 Audit    Julia Santos      Restatement in progress
+  2025-04-20  F-003 Login RL Alice Chen        Rate-limit planned Q2
+
+---
+END OF DOCUMENT

@@ -1,0 +1,71 @@
+APEX SOLUTIONS INC. — Q1 2025 FINANCIAL REPORT
+================================================
+Classification: CONFIDENTIAL — Finance Department Only
+Author: George Mbeki (Head of Finance)
+Date: 2025-04-15
+Period: January 1 – March 31, 2025
+
+---
+
+EXECUTIVE SUMMARY
+-----------------
+Q1 2025 was a strong quarter for Apex Solutions.  Revenue exceeded the
+quarterly plan by 8 %, driven by two enterprise deals closed in March.
+Operating costs came in 3 % below budget due to delayed hiring.
+
+
+INCOME STATEMENT (USD)
+------------------------
+                             Q1 2025 Actual    Q1 2025 Budget    Variance
+  ─────────────────────────────────────────────────────────────────────────
+  Revenue
+    Subscription ARR         3 240 000          3 000 000         +8.0 %
+    Professional Services      480 000            400 000        +20.0 %
+    Other                       32 000             30 000         +6.7 %
+  TOTAL REVENUE              3 752 000          3 430 000         +9.4 %
+
+  Cost of Revenue
+    Cloud infrastructure       325 000            340 000         -4.4 %
+    Third-party APIs            87 000             80 000         +8.8 %
+  TOTAL COGS                   412 000            420 000         -1.9 %
+
+  GROSS PROFIT                3 340 000          3 010 000        +11.0 %
+  Gross Margin                   89.0 %             87.8 %
+
+  Operating Expenses
+    Personnel                 1 820 000          1 922 000         -5.3 %
+    Sales & Marketing           198 000            217 000         -8.8 %
+    R&D                         225 000            248 000         -9.3 %
+    G&A                         112 000            110 000         +1.8 %
+  TOTAL OPEX                  2 355 000          2 497 000         -5.7 %
+
+  EBITDA                        985 000            513 000        +92.0 %
+  EBITDA Margin                  26.3 %             15.0 %
+
+
+CASH POSITION
+--------------
+  Opening Cash (Jan 1)    :  USD  8 420 000
+  Operating Cash Flow     :  USD  1 102 000
+  Investing (CapEx)       :  USD   (142 000)
+  Financing               :  USD          0
+  Closing Cash (Mar 31)   :  USD  9 380 000
+  Months of Runway        :  24.3 months
+
+
+KEY HIGHLIGHTS
+--------------
+  • Enterprise deal with ClientCo A (USD 480 000 ARR) signed March 14.
+  • Enterprise deal with ClientCo B (USD 360 000 ARR) signed March 28.
+  • Hiring was 3 months behind plan — 5 of 9 planned hires completed.
+  • Cloud costs rose 8 % YoY due to Elasticsearch cluster expansion.
+
+
+OUTLOOK Q2 2025
+---------------
+  • Revenue forecast: USD 4 100 000 (ARR growth + 2 new deals pipeline)
+  • Hiring to accelerate: 4 remaining Q1 hires + 5 new Q2 reqs
+  • Infrastructure cost expected to stabilise after migration
+
+---
+END OF DOCUMENT

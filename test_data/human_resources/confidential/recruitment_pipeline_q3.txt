@@ -1,0 +1,71 @@
+APEX SOLUTIONS INC. — Q3 2025 RECRUITMENT PIPELINE
+=====================================================
+Classification: CONFIDENTIAL — Human Resources Department Only
+Author: Ethan Lewis (Talent Acquisition Manager)
+Date: 2025-04-12
+
+---
+
+PURPOSE
+-------
+This document tracks all open requisitions, active candidates, and hiring
+targets for Q3 2025 (July–September).  Information here is strictly
+confidential; share only with hiring managers and HR staff.
+
+
+OPEN REQUISITIONS
+-----------------
+Req ID   Role                          Dept         Headcount  Status
+─────────────────────────────────────────────────────────────────────────
+REQ-031  Senior Backend Engineer       Engineering  2          Interviewing
+REQ-032  DevOps / SRE Engineer         Engineering  1          Offer Stage
+REQ-033  HR Business Partner           HR           1          Sourcing
+REQ-034  Junior Financial Analyst      Finance      2          Shortlisting
+REQ-035  Compliance Officer            Legal        1          Sourcing
+REQ-036  Warehouse Operations Manager  Operations   1          Interviewing
+
+
+ACTIVE CANDIDATES — SENIOR BACKEND ENGINEER (REQ-031)
+------------------------------------------------------
+Candidate       | Stage          | Notes
+────────────────────────────────────────────────────────────────────
+Jane Doe        | Final Round    | Strong Kafka + Python; offer pending
+Mark Otieno     | Technical Test | Missed async question; marginal pass
+Sara Lindqvist  | HR Screening   | Referral from Alice Chen; priority
+
+
+ACTIVE CANDIDATES — DEVOPS / SRE (REQ-032)
+-------------------------------------------
+Candidate       | Stage   | Notes
+────────────────────────────────────────────────────────
+Amir Khan       | Offer   | Verbal accepted; awaiting signed offer
+Priya Nair      | Reserve | Strong but preferred company closer to home
+
+
+HIRING TARGETS Q3 2025
+-----------------------
+  Engineering   : +3 hires (bring total to 18)
+  Finance       : +2 hires (bring total to 8)
+  Legal         : +1 hire (bring total to 5)
+  Operations    : +1 hire (bring total to 12)
+
+
+BUDGET
+------
+Total recruitment budget Q3: USD 45 000
+  Agency fees (external recruiters): USD 20 000
+  Job board adverts (LinkedIn, Glassdoor): USD 8 000
+  Candidate travel & assessment: USD 5 000
+  Signing bonuses (budgeted): USD 12 000
+
+
+TIMELINE
+--------
+  12 Apr – 30 Apr : Active sourcing for all open reqs
+  01 May – 31 May : First-round interviews
+  01 Jun – 15 Jun : Final rounds + offer negotiations
+  16 Jun – 30 Jun : Offer acceptance and onboarding prep
+  01 Jul onwards  : New hire start dates
+
+---
+END OF DOCUMENT

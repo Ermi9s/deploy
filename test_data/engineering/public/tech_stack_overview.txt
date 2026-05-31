@@ -1,0 +1,77 @@
+APEX SOLUTIONS INC. — TECHNOLOGY STACK OVERVIEW
+=================================================
+Classification: PUBLIC
+Department: Engineering
+Version: 3.1
+Last Updated: 2025-02-10
+
+---
+
+PURPOSE
+-------
+This document gives a high-level overview of the technologies used across
+all Apex Solutions products.  It is intended for new hires, interviewers,
+and stakeholders who need to understand our technical landscape without
+accessing confidential architectural details.
+
+
+FRONTEND
+--------
+• Framework        : Next.js 14 (App Router)
+• Language         : TypeScript 5
+• Styling          : Tailwind CSS + shadcn/ui component library
+• State Management : Zustand for client state; SWR for server state
+• Testing          : Jest + React Testing Library; Playwright for E2E
+
+
+BACKEND (MICROSERVICES)
+------------------------
+Each service is a Python / Django REST Framework application:
+
+  Service          Port   Responsibility
+  ───────────────────────────────────────────────────────────
+  management       8002   User accounts, departments, admin
+  ingestion        8001   File upload & ingestion pipeline
+  notification     8003   In-app notifications (WebSocket + polling)
+  rag              8004   AI search and chat (RAG)
+  workers          —      Celery background tasks
+
+All services communicate over an internal Docker network.  The API Gateway
+(Nginx) routes public traffic to the correct service.
+
+
+AI & SEARCH
+-----------
+• Embedding Model     : Google Gemini text-embedding-004
+• Generative Model    : Google Gemini 1.5 Flash / Pro
+• Vector Store        : Elasticsearch 8 (kNN dense vectors)
+• OCR                 : Tesseract 5 via pytesseract
+• PDF Parsing         : PyMuPDF (fitz)
+
+
+DATA STORES
+-----------
+• Primary DB          : PostgreSQL 15 (one schema per microservice)
+• Cache / Queue Broker: Redis 7
+• Object Storage      : MinIO (S3-compatible)
+• Vector/Search DB    : Elasticsearch 8
+
+
+INFRASTRUCTURE
+--------------
+• Container runtime   : Docker / Docker Compose (dev), GKE (prod)
+• CI/CD               : GitHub Actions
+• Monitoring          : Prometheus + Grafana
+• Alerting            : PagerDuty
+• Secret Management   : Google Secret Manager
+
+
+SECURITY HIGHLIGHTS
+-------------------
+• Authentication      : JWT (SimpleJWT) with 60-min access tokens
+• Authorisation       : Department-level Mandatory Access Control (MAC)
+• TLS                 : Enforced on all public endpoints
+• Secrets scanning    : Gitleaks in CI pipeline
+
+---
+END OF DOCUMENT

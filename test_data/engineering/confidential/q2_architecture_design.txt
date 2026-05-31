@@ -1,0 +1,88 @@
+APEX SOLUTIONS INC. — Q2 2025 ARCHITECTURE DESIGN DOCUMENT
+============================================================
+Classification: CONFIDENTIAL — Engineering Department Only
+Author: Alice Chen (Head of Engineering)
+Date: 2025-03-20
+Status: APPROVED
+
+---
+
+EXECUTIVE SUMMARY
+-----------------
+This document describes the approved architectural changes to be implemented
+in Q2 2025.  The primary goal is to decouple the monolithic ingestion pipeline
+into independent chunking, embedding, and indexing workers to improve
+horizontal scalability.
+
+The design has been reviewed by the Engineering leads and approved by the CTO.
+Do not share outside the Engineering department.
+
+
+1. CURRENT ARCHITECTURE PAIN POINTS
+-------------------------------------
+• Single Celery worker processes all pipeline stages sequentially, creating
+  a bottleneck at the embedding stage (avg. 4 s per document page).
+• Elasticsearch index mapping is not optimised for kNN recall > 95 %.
+• The management service couples authentication and drive logic, making
+  independent scaling difficult.
+
+
+2. PROPOSED CHANGES
+--------------------
+
+2.1 Pipeline Parallelisation
+  Split the single `process_document` Celery task into four independent tasks:
+    a) extract_text_task     — PyMuPDF / Tesseract
+    b) chunk_text_task       — sliding window chunker
+    c) generate_embeddings_task — Gemini API (parallelised across chunks)
+    d) index_chunks_task     — Elasticsearch bulk index
+
+  Each stage publishes to a dedicated Redis queue.  A lightweight orchestrator
+  task monitors progress and updates the UploadedDocument.status field.
+
+2.2 Elasticsearch Optimisation
+  • Increase `num_candidates` from 50 → 200 for kNN queries.
+  • Add a secondary `bm25_score` field to enable hybrid search (kNN + BM25).
+  • Snapshot policy: daily snapshots to MinIO for disaster recovery.
+
+2.3 Management Service Split
+  Phase 1 (Q2): Extract the Drive API into a separate `drive` Django app
+  while keeping shared database access.
+  Phase 2 (Q3): Migrate Drive to its own PostgreSQL schema and containerise
+  independently.
+
+
+3. TIMELINE
+-----------
+  Week 1–2   : Spike & proof-of-concept for parallel tasks
+  Week 3–5   : Implementation + unit tests
+  Week 6     : Load testing (target: 50 concurrent uploads, p95 < 30 s)
+  Week 7     : Staging rollout + monitoring dashboards
+  Week 8     : Production cut-over (blue-green deployment)
+
+
+4. RISKS & MITIGATIONS
+-----------------------
+  Risk                          | Likelihood | Mitigation
+  ─────────────────────────────────────────────────────────────────────
+  Celery task fan-out storms    | Medium     | Rate-limit Redis queues
+  Gemini API quota exceeded     | Low        | Exponential back-off + retry
+  ES index corruption on split  | Low        | Snapshot before migration
+  Increased Redis memory usage  | Medium     | Set maxmemory policy LRU
+
+
+5. SUCCESS METRICS
+------------------
+  • p95 ingestion time for a 10-page PDF ≤ 20 s (currently ~85 s)
+  • RAG retrieval recall@10 ≥ 0.92
+  • Zero data loss events post-migration
+
+
+APPROVAL SIGN-OFFS
+------------------
+  Alice Chen   – Head of Engineering  ✓ Approved 2025-03-20
+  Bob Kumar    – DevOps Lead          ✓ Approved 2025-03-21
+  [CTO]        – Executive Sponsor    ✓ Approved 2025-03-22
+
+---
+END OF DOCUMENT

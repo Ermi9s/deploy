@@ -1,0 +1,105 @@
+APEX SOLUTIONS INC. — API INTEGRATION SPECIFICATION
+=====================================================
+Classification: CONFIDENTIAL — Engineering Department Only
+Author: Bob Kumar (DevOps Lead)
+Version: 2.4
+Date: 2025-04-05
+
+---
+
+PURPOSE
+-------
+This specification defines the internal REST + WebSocket API contracts used
+between microservices.  Third-party integrators must use the public API Gateway
+documentation instead.
+
+
+1. AUTHENTICATION
+-----------------
+All inter-service calls use a shared internal service token (header:
+  X-Service-Token: <token>
+
+User-facing endpoints require a JWT issued by the management service:
+  Authorization: Bearer <access_token>
+
+JWT Claims (relevant fields):
+  {
+    "user_id"       : 42,
+    "email"         : "alice.chen@apexsolutions.com",
+    "department_id" : "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "level_ranking" : 3,
+    "is_superuser"  : false
+  }
+
+Token TTL: 3600 seconds (access), 7 days (refresh).
+
+
+2. INGESTION SERVICE (PORT 8001)
+---------------------------------
+Endpoint                              Method  Description
+───────────────────────────────────────────────────────────────────────
+/api/documents/upload/                POST    Upload a new document
+/api/documents/<id>/status/           GET     Poll ingestion status
+/api/documents/<id>/register/         POST    Register file in drive
+WS /ws/documents/                     WS      Real-time progress stream
+
+Upload Request (multipart/form-data):
+  file           : <binary>
+  departmentAccess: {"<dept-uuid>": <min_ranking>, ...}
+
+Status Response:
+  {
+    "id"       : "<uuid>",
+    "status"   : "queued|processing|completed|failed",
+    "progress" : 75,
+    "stage"    : "embedding"
+  }
+
+
+3. MANAGEMENT SERVICE (PORT 8002)
+----------------------------------
+Endpoint                                  Method  Description
+───────────────────────────────────────────────────────────────────────
+/auth/register/                           POST    Register new user
+/auth/login/                              POST    Obtain JWT pair
+/auth/token/refresh/                      POST    Refresh access token
+/auth/me/                                 GET     Current user profile
+/auth/admin/departments/                  GET/POST  Department CRUD
+/auth/admin/departments/<pk>/             GET/PATCH/DELETE
+/auth/admin/departments/<pk>/permission-levels/  GET/POST
+/auth/admin/users/                        GET     List users
+/auth/admin/users/<pk>/assign/            POST    Assign dept + level
+/auth/admin/users/<pk>/toggle-admin/      POST    Promote/demote admin
+/auth/admin/audit-logs/                   GET     Admin audit trail
+/drive/items/                             GET/POST  Drive root items
+/drive/items/<id>/                        GET/PATCH/DELETE
+/drive/items/<id>/trash/                  POST    Soft-delete to trash
+/drive/items/<id>/restore/                POST    Restore from trash
+/drive/items/<id>/versions/               GET     File version history
+
+
+4. RAG SERVICE (PORT 8004)
+---------------------------
+Endpoint                              Method  Description
+───────────────────────────────────────────────────────────────────────
+/api/chat/sessions/                   GET/POST  Chat session management
+/api/chat/sessions/<id>/messages/     GET     Message history
+WS /ws/chat/<session_id>/             WS      Streaming chat
+/api/planning/plans/                  GET/POST  Department plans
+/api/planning/plans/<id>/milestones/  GET/POST  Milestones
+/api/planning/milestones/<id>/accept/ POST    Accept AI completion
+/api/planning/milestones/<id>/reject/ POST    Reject AI completion
+/api/planning/milestones/<id>/complete/ POST  Manual completion
+
+
+5. ERROR CODES
+--------------
+  400 Bad Request       — Validation failure (body contains `detail`)
+  401 Unauthorized      — Missing or expired JWT
+  403 Forbidden         — Insufficient MAC ranking for resource
+  404 Not Found         — Resource does not exist (or MAC-hidden)
+  409 Conflict          — Constraint violation (e.g. user still assigned)
+  429 Too Many Requests — Rate-limit exceeded (Retry-After header set)
+
+---
+END OF DOCUMENT

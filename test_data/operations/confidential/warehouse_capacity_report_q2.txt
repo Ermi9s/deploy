@@ -1,0 +1,69 @@
+APEX SOLUTIONS INC. — WAREHOUSE CAPACITY REPORT Q2 2025
+=========================================================
+Classification: CONFIDENTIAL — Operations Department Only
+Author: Mike Ali (Operations Manager)
+Date: 2025-04-15
+
+---
+
+PURPOSE
+-------
+This report assesses the current storage and warehouse capacity for Apex
+Solutions' IT asset stockroom at HQ.  It informs Q3 procurement planning
+and potential off-site storage decisions.
+
+
+CURRENT STORAGE ALLOCATION (HQ — Westgate Plaza, Room B12)
+------------------------------------------------------------
+  Area         : 45 m² (dedicated IT asset storeroom)
+  Current Usage: 72 % occupied
+
+  Category                  Units    Avg Size   Space Used
+  ─────────────────────────────────────────────────────────
+  Laptops (new stock)        24      0.05 m²    1.2 m²
+  Laptops (awaiting setup)    8      0.05 m²    0.4 m²
+  Monitors                   18      0.09 m²    1.6 m²
+  Servers / NAS               3      0.25 m²    0.75 m²
+  Networking equipment       12      0.08 m²    0.96 m²
+  Cables & peripherals (boxes) 40   0.04 m²    1.6 m²
+  E-waste (pending disposal)  15    0.06 m²    0.9 m²
+  Furniture (surplus)          6    0.5 m²     3.0 m²
+  ────────────────────────────────────────────────────
+  TOTAL USED                                   10.4 m²
+  AVAILABLE                                     4.0 m²   (of 45m², excl. walkways)
+
+
+CAPACITY ISSUES IDENTIFIED
+---------------------------
+  1. E-waste backlog (15 units) — overdue for disposal (target: monthly).
+     Action: Schedule certified e-waste pickup with GreenRecycle Ltd. by May 10.
+
+  2. Surplus furniture (6 items) from office redesign blocking aisle.
+     Action: Donate to NGO partner or arrange auction by May 20.
+
+  3. Q3 hiring (+9 employees) will require ~9 additional laptop sets.
+     Projected additional space needed: 2.7 m² — exceeds current availability.
+     Action: Request 15 m² additional storeroom from Westgate Properties.
+
+
+Q3 PROCUREMENT PLAN
+--------------------
+  Item                   Qty   Unit Cost (USD)   Total (USD)   Priority
+  ─────────────────────────────────────────────────────────────────────────
+  Laptops (new hires)     9       1 200            10 800        HIGH
+  Monitors (new hires)    9         350             3 150        HIGH
+  Ergonomic chairs        9         280             2 520        HIGH
+  Standing desks          4         420             1 680        MEDIUM
+  Webcams & headsets     12         110             1 320        HIGH
+  ─────────────────────────────────────────────────────────────────────────
+  TOTAL Q3 PROCUREMENT                             19 470
+
+
+RECOMMENDATIONS
+---------------
+  1. Immediate: Clear e-waste and surplus furniture to free 3.9 m².
+  2. Short-term: Negotiate additional 15 m² storeroom (est. KES 5 000/month).
+  3. Long-term: Consider cloud-first approach to reduce physical hardware needs.
+
+---
+END OF DOCUMENT
