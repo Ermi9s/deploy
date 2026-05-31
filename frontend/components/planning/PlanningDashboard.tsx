@@ -220,9 +220,9 @@ export function PlanningDashboard() {
   const filteredMilestones = selectedPlan?.milestones ? getFilteredMilestones(selectedPlan.milestones) : []
 
   return (
-    <div className="flex flex-col h-full gap-6">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 p-5 md:px-6 border-b border-border bg-accent/30">
         <div>
           <h1 className="text-3xl font-display font-bold tracking-tight text-foreground flex items-center gap-2">
             <ClipboardList className="h-8 w-8 text-primary" />
@@ -285,14 +285,14 @@ export function PlanningDashboard() {
           </Button>
         </div>
       ) : (
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0 overflow-hidden">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 min-h-0 overflow-hidden bg-card">
 
           {/* Left — Plans Sidebar */}
-          <div className="lg:col-span-4 flex flex-col gap-4 overflow-y-auto max-h-[350px] lg:max-h-none">
-            <h3 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider px-1">
+          <div className="lg:col-span-4 flex flex-col overflow-y-auto max-h-[350px] lg:max-h-none border-r border-border bg-accent/10">
+            <h3 className="font-display font-semibold text-xs text-muted-foreground uppercase tracking-wider p-4 border-b border-border bg-accent/20">
               Active Roadmaps
             </h3>
-            <div className="space-y-3">
+            <div className="p-3 space-y-2">
               {plans.map((p) => {
                 const isSelected = selectedPlan?.id === p.id
                 const stats = getMilestoneStats(p.milestones)
@@ -337,9 +337,9 @@ export function PlanningDashboard() {
           </div>
 
           {/* Right — Milestones Detail */}
-          <div className="lg:col-span-8 flex flex-col gap-4 min-h-0">
+          <div className="lg:col-span-8 flex flex-col min-h-0 bg-card">
             {selectedPlan && (
-              <div className="flex flex-col h-full bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+              <div className="flex flex-col h-full overflow-hidden">
 
                 {/* Plan Header */}
                 <div className="p-6 border-b border-border bg-card/50 flex flex-col sm:flex-row sm:items-start justify-between gap-4 shrink-0">

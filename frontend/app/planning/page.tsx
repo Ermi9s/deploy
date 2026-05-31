@@ -13,8 +13,10 @@ export default function PlanningPage() {
   return (
     <AuthGuard>
       <AppLayout>
-        <div className="h-full p-4 md:p-6 lg:p-8">
-          <PlanningDashboard />
+        <div className="flex flex-col h-screen p-4 md:p-6 lg:p-8 bg-background">
+          <div className="flex flex-col flex-1 border border-border rounded-xl shadow-xl overflow-hidden bg-card min-h-0">
+            <PlanningDashboard />
+          </div>
         </div>
       </AppLayout>
     </AuthGuard>
