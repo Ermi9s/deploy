@@ -72,7 +72,7 @@ export default function DepartmentAccessPicker({
 
   const getBadgeStyle = (ranking: number, isCurrentSelection: boolean) => {
     if (!isCurrentSelection) {
-      return 'bg-slate-100 hover:bg-slate-200 text-slate-500 border-slate-200'
+      return 'bg-accent hover:bg-slate-200 text-muted-foreground border-border'
     }
     // Highlighting based on clearance level
     if (ranking <= 1) return 'bg-emerald-600 text-white border-emerald-600 ring-2 ring-emerald-300 ring-offset-1'
@@ -84,7 +84,7 @@ export default function DepartmentAccessPicker({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-10 text-slate-400 border border-slate-100 bg-white rounded-xl">
+      <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground border border-border/50 bg-card rounded-xl">
         <Loader2 className="w-5 h-5 animate-spin text-indigo-500" />
         <span className="text-sm font-medium">Loading security matrix...</span>
       </div>
@@ -109,29 +109,29 @@ export default function DepartmentAccessPicker({
         <div className="flex items-center gap-2">
           <Shield className="w-5 h-5 text-indigo-500" />
           <div>
-            <h4 className="text-sm font-semibold text-slate-800">Clearance Classification Matrix</h4>
-            <p className="text-xs text-slate-500">Configure who is authorized to view vector search results.</p>
+            <h4 className="text-sm font-semibold text-foreground">Clearance Classification Matrix</h4>
+            <p className="text-xs text-muted-foreground">Configure who is authorized to view vector search results.</p>
           </div>
         </div>
       </div>
 
-      <div className="border border-slate-200/80 rounded-xl bg-white overflow-hidden shadow-sm">
+      <div className="border border-border/80 rounded-xl bg-card overflow-hidden shadow-sm">
         <div className="min-w-full overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-100 table-fixed">
-            <thead className="bg-slate-50/70">
+          <table className="min-w-full divide-y divide-border/50 table-fixed">
+            <thead className="bg-muted/70">
               <tr>
-                <th scope="col" className="w-[180px] px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
+                <th scope="col" className="w-[180px] px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Department
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-400">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Clearance Requirement
                 </th>
-                <th scope="col" className="w-[80px] px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-400">
+                <th scope="col" className="w-[80px] px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Status
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            <tbody className="divide-y divide-border/50 bg-card">
               {departments.map((dept) => {
                 const selected = isSelected(dept)
                 const pub = isPublic(dept)
@@ -142,7 +142,7 @@ export default function DepartmentAccessPicker({
                 return (
                   <tr
                     key={dept.uuid}
-                    className={`transition-colors ${selected ? 'bg-indigo-50/20' : 'hover:bg-slate-50/40'}`}
+                    className={`transition-colors ${selected ? 'bg-indigo-50/20' : 'hover:bg-muted/40'}`}
                   >
                     {/* Department Header */}
                     <td className="px-4 py-3.5 align-middle">
@@ -154,7 +154,7 @@ export default function DepartmentAccessPicker({
                         ) : (
                           <span className="w-4 h-4 rounded-full border border-dashed border-slate-300 shrink-0" />
                         )}
-                        <span className={`text-sm font-semibold truncate ${selected ? 'text-slate-900 font-bold' : 'text-slate-500'}`}>
+                        <span className={`text-sm font-semibold truncate ${selected ? 'text-slate-900 font-bold' : 'text-muted-foreground'}`}>
                           {dept.name}
                         </span>
                       </div>
@@ -184,7 +184,7 @@ export default function DepartmentAccessPicker({
                         })}
 
                         {levels.length === 0 && (
-                          <span className="text-xs italic text-slate-400">No clearance levels defined</span>
+                          <span className="text-xs italic text-muted-foreground">No clearance levels defined</span>
                         )}
                       </div>
                     </td>
@@ -200,13 +200,13 @@ export default function DepartmentAccessPicker({
                           type="button"
                           disabled={disabled}
                           onClick={() => handleRemoveDepartment(dept)}
-                          className="p-1 hover:bg-red-50 hover:text-red-500 text-slate-400 rounded-lg transition-colors border border-transparent hover:border-red-200 shrink-0"
+                          className="p-1 hover:bg-red-50 hover:text-red-500 text-muted-foreground rounded-lg transition-colors border border-transparent hover:border-red-200 shrink-0"
                           title="Revoke department access"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
                       ) : (
-                        <span className="text-[10px] font-medium text-slate-400 italic">None</span>
+                        <span className="text-[10px] font-medium text-muted-foreground italic">None</span>
                       )}
                     </td>
                   </tr>

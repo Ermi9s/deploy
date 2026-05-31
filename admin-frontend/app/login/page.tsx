@@ -7,7 +7,7 @@ import { api, clearStoredTokens, isAuthenticated } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { ShieldAlert } from 'lucide-react'
+import { Brain, ShieldAlert } from 'lucide-react'
 
 const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3000'
 
@@ -53,15 +53,15 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 sm:p-6">
-      <Card className="w-full max-w-md p-6 sm:p-8 space-y-6 border-slate-800 bg-slate-900 shadow-2xl">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6">
+      <Card className="w-full max-w-md p-6 sm:p-8 space-y-6 shadow-2xl">
         <div className="flex flex-col items-center gap-3 mb-2">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white font-bold text-2xl">
-            Ω
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
+            <Brain className="h-6 w-6" />
           </div>
           <div className="text-center">
-            <h1 className="text-xl font-bold tracking-tight text-slate-100">OKnowledge Admin</h1>
-            <p className="text-sm text-slate-400 mt-1">Sign in with your administrator credentials.</p>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">OKnowledge Admin</h1>
+            <p className="text-sm text-muted-foreground mt-1">Sign in with your administrator credentials.</p>
           </div>
         </div>
 
@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
             placeholder="Email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="bg-slate-950 border-slate-800 focus:border-indigo-500 text-slate-200 placeholder:text-slate-600"
+            className="bg-background"
           />
           <Input
             id="admin-password"
@@ -82,19 +82,19 @@ export default function AdminLoginPage() {
             placeholder="Password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="bg-slate-950 border-slate-800 focus:border-indigo-500 text-slate-200 placeholder:text-slate-600"
+            className="bg-background"
           />
 
           {error ? (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-red-950/30 border border-red-900/50">
-              <ShieldAlert className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-              <p className="text-sm text-red-400">{error}</p>
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+              <ShieldAlert className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+              <p className="text-sm text-destructive">{error}</p>
             </div>
           ) : null}
 
           <Button
             id="admin-login-submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold"
+            className="w-full font-semibold shadow-md"
             type="submit"
             disabled={loading}
           >
@@ -102,9 +102,9 @@ export default function AdminLoginPage() {
           </Button>
         </form>
 
-        <p className="text-xs text-slate-600 text-center">
+        <p className="text-xs text-muted-foreground text-center">
           Not an admin?{' '}
-          <a href={`${PORTAL_URL}/login`} className="text-indigo-500 hover:underline">
+          <a href={`${PORTAL_URL}/login`} className="text-primary hover:underline">
             Return to the user portal
           </a>
         </p>

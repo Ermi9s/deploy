@@ -31,9 +31,9 @@ export default function FilePreview({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] flex flex-col shadow-2xl">
-        <div className="flex items-center justify-between p-6 border-b bg-gray-50">
-          <h2 className="text-xl font-semibold text-gray-800 truncate">{item.name}</h2>
+      <div className="bg-card rounded-lg max-w-4xl w-full max-h-[80vh] flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between p-6 border-b bg-muted">
+          <h2 className="text-xl font-semibold text-foreground truncate">{item.name}</h2>
           <div className="flex gap-2 ml-4">
             {fileUrl && (
               <Button asChild variant="ghost" size="icon">
@@ -53,7 +53,7 @@ export default function FilePreview({
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto flex items-center justify-center bg-gray-50">
+        <div className="flex-1 overflow-auto flex items-center justify-center bg-muted">
           <AllFileViewer
             fileName={item.name}
             mimeType={item.fileType}

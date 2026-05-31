@@ -1,0 +1,8 @@
+app/drive/ingestion/[documentId]/page.tsx(144,18): error TS2322: Type '{ children: Element; title: string; }' is not assignable to type 'IntrinsicAttributes & AppLayoutProps'.
+  Property 'title' does not exist on type 'IntrinsicAttributes & AppLayoutProps'.
+app/reset-password/page.tsx(42,38): error TS2554: Expected 1 arguments, but got 2.
+components/notifications/NotificationsView.tsx(158,81): error TS2554: Expected 0 arguments, but got 1.
+components/notifications/NotificationsView.tsx(288,36): error TS2339: Property 'reference_document_id' does not exist on type 'PlanningNotification'.
+components/notifications/NotificationsView.tsx(293,67): error TS2339: Property 'reference_document_id' does not exist on type 'PlanningNotification'.
+components/notifications/NotificationsView.tsx(294,68): error TS2339: Property 'reference_document_id' does not exist on type 'PlanningNotification'.
+components/notifications/NotificationsView.tsx(296,51): error TS2339: Property 'reference_document_id' does not exist on type 'PlanningNotification'.

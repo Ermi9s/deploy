@@ -15,7 +15,7 @@ interface AppLayoutProps {
   navItems?: NavItem[]
   brandTitle?: string
   brandSubtitle?: string
-  backLink?: { name: string; href: string; icon: LucideIcon }
+  backLink?: { name: string; href: string; icon: LucideIcon; isExternal?: boolean }
 }
 
 export function AppLayout({ children, navItems, brandTitle, brandSubtitle, backLink }: AppLayoutProps) {

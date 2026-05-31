@@ -151,7 +151,7 @@ export default function UploadModal({
     const mime = file.type.toLowerCase()
     if (mime === 'application/pdf') return <FileText className="w-5 h-5 text-rose-500 shrink-0" />
     if (mime.startsWith('image/')) return <ImageIcon className="w-5 h-5 text-amber-500 shrink-0" />
-    return <FileIcon className="w-5 h-5 text-slate-400 shrink-0" />
+    return <FileIcon className="w-5 h-5 text-muted-foreground shrink-0" />
   }
 
   const executeUploadLoop = async () => {
@@ -206,14 +206,14 @@ export default function UploadModal({
       onOpenChange(val)
       if (!val) resetState()
     }}>
-      <DialogContent className="sm:max-w-[760px] p-0 overflow-hidden rounded-2xl border-slate-200">
-        <DialogHeader className="px-6 pt-5 pb-3 border-b border-slate-100 flex flex-row items-center justify-between">
+      <DialogContent className="sm:max-w-[760px] p-0 overflow-hidden rounded-2xl border-border">
+        <DialogHeader className="px-6 pt-5 pb-3 border-b border-border/50 flex flex-row items-center justify-between">
           <div>
-            <DialogTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
               <Upload className="w-5 h-5 text-indigo-600" />
               Secure Document Ingestor
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500 mt-0.5">
+            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
               Select, classify, and audit documents uploaded to your knowledge environment.
             </DialogDescription>
           </div>
@@ -221,26 +221,26 @@ export default function UploadModal({
 
         {/* Stepper progress indicator */}
         {step !== 'uploading' && (
-          <div className="px-6 py-3 bg-slate-50/80 border-b border-slate-100 flex items-center justify-center gap-8">
+          <div className="px-6 py-3 bg-muted/80 border-b border-border/50 flex items-center justify-center gap-8">
             <div className="flex items-center gap-2">
               <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold ${step === 'select' ? 'bg-indigo-600 text-white' : 'bg-emerald-100 text-emerald-700 font-bold'}`}>
                 {step !== 'select' ? '✓' : '1'}
               </span>
-              <span className={`text-xs font-semibold ${step === 'select' ? 'text-slate-800' : 'text-slate-400'}`}>Select Files</span>
+              <span className={`text-xs font-semibold ${step === 'select' ? 'text-foreground' : 'text-muted-foreground'}`}>Select Files</span>
             </div>
             <div className="w-8 h-px bg-slate-200" />
             <div className="flex items-center gap-2">
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold ${step === 'classify' ? 'bg-indigo-600 text-white' : step === 'review' ? 'bg-emerald-100 text-emerald-700 font-bold' : 'bg-slate-200 text-slate-500'}`}>
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold ${step === 'classify' ? 'bg-indigo-600 text-white' : step === 'review' ? 'bg-emerald-100 text-emerald-700 font-bold' : 'bg-slate-200 text-muted-foreground'}`}>
                 {step === 'review' ? '✓' : '2'}
               </span>
-              <span className={`text-xs font-semibold ${step === 'classify' ? 'text-slate-800' : 'text-slate-400'}`}>Classify</span>
+              <span className={`text-xs font-semibold ${step === 'classify' ? 'text-foreground' : 'text-muted-foreground'}`}>Classify</span>
             </div>
             <div className="w-8 h-px bg-slate-200" />
             <div className="flex items-center gap-2">
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold ${step === 'review' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold ${step === 'review' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-muted-foreground'}`}>
                 3
               </span>
-              <span className={`text-xs font-semibold ${step === 'review' ? 'text-slate-800' : 'text-slate-400'}`}>Review & Upload</span>
+              <span className={`text-xs font-semibold ${step === 'review' ? 'text-foreground' : 'text-muted-foreground'}`}>Review & Upload</span>
             </div>
           </div>
         )}
@@ -258,7 +258,7 @@ export default function UploadModal({
                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
                   isDragging
                     ? 'border-indigo-500 bg-indigo-50/50 scale-[0.99]'
-                    : 'border-slate-200 bg-slate-50/30 hover:border-indigo-400 hover:bg-indigo-50/10'
+                    : 'border-border bg-muted/30 hover:border-indigo-400 hover:bg-indigo-50/10'
                 }`}
               >
                 <input
@@ -271,28 +271,28 @@ export default function UploadModal({
                 <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto mb-3">
                   <Upload className="w-6 h-6 text-indigo-600" />
                 </div>
-                <p className="text-sm font-semibold text-slate-700">Drag files here or browse</p>
-                <p className="text-xs text-slate-400 mt-1">PDF and image formats supported up to 500 MB</p>
+                <p className="text-sm font-semibold text-foreground/90">Drag files here or browse</p>
+                <p className="text-xs text-muted-foreground mt-1">PDF and image formats supported up to 500 MB</p>
               </div>
 
               {/* Queued files list */}
               {fileQueue.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wide">Queue ({totalFiles})</h4>
-                  <ul className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden bg-white max-h-[220px] overflow-y-auto shadow-inner">
+                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Queue ({totalFiles})</h4>
+                  <ul className="divide-y divide-border/50 border border-border/50 rounded-xl overflow-hidden bg-card max-h-[220px] overflow-y-auto shadow-inner">
                     {fileQueue.map((qFile) => (
-                      <li key={qFile.id} className="flex items-center justify-between p-3 hover:bg-slate-50/50 transition">
+                      <li key={qFile.id} className="flex items-center justify-between p-3 hover:bg-muted/50 transition">
                         <div className="flex items-center gap-3 min-w-0">
                           {getFileIcon(qFile.file)}
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-700 truncate max-w-[400px]">{qFile.file.name}</p>
-                            <p className="text-[11px] text-slate-400 mt-0.5">{formatFileSize(qFile.file.size)}</p>
+                            <p className="text-sm font-medium text-foreground/90 truncate max-w-[400px]">{qFile.file.name}</p>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">{formatFileSize(qFile.file.size)}</p>
                           </div>
                         </div>
                         <button
                           type="button"
                           onClick={() => removeFileFromQueue(qFile.id)}
-                          className="p-1 text-slate-400 hover:text-red-500 rounded-md hover:bg-red-50 transition"
+                          className="p-1 text-muted-foreground hover:text-red-500 rounded-md hover:bg-red-50 transition"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -327,17 +327,17 @@ export default function UploadModal({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* File Breakdown */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center justify-between">
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wide flex items-center justify-between">
                   <span>Target Files</span>
-                  <span className="text-slate-500">{totalFiles} total</span>
+                  <span className="text-muted-foreground">{totalFiles} total</span>
                 </h4>
-                <ul className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden bg-white max-h-[280px] overflow-y-auto">
+                <ul className="divide-y divide-border/50 border border-border rounded-xl overflow-hidden bg-card max-h-[280px] overflow-y-auto">
                   {fileQueue.map((qFile) => (
                     <li key={qFile.id} className="flex items-center gap-3 p-3">
                       {getFileIcon(qFile.file)}
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold text-slate-700 truncate">{qFile.file.name}</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">{formatFileSize(qFile.file.size)}</p>
+                        <p className="text-xs font-semibold text-foreground/90 truncate">{qFile.file.name}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{formatFileSize(qFile.file.size)}</p>
                       </div>
                     </li>
                   ))}
@@ -346,13 +346,13 @@ export default function UploadModal({
 
               {/* Policy Audit */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1">
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
                   <Shield className="w-3.5 h-3.5 text-indigo-500" />
                   Assigned Security Policy
                 </h4>
-                <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-4">
+                <div className="border border-border rounded-xl p-4 bg-muted/50 space-y-4">
                   <div className="space-y-2">
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Permitted Clearance Levels</p>
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Permitted Clearance Levels</p>
                     <div className="flex flex-col gap-1.5">
                       {Object.entries(departmentAccess).map(([deptUuid, minRanking]) => {
                         const rankLabel =
@@ -363,8 +363,8 @@ export default function UploadModal({
                           `Top Secret (Rank ${minRanking})`;
 
                         return (
-                          <div key={deptUuid} className="flex items-center justify-between bg-white border border-slate-100 px-3 py-1.5 rounded-lg">
-                            <span className="text-xs font-bold text-slate-700 truncate max-w-[150px]">
+                          <div key={deptUuid} className="flex items-center justify-between bg-card border border-border/50 px-3 py-1.5 rounded-lg">
+                            <span className="text-xs font-bold text-foreground/90 truncate max-w-[150px]">
                               {deptUuid === 'Public' ? 'Public' : 'Active Department'}
                             </span>
                             <Badge variant="outline" className={`text-[10px] font-bold ${
@@ -382,12 +382,12 @@ export default function UploadModal({
                     </div>
                   </div>
 
-                  <div className="border-t border-slate-200 pt-3">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                  <div className="border-t border-border pt-3">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground/80">
                       <Lock className="w-3.5 h-3.5 text-indigo-500" />
                       Locked Security Fallback
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                    <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
                       Public users are automatically granted read access at clearance rank 1+.
                     </p>
                   </div>
@@ -401,24 +401,24 @@ export default function UploadModal({
             <div className="space-y-6 py-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-semibold text-slate-700">
+                  <span className="font-semibold text-foreground/90">
                     {!isUploadingFinished
                       ? `Uploading documents... (${completedCount + failedCount}/${totalFiles})`
                       : 'Upload session completed'}
                   </span>
-                  <span className="text-slate-500 font-bold">{Math.round((completedCount / totalFiles) * 100)}%</span>
+                  <span className="text-muted-foreground font-bold">{Math.round((completedCount / totalFiles) * 100)}%</span>
                 </div>
-                <Progress value={(completedCount / totalFiles) * 100} className="h-2 bg-slate-100" />
+                <Progress value={(completedCount / totalFiles) * 100} className="h-2 bg-accent" />
               </div>
 
               {/* Sequential queue execution breakdown */}
-              <ul className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden bg-white max-h-[220px] overflow-y-auto">
+              <ul className="divide-y divide-border/50 border border-border rounded-xl overflow-hidden bg-card max-h-[220px] overflow-y-auto">
                 {fileQueue.map((qFile) => (
                   <li key={qFile.id} className="flex items-center justify-between p-3.5">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       {getFileIcon(qFile.file)}
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold text-slate-700 truncate">{qFile.file.name}</p>
+                        <p className="text-xs font-semibold text-foreground/90 truncate">{qFile.file.name}</p>
                         {qFile.status === 'failed' && qFile.error && (
                           <p className="text-[10px] text-red-500 mt-0.5 truncate">{qFile.error}</p>
                         )}
@@ -427,7 +427,7 @@ export default function UploadModal({
 
                     <div className="shrink-0 ml-4">
                       {qFile.status === 'queued' && (
-                        <span className="text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-bold text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full">
                           Queued
                         </span>
                       )}
@@ -455,8 +455,8 @@ export default function UploadModal({
         </div>
 
         {/* Modal Action Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-          <div className="text-xs text-slate-400 font-medium">
+        <div className="px-6 py-4 bg-muted border-t border-border/50 flex items-center justify-between">
+          <div className="text-xs text-muted-foreground font-medium">
             {step === 'select' && totalFiles > 0 && `${totalFiles} file(s) queued`}
             {step === 'classify' && 'Step 2 of 3'}
             {step === 'review' && 'Step 3 of 3'}
@@ -467,7 +467,7 @@ export default function UploadModal({
             {step === 'select' && (
               <>
                 <DialogClose asChild>
-                  <Button variant="outline" className="border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl">
+                  <Button variant="outline" className="border-border text-muted-foreground/80 hover:bg-accent rounded-xl">
                     Cancel
                   </Button>
                 </DialogClose>
@@ -487,7 +487,7 @@ export default function UploadModal({
                 <Button
                   variant="outline"
                   onClick={() => setStep('select')}
-                  className="border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="border-border text-muted-foreground/80 hover:bg-accent rounded-xl"
                 >
                   <ChevronLeft className="w-4 h-4 mr-1" />
                   Back
@@ -507,7 +507,7 @@ export default function UploadModal({
                 <Button
                   variant="outline"
                   onClick={() => setStep('classify')}
-                  className="border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="border-border text-muted-foreground/80 hover:bg-accent rounded-xl"
                 >
                   <ChevronLeft className="w-4 h-4 mr-1" />
                   Back

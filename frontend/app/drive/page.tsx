@@ -65,7 +65,7 @@ export default function DrivePage() {
   const [sortAsc, setSortAsc] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
-  const [treePanelOpen, setTreePanelOpen] = useState(true)
+  const [previewPanelOpen, setPreviewPanelOpen] = useState(false)
   const [previewPaneWidth, setPreviewPaneWidth] = useState(DEFAULT_PREVIEW_PANE_WIDTH)
   const [isResizingPreviewPane, setIsResizingPreviewPane] = useState(false)
   const browseSectionRef = useRef<HTMLElement | null>(null)
@@ -76,7 +76,7 @@ export default function DrivePage() {
   }, [selectedItem, ensureVersionsLoaded])
 
   useEffect(() => {
-    if (currentFolderId) setTreePanelOpen(true)
+    // Tree panel is always open now
   }, [currentFolderId])
 
   useEffect(() => {
@@ -165,8 +165,9 @@ export default function DrivePage() {
   return (
     <AuthGuard>
       <AppLayout>
-        <div className="space-y-4 p-4 md:p-6 lg:p-8">
-          {/* Action bar */}
+        <div className="flex flex-col h-screen p-4 md:p-6 lg:p-8 bg-background">
+          <div className="flex flex-col flex-1 border border-border rounded-xl shadow-xl overflow-hidden bg-card min-h-0">
+            {/* Action bar and Breadcrumb Combined */}
             <DriveHeader
               currentFolderName={currentFolderName}
               currentPath={currentPath}
@@ -174,7 +175,7 @@ export default function DrivePage() {
               sortBy={sortBy}
               sortAsc={sortAsc}
               sortLabel={sortLabel}
-              treePanelOpen={treePanelOpen}
+              previewPanelOpen={previewPanelOpen}
               isCreatingFolder={isCreatingFolder}
               folderName={folderName}
               searchQuery={searchQuery}
@@ -186,7 +187,7 @@ export default function DrivePage() {
               loadingTreeNodes={loadingTreeNodes}
               loadingFileVersions={loadingFileVersions}
               fileVersions={fileVersions}
-              onToggleTreePanel={() => setTreePanelOpen((p) => !p)}
+              onTogglePreviewPanel={() => setPreviewPanelOpen((p) => !p)}
               onSetViewMode={setViewMode}
               onSetSortBy={setSortBy}
               onToggleSortAsc={() => setSortAsc((p) => !p)}
@@ -204,49 +205,35 @@ export default function DrivePage() {
               formatDate={formatDate}
             />
 
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2 text-sm">
-              {currentPath.map((crumb, index) => (
-                <div className="flex items-center gap-1" key={`${crumb.id || ROOT_KEY}-${index}`}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7"
-                    onClick={() => void navigateToPath(currentPath.slice(0, index + 1))}
-                  >
-                    {crumb.name}
-                  </Button>
-                  {index < currentPath.length - 1 && (
-                    <ChevronRight className="h-4 w-4 text-slate-400" />
-                  )}
-                </div>
-              ))}
-            </div>
-
             {/* 3-column layout: tree | files | preview */}
             <section
               ref={browseSectionRef}
-              className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(320px,var(--preview-width))] lg:grid-cols-[minmax(0,var(--tree-width,260px))_minmax(0,1fr)_minmax(320px,var(--preview-width))]"
+              className={`grid gap-0 overflow-hidden flex-1 min-h-0 ${
+                previewPanelOpen
+                  ? 'grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(320px,var(--preview-width))] lg:grid-cols-[minmax(200px,var(--tree-width,260px))_minmax(0,1fr)_minmax(320px,var(--preview-width))]'
+                  : 'grid-cols-1 lg:grid-cols-[minmax(200px,var(--tree-width,260px))_minmax(0,1fr)]'
+              }`}
               style={{ '--preview-width': `${previewPaneWidth}px` } as React.CSSProperties}
             >
               {/* Desktop sidebar tree */}
               <aside
-                className={`hidden rounded-xl border border-slate-200 bg-white p-3 lg:block transition-all duration-300 ${
-                  treePanelOpen ? 'opacity-100' : 'w-0 overflow-hidden border-none p-0 opacity-0'
-                }`}
+                className="hidden lg:flex flex-col border-r border-border bg-accent/30 p-3 transition-all duration-300 overflow-hidden"
               >
+                <div className="mb-1 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Locations
+                </div>
                 <button
                   type="button"
                   onClick={() => void navigateToPath([ROOT_CRUMB])}
-                  className={`mb-2 flex w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-sm ${
-                    !currentFolderId ? 'bg-blue-100 text-blue-900' : 'text-slate-700 hover:bg-slate-100'
+                  className={`mb-2 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-medium transition-colors ${
+                    !currentFolderId ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                   }`}
                 >
-                  <Folder className="h-4 w-4" />
+                  <Folder className={`h-4 w-4 ${!currentFolderId ? 'text-primary' : 'text-muted-foreground/70'}`} fill={!currentFolderId ? 'currentColor' : 'none'} fillOpacity={0.2} />
                   {ROOT_CRUMB.name}
                 </button>
                 {loadingTreeNodes.has(ROOT_KEY) ? (
-                  <p className="px-2 py-1 text-xs text-slate-400">Loading structure...</p>
+                  <p className="px-2 py-1 text-xs text-muted-foreground">Loading structure...</p>
                 ) : (
                   <DriveSidebarTree
                     parentId={null}
@@ -269,7 +256,7 @@ export default function DrivePage() {
               </aside>
 
               {/* File list / grid */}
-              <div className="rounded-xl border border-slate-200 bg-white lg:h-[calc(100vh-7.5rem)] lg:overflow-y-auto">
+              <div className="bg-card overflow-y-auto flex-1 min-w-0">
                 <DriveContent
                   items={filteredAndSortedItems}
                   loading={loading}
@@ -290,23 +277,28 @@ export default function DrivePage() {
               </div>
 
               {/* Right-hand preview / metadata panel */}
-              <PreviewPanel
-                selectedItem={selectedItem}
-                previewUrl={previewUrl}
-                previewLoading={previewLoading}
-                previewError={previewError}
-                previewVersion={previewVersion}
-                selectedVersions={selectedVersions}
-                ingestionByDocumentId={ingestionByDocumentId}
-                onDownload={(item, v) => void handleDownload(item, v)}
-                onPreviewVersion={(item, v) => void openPreview(item, v)}
-                onRefreshVersions={(id) => void ensureVersionsLoaded(id, true)}
-                onStartResize={() => setIsResizingPreviewPane(true)}
-                onResetWidth={() => setPreviewPaneWidth(DEFAULT_PREVIEW_PANE_WIDTH)}
-                formatDate={formatDate}
-                formatFileSize={formatFileSize}
-              />
+              {previewPanelOpen && (
+                <div className="border-l border-border bg-accent/30">
+                  <PreviewPanel
+                    selectedItem={selectedItem}
+                    previewUrl={previewUrl}
+                    previewLoading={previewLoading}
+                    previewError={previewError}
+                    previewVersion={previewVersion}
+                    selectedVersions={selectedVersions}
+                    ingestionByDocumentId={ingestionByDocumentId}
+                    onDownload={(item, v) => void handleDownload(item, v)}
+                    onPreviewVersion={(item, v) => void openPreview(item, v)}
+                    onRefreshVersions={(id) => void ensureVersionsLoaded(id, true)}
+                    onStartResize={() => setIsResizingPreviewPane(true)}
+                    onResetWidth={() => setPreviewPaneWidth(DEFAULT_PREVIEW_PANE_WIDTH)}
+                    formatDate={formatDate}
+                    formatFileSize={formatFileSize}
+                  />
+                </div>
+              )}
             </section>
+          </div>
         </div>
 
         <UploadModal

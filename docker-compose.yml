@@ -165,12 +165,14 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     environment:
       - MANAGEMENT_API=http://management:8000
       - INGESTION_API=http://ingestion:8000
       - RAG_API=http://rag:8000
       - NOTIFICATION_API=http://notification:8000
+    volumes:
+      - ./frontend:/app
     ports:
       - "3000:3000"
     depends_on:
@@ -186,10 +188,12 @@ services:
   admin-frontend:
     build:
       context: ./admin-frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     environment:
       - NEXT_PUBLIC_MANAGEMENT_API=http://localhost:8002
       - NEXT_PUBLIC_PORTAL_URL=http://localhost:3000
+    volumes:
+      - ./admin-frontend:/app
     ports:
       - "3001:3000"
     depends_on:

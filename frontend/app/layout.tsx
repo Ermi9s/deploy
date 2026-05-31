@@ -10,7 +10,6 @@ const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' })
 export const metadata: Metadata = {
   title: 'OKM | Intelligent Workspace',
   description: 'A fully-featured file storage and collaboration platform with secure uploads, folder organization, trash recovery, and file preview capabilities.',
-  generator: 'v0.app',
   icons: {
     icon: [
       {

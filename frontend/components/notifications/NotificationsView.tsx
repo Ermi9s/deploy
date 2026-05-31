@@ -137,9 +137,9 @@ export function NotificationsView() {
     n.notification_type === 'milestone_auto_completed' || n.milestone.status === 'auto_completed'
 
   return (
-    <div className="flex flex-col h-full gap-6 max-w-3xl mx-auto w-full">
+    <div className="flex flex-col h-full w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 md:px-6 border-b border-border bg-accent/30 shrink-0">
         <div>
           <h1 className="text-3xl font-display font-bold tracking-tight text-foreground flex items-center gap-2">
             <Bell className="h-8 w-8 text-primary" />
@@ -155,7 +155,7 @@ export function NotificationsView() {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" size="sm" onClick={() => fetchNotifications(true)} disabled={refreshing} className="font-semibold">
+          <Button variant="outline" size="sm" onClick={() => fetchNotifications()} disabled={refreshing} className="font-semibold">
             <RefreshCw className={cn('h-3.5 w-3.5 mr-1.5', refreshing && 'animate-spin')} />
             Refresh
           </Button>
@@ -169,7 +169,7 @@ export function NotificationsView() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-1 border-b border-border pb-1 shrink-0">
+      <div className="flex items-center gap-1 border-b border-border px-6 pt-2 shrink-0 bg-card">
         {(['all', 'unread', 'read'] as NotifFilter[]).map(f => (
           <button
             key={f}
@@ -189,7 +189,9 @@ export function NotificationsView() {
       </div>
 
       {/* Content */}
-      {loading ? (
+      <div className="flex-1 overflow-y-auto bg-card">
+        <div className="max-w-3xl mx-auto w-full p-6 space-y-4">
+          {loading ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-3 py-20">
           <Spinner className="h-8 w-8 text-primary" />
           <span className="text-sm text-muted-foreground font-medium">Loading notifications...</span>
@@ -285,15 +287,15 @@ export function NotificationsView() {
                       <ArrowRight className="h-3.5 w-3.5 mr-1" />
                       View Milestone
                     </Button>
-                    {isAI && notif.reference_document_id && (
+                    {isAI && notif.milestone.reference_document_id && (
                       <Button
                         variant="outline"
                         size="sm"
                         className="h-7 text-xs font-semibold border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
-                        onClick={() => handleViewSourceFile(notif.reference_document_id!)}
-                        disabled={busy || downloadingIds.has(notif.reference_document_id)}
+                        onClick={() => handleViewSourceFile(notif.milestone.reference_document_id!)}
+                        disabled={busy || downloadingIds.has(notif.milestone.reference_document_id)}
                       >
-                        {downloadingIds.has(notif.reference_document_id) ? (
+                        {downloadingIds.has(notif.milestone.reference_document_id) ? (
                           <Spinner className="h-3 w-3 mr-1" />
                         ) : (
                           <FileText className="h-3.5 w-3.5 mr-1" />
@@ -320,6 +322,8 @@ export function NotificationsView() {
           </AnimatePresence>
         </div>
       )}
+        </div>
+      </div>
     </div>
   )
 }

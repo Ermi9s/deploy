@@ -32,8 +32,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { clearStoredTokens, api } from '@/lib/api'
 import { useRouter } from 'next/navigation'
-import { useNotificationSocket } from '@/hooks/useNotificationSocket'
-
 
 interface SidebarProps {
   collapsed?: boolean
@@ -41,7 +39,7 @@ interface SidebarProps {
   navItems?: { name: string; href: string; icon: any }[]
   brandTitle?: string
   brandSubtitle?: string
-  backLink?: { name: string; href: string; icon: any }
+  backLink?: { name: string; href: string; icon: any; isExternal?: boolean }
 }
 
 const DEFAULT_NAV_ITEMS = [
@@ -57,16 +55,7 @@ export function Sidebar({ collapsed = false, onToggle, navItems, brandTitle, bra
   const pathname = usePathname()
   const router = useRouter()
   const { setTheme, theme } = useTheme()
-  const { notifications, unreadCount, markRead } = useNotificationSocket()
-  const hasUnread = unreadCount > 0
 
-  const handleMarkRead = async (uuid: string) => {
-    try {
-      await markRead(uuid)
-    } catch (err) {
-      console.error('Failed to mark read', err)
-    }
-  }
 
   const handleLogout = () => {
     clearStoredTokens()
@@ -141,96 +130,37 @@ export function Sidebar({ collapsed = false, onToggle, navItems, brandTitle, bra
       {/* Footer Actions */}
       <div className="p-4 border-t border-border shrink-0 flex flex-col gap-2">
         {backLink && (
-          <Link
-            href={backLink.href}
-            className={cn(
-              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground mb-1",
-              collapsed && "justify-center px-0"
-            )}
-            title={collapsed ? backLink.name : undefined}
-          >
-            <backLink.icon className="h-5 w-5 shrink-0" />
-            {!collapsed && <span className="truncate">{backLink.name}</span>}
-          </Link>
+          backLink.isExternal ? (
+            <a
+              href={backLink.href}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground mb-1",
+                collapsed && "justify-center px-0"
+              )}
+              title={collapsed ? backLink.name : undefined}
+            >
+              <backLink.icon className="h-5 w-5 shrink-0" />
+              {!collapsed && <span className="truncate">{backLink.name}</span>}
+            </a>
+          ) : (
+            <Link
+              href={backLink.href}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground mb-1",
+                collapsed && "justify-center px-0"
+              )}
+              title={collapsed ? backLink.name : undefined}
+            >
+              <backLink.icon className="h-5 w-5 shrink-0" />
+              {!collapsed && <span className="truncate">{backLink.name}</span>}
+            </Link>
+          )
         )}
         <div className={cn("flex items-center gap-1 mb-1 w-full", collapsed ? "flex-col" : "justify-between px-1")}>
           {/* Search */}
           <button className="p-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" title="Search">
             <Search className="h-4 w-4" />
           </button>
-          
-          {/* Notifications */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button 
-                className="p-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors relative outline-none" 
-                title="Notifications"
-              >
-                <Bell className="h-4 w-4" />
-                {hasUnread && (
-                  <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-primary" />
-                )}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              align={collapsed ? "start" : "end"} 
-              side={collapsed ? "right" : "top"} 
-              sideOffset={8} 
-              className="w-80 p-2 max-h-96 overflow-y-auto"
-            >
-              <DropdownMenuLabel className="font-display font-semibold text-sm px-2 py-1 flex items-center justify-between">
-                <span>Planning Alerts</span>
-                {hasUnread && (
-                  <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-normal">
-                    {notifications.filter(n => !n.is_read).length} new
-                  </span>
-                )}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator className="my-1" />
-              {notifications.length === 0 ? (
-                <div className="text-center py-6 text-xs text-muted-foreground">
-                  No notifications yet.
-                </div>
-              ) : (
-                notifications.slice(0, 5).map((notif) => (
-                  <DropdownMenuItem 
-                    key={notif.id} 
-                    onClick={() => !notif.is_read && handleMarkRead(notif.id)}
-                    className={cn(
-                      "flex flex-col items-start gap-1 rounded-md p-2.5 text-xs transition-colors cursor-pointer my-0.5",
-                      notif.is_read 
-                        ? "text-muted-foreground/80 hover:bg-accent" 
-                        : "bg-primary/5 text-foreground hover:bg-primary/10 font-medium"
-                    )}
-                  >
-                    <div className="flex items-center gap-1.5 w-full">
-                      <span className="font-semibold text-card-foreground truncate max-w-[180px]">
-                        {notif.milestone.plan_title}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
-                        {new Date(notif.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p className="line-clamp-2 text-muted-foreground leading-normal mt-0.5 text-[11px]">
-                      {notif.message}
-                    </p>
-                    {!notif.is_read && (
-                      <span className="text-[10px] text-primary mt-1 font-semibold block">
-                        Mark as read
-                      </span>
-                    )}
-                  </DropdownMenuItem>
-                ))
-              )}
-              <DropdownMenuSeparator className="my-1" />
-              <DropdownMenuItem asChild>
-                <a href="/notifications" className="flex items-center justify-center gap-1.5 text-xs font-semibold text-primary py-1.5 rounded-md hover:bg-primary/5 cursor-pointer">
-                  View all notifications
-                  <Bell className="h-3 w-3" />
-                </a>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
 
           {/* Theme Toggle */}
