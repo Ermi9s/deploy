@@ -57,7 +57,7 @@ export function ReportListClient() {
   return (
     <div className="h-full flex flex-col">
       {/* Page header */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-border shrink-0">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-border bg-accent/30 shrink-0">
         <div>
           <h1 className="text-xl font-bold text-foreground">Reports</h1>
           <p className="text-sm text-muted-foreground mt-0.5">

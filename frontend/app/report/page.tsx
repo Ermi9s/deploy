@@ -12,7 +12,11 @@ export default function ReportPage() {
   return (
     <AuthGuard>
       <AppLayout>
-        <ReportListClient />
+        <div className="flex flex-col h-screen p-4 md:p-6 lg:p-8 bg-background">
+          <div className="flex flex-col flex-1 border border-border rounded-xl shadow-xl overflow-hidden bg-card min-h-0">
+            <ReportListClient />
+          </div>
+        </div>
       </AppLayout>
     </AuthGuard>
   )
