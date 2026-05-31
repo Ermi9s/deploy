@@ -111,7 +111,7 @@ export function ChatWindow() {
 
   return (
     <>
-      <div className="flex h-full min-h-[500px] rounded-3xl overflow-hidden border border-border shadow-sm bg-card relative">
+      <div className="flex flex-col md:flex-row flex-1 border border-border rounded-xl shadow-xl overflow-hidden bg-card min-h-0 relative">
 
         {/* ── Desktop Sidebar ────────────────────────────────────── */}
         <div className="hidden md:flex flex-col w-72 bg-accent/30 border-r border-border text-foreground select-none">

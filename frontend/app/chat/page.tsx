@@ -13,7 +13,7 @@ export default function ChatPage() {
   return (
     <AuthGuard>
       <AppLayout>
-        <div className="h-full p-4 md:p-6 lg:p-8">
+        <div className="flex flex-col h-screen p-4 md:p-6 lg:p-8 bg-background">
           <ChatWindow />
         </div>
       </AppLayout>
