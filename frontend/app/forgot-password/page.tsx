@@ -7,7 +7,7 @@ import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowRight, CheckCircle2, Loader2, Sparkles } from 'lucide-react'
+import { ArrowRight, Brain, CheckCircle2, Loader2 } from 'lucide-react'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
 
         <div className="relative z-10 flex items-center gap-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white">
-            <Sparkles className="h-5 w-5" />
+            <Brain className="h-5 w-5" />
           </div>
           <span className="text-2xl font-display font-semibold tracking-tight text-white">
             OKM
