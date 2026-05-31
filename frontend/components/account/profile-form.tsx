@@ -97,7 +97,7 @@ export default function ProfileForm({ profile, onSave, onUploadPicture, onRemove
     <Card className="p-6 space-y-4">
       <div>
         <h2 className="text-lg font-semibold">Profile</h2>
-        <p className="text-sm text-gray-600">Manage your profile information.</p>
+        <p className="text-sm text-muted-foreground">Manage your profile information.</p>
       </div>
 
       <div className="space-y-2">

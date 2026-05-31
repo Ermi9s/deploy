@@ -50,10 +50,10 @@ export default function AdminAuditLogs() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 via-slate-200 to-slate-400 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
           Administrative Audit Logs
         </h1>
-        <p className="text-sm text-slate-400 mt-1">Immutable ledger recording all administrative actions and security parameter updates.</p>
+        <p className="text-sm text-muted-foreground mt-1">Immutable ledger recording all administrative actions and security parameter updates.</p>
       </div>
 
       {/* Filter Controls */}
@@ -64,7 +64,7 @@ export default function AdminAuditLogs() {
             setActionType(e.target.value)
             setPage(1)
           }}
-          className="px-4 py-2 bg-slate-900 border border-slate-800 text-slate-300 rounded-xl focus:border-indigo-500 text-sm w-full sm:w-auto"
+          className="px-4 py-2 bg-background border border-border text-foreground rounded-xl focus:border-primary text-sm w-full sm:w-auto"
         >
           <option value="">All Actions</option>
           <option value="CREATE">Create</option>
@@ -80,7 +80,7 @@ export default function AdminAuditLogs() {
             setTargetType(e.target.value)
             setPage(1)
           }}
-          className="px-4 py-2 bg-slate-900 border border-slate-800 text-slate-300 rounded-xl focus:border-indigo-500 text-sm w-full sm:w-auto"
+          className="px-4 py-2 bg-background border border-border text-foreground rounded-xl focus:border-primary text-sm w-full sm:w-auto"
         >
           <option value="">All Target Types</option>
           <option value="DEPARTMENT">Department</option>
@@ -90,26 +90,26 @@ export default function AdminAuditLogs() {
       </div>
 
       {/* Logs Table */}
-      <Card className="border-slate-800 bg-slate-900/30 backdrop-blur-md overflow-hidden">
+      <Card className="overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-800/80 bg-slate-900/50">
+                <tr className="border-b bg-muted/50">
                   <th className="w-8"></th>
-                  <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider text-slate-400">Timestamp</th>
-                  <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider text-slate-400">Actor Identity</th>
-                  <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider text-slate-400">Action Type</th>
-                  <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider text-slate-400">Target Type</th>
-                  <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider text-slate-400">Target ID</th>
-                  <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider text-slate-400">IP Address</th>
+                  <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">Timestamp</th>
+                  <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">Actor Identity</th>
+                  <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">Action Type</th>
+                  <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">Target Type</th>
+                  <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">Target ID</th>
+                  <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">IP Address</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/40">
+              <tbody className="divide-y divide-border">
                 {loading && logs.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="text-center py-16">
-                      <Loader2 className="w-6 h-6 animate-spin text-indigo-500 mx-auto" />
+                      <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
                     </td>
                   </tr>
                 ) : logs.length > 0 ? (
@@ -118,20 +118,20 @@ export default function AdminAuditLogs() {
                     return (
                       <React.Fragment key={log.id}>
                         <tr
-                          className="hover:bg-slate-800/20 transition-all duration-150 cursor-pointer"
+                          className="hover:bg-muted/50 transition-all duration-150 cursor-pointer"
                           onClick={() => toggleExpand(log.id)}
                         >
                           <td className="pl-4 text-center">
                             {isExpanded ? (
-                              <ChevronUp className="w-4 h-4 text-slate-500" />
+                              <ChevronUp className="w-4 h-4 text-muted-foreground" />
                             ) : (
-                              <ChevronDown className="w-4 h-4 text-slate-500" />
+                              <ChevronDown className="w-4 h-4 text-muted-foreground" />
                             )}
                           </td>
-                          <td className="px-6 py-4.5 text-xs text-slate-400">
+                          <td className="px-6 py-4.5 text-xs text-muted-foreground">
                             {new Date(log.timestamp).toLocaleString()}
                           </td>
-                          <td className="px-6 py-4.5 text-sm font-semibold text-slate-200">
+                          <td className="px-6 py-4.5 text-sm font-semibold text-foreground">
                             {log.actor_email}
                           </td>
                           <td className="px-6 py-4.5">
@@ -144,22 +144,22 @@ export default function AdminAuditLogs() {
                               {log.action_type_display}
                             </span>
                           </td>
-                          <td className="px-6 py-4.5 text-xs font-semibold text-slate-300">
+                          <td className="px-6 py-4.5 text-xs font-semibold text-muted-foreground">
                             {log.target_type_display}
                           </td>
-                          <td className="px-6 py-4.5 text-xs font-mono text-slate-500">
+                          <td className="px-6 py-4.5 text-xs font-mono text-muted-foreground">
                             {log.target_id}
                           </td>
-                          <td className="px-6 py-4.5 text-xs font-mono text-slate-500">
+                          <td className="px-6 py-4.5 text-xs font-mono text-muted-foreground">
                             {log.ip_address || '—'}
                           </td>
                         </tr>
                         {isExpanded && (
-                          <tr className="bg-slate-950/40">
-                            <td colSpan={7} className="px-8 py-6 border-b border-slate-800">
+                          <tr className="bg-muted/30">
+                            <td colSpan={7} className="px-8 py-6 border-b border-border">
                               <div className="space-y-3">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Metadata payload diff</p>
-                                <pre className="p-4 rounded-xl border border-slate-800 bg-slate-950 text-xs font-mono text-indigo-300 overflow-x-auto">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Metadata payload diff</p>
+                                <pre className="p-4 rounded-xl border border-border bg-background text-xs font-mono text-primary overflow-x-auto">
                                   {JSON.stringify(log.details, null, 2)}
                                 </pre>
                               </div>
@@ -171,7 +171,7 @@ export default function AdminAuditLogs() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={7} className="text-center py-16 text-slate-500 text-sm">
+                    <td colSpan={7} className="text-center py-16 text-muted-foreground text-sm">
                       No matching actions found in the ledger.
                     </td>
                   </tr>
@@ -188,19 +188,17 @@ export default function AdminAuditLogs() {
           <Button
             variant="outline"
             size="sm"
-            className="border-slate-800 text-slate-400 hover:bg-slate-800"
             disabled={page === 1}
             onClick={() => setPage((p) => p - 1)}
           >
             Previous
           </Button>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-muted-foreground">
             Page {page} of {totalPages}
           </span>
           <Button
             variant="outline"
             size="sm"
-            className="border-slate-800 text-slate-400 hover:bg-slate-800"
             disabled={page === totalPages}
             onClick={() => setPage((p) => p + 1)}
           >
