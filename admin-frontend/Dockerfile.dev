@@ -2,11 +2,7 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Install pnpm globally
-RUN npm install -g pnpm
-
-# Everything (including node_modules) comes from the bind mount.
-# No COPY, no pnpm install needed inside Docker.
 EXPOSE 3000
 
-CMD ["pnpm", "dev"]
+# Install dependencies at container start so the bind mount does not hide them.
+CMD ["sh", "-c", "npm ci && npm run dev"]
