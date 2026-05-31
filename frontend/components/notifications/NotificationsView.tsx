@@ -137,9 +137,9 @@ export function NotificationsView() {
     n.notification_type === 'milestone_auto_completed' || n.milestone.status === 'auto_completed'
 
   return (
-    <div className="flex flex-col h-full gap-6 max-w-3xl mx-auto w-full">
+    <div className="flex flex-col h-full w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 md:px-6 border-b border-border bg-accent/30 shrink-0">
         <div>
           <h1 className="text-3xl font-display font-bold tracking-tight text-foreground flex items-center gap-2">
             <Bell className="h-8 w-8 text-primary" />
@@ -169,7 +169,7 @@ export function NotificationsView() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-1 border-b border-border pb-1 shrink-0">
+      <div className="flex items-center gap-1 border-b border-border px-6 pt-2 shrink-0 bg-card">
         {(['all', 'unread', 'read'] as NotifFilter[]).map(f => (
           <button
             key={f}
@@ -189,7 +189,9 @@ export function NotificationsView() {
       </div>
 
       {/* Content */}
-      {loading ? (
+      <div className="flex-1 overflow-y-auto bg-card">
+        <div className="max-w-3xl mx-auto w-full p-6 space-y-4">
+          {loading ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-3 py-20">
           <Spinner className="h-8 w-8 text-primary" />
           <span className="text-sm text-muted-foreground font-medium">Loading notifications...</span>
@@ -320,6 +322,8 @@ export function NotificationsView() {
           </AnimatePresence>
         </div>
       )}
+        </div>
+      </div>
     </div>
   )
 }
