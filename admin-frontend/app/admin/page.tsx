@@ -57,10 +57,10 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 via-slate-200 to-slate-400 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
           System Overview
         </h1>
-        <p className="text-sm text-slate-400 mt-1">Real-time status of OKM archives, departments, and user profiles.</p>
+        <p className="text-sm text-muted-foreground mt-1">Real-time status of OKM archives, departments, and user profiles.</p>
       </div>
 
       {/* KPI Stats Grid */}
@@ -68,19 +68,19 @@ export default function AdminDashboard() {
         {kpis.map((kpi) => {
           const Icon = kpi.icon
           return (
-            <Card key={kpi.label} className="border-slate-800/80 bg-slate-900/50 backdrop-blur-md relative overflow-hidden group hover:border-slate-700/80 transition-all duration-300">
+            <Card key={kpi.label} className="relative overflow-hidden group hover:border-primary/20 transition-all duration-300">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity duration-300">
                 <Icon className="w-24 h-24" />
               </div>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{kpi.label}</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{kpi.label}</span>
                   <div className={`p-2 rounded-lg bg-gradient-to-br ${kpi.color}`}>
                     <Icon className="w-5 h-5" />
                   </div>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-extrabold tracking-tight text-slate-100">{kpi.value}</span>
+                  <span className="text-4xl font-extrabold tracking-tight text-foreground">{kpi.value}</span>
                 </div>
               </CardContent>
             </Card>
@@ -89,50 +89,50 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Activity Feed */}
-      <Card className="border-slate-800/80 bg-slate-900/40 backdrop-blur-md">
-        <CardHeader className="flex flex-row items-center justify-between border-b border-slate-800/60 pb-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between border-b pb-6">
           <div>
-            <CardTitle className="text-lg font-bold text-slate-100">Administrative Logs</CardTitle>
-            <CardDescription className="text-slate-400">Most recent actions performed across the platform.</CardDescription>
+            <CardTitle className="text-lg font-bold text-foreground">Administrative Logs</CardTitle>
+            <CardDescription>Most recent actions performed across the platform.</CardDescription>
           </div>
           <Link href="/admin/audit-logs">
-            <Button variant="outline" size="sm" className="border-slate-800 hover:bg-slate-800 text-slate-300">
+            <Button variant="outline" size="sm">
               View All Logs <ArrowUpRight className="w-4 h-4 ml-1.5" />
             </Button>
           </Link>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="divide-y divide-slate-800/40">
+          <div className="divide-y divide-border">
             {stats?.recent_audit_logs && stats.recent_audit_logs.length > 0 ? (
               stats.recent_audit_logs.map((log) => (
-                <div key={log.id} className="flex items-start justify-between p-6 hover:bg-slate-800/20 transition-all duration-200">
+                <div key={log.id} className="flex items-start justify-between p-6 hover:bg-muted/50 transition-all duration-200">
                   <div className="flex items-start gap-4">
-                    <div className="p-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 shrink-0 mt-0.5">
+                    <div className="p-2 rounded-xl bg-muted border border-border text-foreground shrink-0 mt-0.5">
                       <Clock className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-200">
-                        <span className="text-indigo-400">{log.actor_email}</span> performed{' '}
-                        <span className="text-amber-400 font-medium">{log.action_type_display}</span> on{' '}
-                        <span className="text-slate-300">{log.target_type_display}</span>
+                      <p className="text-sm font-semibold text-foreground">
+                        <span className="text-primary">{log.actor_email}</span> performed{' '}
+                        <span className="font-medium text-amber-500 dark:text-amber-400">{log.action_type_display}</span> on{' '}
+                        <span className="text-muted-foreground">{log.target_type_display}</span>
                       </p>
-                      <p className="text-xs text-slate-400 mt-1">
-                        Target ID: <span className="font-mono text-slate-500">{log.target_id}</span>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Target ID: <span className="font-mono">{log.target_id}</span>
                       </p>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="text-[11px] font-medium text-slate-500">
+                    <span className="text-[11px] font-medium text-muted-foreground">
                       {new Date(log.timestamp).toLocaleString()}
                     </span>
                     {log.ip_address && (
-                      <p className="text-[10px] text-slate-500/80 font-mono mt-0.5">{log.ip_address}</p>
+                      <p className="text-[10px] text-muted-foreground/80 font-mono mt-0.5">{log.ip_address}</p>
                     )}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-center py-12 text-slate-500 text-sm">
+              <div className="text-center py-12 text-muted-foreground text-sm">
                 No recent administrative actions logged yet.
               </div>
             )}
