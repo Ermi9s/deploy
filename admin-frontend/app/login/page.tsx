@@ -7,7 +7,7 @@ import { api, clearStoredTokens, isAuthenticated } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { ShieldAlert } from 'lucide-react'
+import { Brain, ShieldAlert } from 'lucide-react'
 
 const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3000'
 
@@ -56,8 +56,8 @@ export default function AdminLoginPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6">
       <Card className="w-full max-w-md p-6 sm:p-8 space-y-6 shadow-2xl">
         <div className="flex flex-col items-center gap-3 mb-2">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white font-bold text-2xl">
-            Ω
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
+            <Brain className="h-6 w-6" />
           </div>
           <div className="text-center">
             <h1 className="text-xl font-bold tracking-tight text-foreground">OKnowledge Admin</h1>
