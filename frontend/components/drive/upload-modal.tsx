@@ -95,15 +95,15 @@ export default function UploadModal({
       const mime = file.type.toLowerCase()
       const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
 
-      // Validate: PDF, Images, or Text/Markdown
+      // Validate: PDF, Images, Text, Markdown, JSON, CSV, HTML, and Word (doc/docx)
       const isValid =
         mime === 'application/pdf' ||
         mime.startsWith('image/') ||
         mime.startsWith('text/') ||
-        ext === '.pdf' ||
-        ext === '.md' ||
-        ext === '.txt' ||
-        ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.tiff'].some((e) => ext.endsWith(e))
+        mime === 'application/json' ||
+        mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        mime === 'application/msword' ||
+        ['.pdf', '.md', '.txt', '.json', '.csv', '.html', '.htm', '.docx', '.doc'].some((e) => ext === e)
 
       if (isValid) {
         newFiles.push({
@@ -112,7 +112,7 @@ export default function UploadModal({
           status: 'queued',
         })
       } else {
-        alert(`Unsupported file format: ${file.name}. Only PDFs and images are supported.`)
+        alert(`Unsupported file format: ${file.name}. Only PDFs, images, text, Markdown, JSON, CSV, HTML, and Word (doc/docx) documents are supported.`)
       }
     }
 

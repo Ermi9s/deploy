@@ -180,7 +180,16 @@ def handle_document_ingestion_job(self, payload: dict[str, Any]) -> dict[str, An
 
     _task_progress(self, 'processing', 2, 'extracting_text', 'Starting text extraction.')
 
-    source_type = 'pdf' if mime_type == 'application/pdf' else 'image'
+    if mime_type == 'application/pdf':
+        source_type = 'pdf'
+    elif mime_type.startswith('image/'):
+        source_type = 'image'
+    elif mime_type in ('text/plain', 'text/markdown', 'text/x-markdown', 'text/csv', 'text/html', 'application/json'):
+        source_type = 'text'
+    elif mime_type in ('application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'):
+        source_type = 'document'
+    else:
+        source_type = 'file'
     text = ''
 
     if mime_type == 'application/pdf':
@@ -218,6 +227,52 @@ def handle_document_ingestion_job(self, payload: dict[str, Any]) -> dict[str, An
         _task_progress(self, 'processing', 18, 'ocr', 'Running OCR for image upload.')
         text = _ocr_image_file(file_path)
         _task_progress(self, 'processing', 35, 'ocr', 'OCR completed for image upload.')
+    elif mime_type in ('text/plain', 'text/markdown', 'text/x-markdown', 'text/csv', 'text/html', 'application/json'):
+        _task_progress(self, 'processing', 10, 'extracting_text', 'Reading text-based document.')
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                text = f.read()
+        except Exception as e:
+            raise ValueError(f'Failed to read text file: {e}')
+        _task_progress(self, 'processing', 35, 'extracting_text', 'Text document read completed.')
+    elif mime_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        _task_progress(self, 'processing', 10, 'extracting_text', 'Extracting text from DOCX.')
+        try:
+            import docx
+            doc = docx.Document(file_path)
+            fullText = []
+            for para in doc.paragraphs:
+                fullText.append(para.text)
+            for table in doc.tables:
+                for row in table.rows:
+                    for cell in row.cells:
+                        fullText.append(cell.text)
+            text = '\n'.join(fullText)
+        except ImportError:
+            import zipfile
+            import xml.etree.ElementTree as ET
+            try:
+                with zipfile.ZipFile(file_path) as z:
+                    xml_content = z.read('word/document.xml')
+                root = ET.fromstring(xml_content)
+                namespaces = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+                text_elements = root.findall('.//w:t', namespaces)
+                text = ''.join([el.text for el in text_elements if el.text])
+            except Exception as e:
+                raise ValueError(f'python-docx is not available and XML fallback failed: {e}')
+        except Exception as e:
+            raise ValueError(f'Failed to extract text from DOCX: {e}')
+        _task_progress(self, 'processing', 35, 'extracting_text', 'DOCX extraction completed.')
+    elif mime_type == 'application/msword':
+        _task_progress(self, 'processing', 10, 'extracting_text', 'Extracting text from legacy DOC.')
+        try:
+            content = file_path.read_bytes()
+            import re
+            words = re.findall(b'[\x20-\x7E\x0A\x0D]{4,}', content)
+            text = '\n'.join(w.decode('utf-8', errors='ignore') for w in words)
+        except Exception as e:
+            raise ValueError(f'Failed to extract text from legacy DOC: {e}')
+        _task_progress(self, 'processing', 35, 'extracting_text', 'Legacy DOC extraction completed.')
     else:
         raise ValueError(f'Unsupported MIME type: {mime_type}')
 

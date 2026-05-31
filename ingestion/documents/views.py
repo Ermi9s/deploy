@@ -22,7 +22,24 @@ SUPPORTED_IMAGE_MIME_TYPES = {
     'image/bmp',
     'image/webp',
 }
-SUPPORTED_MIME_TYPES = {'application/pdf', *SUPPORTED_IMAGE_MIME_TYPES}
+SUPPORTED_TEXT_MIME_TYPES = {
+    'text/plain',
+    'text/markdown',
+    'text/x-markdown',
+    'text/csv',
+    'text/html',
+    'application/json',
+}
+SUPPORTED_OFFICE_MIME_TYPES = {
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/msword',
+}
+SUPPORTED_MIME_TYPES = {
+    'application/pdf',
+    *SUPPORTED_IMAGE_MIME_TYPES,
+    *SUPPORTED_TEXT_MIME_TYPES,
+    *SUPPORTED_OFFICE_MIME_TYPES,
+}
 
 
 class UploadDocumentAPIView(APIView):
@@ -62,9 +79,33 @@ class UploadDocumentAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        extension = Path(upload.name).suffix.lower()
         mime_type = upload.content_type or mimetypes.guess_type(upload.name)[0] or 'application/octet-stream'
-        if mime_type not in SUPPORTED_MIME_TYPES:
-            return Response({'error': f'Unsupported file type: {mime_type}'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        EXT_TO_MIME = {
+            '.pdf': 'application/pdf',
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.tiff': 'image/tiff',
+            '.bmp': 'image/bmp',
+            '.webp': 'image/webp',
+            '.txt': 'text/plain',
+            '.md': 'text/markdown',
+            '.markdown': 'text/markdown',
+            '.json': 'application/json',
+            '.csv': 'text/csv',
+            '.html': 'text/html',
+            '.htm': 'text/html',
+            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            '.doc': 'application/msword',
+        }
+        
+        if mime_type == 'application/octet-stream' or mime_type not in SUPPORTED_MIME_TYPES:
+            if extension in EXT_TO_MIME:
+                mime_type = EXT_TO_MIME[extension]
+            else:
+                return Response({'error': f'Unsupported file type: {mime_type} (extension: {extension})'}, status=status.HTTP_400_BAD_REQUEST)
 
         # MAC: parse and strictly validate the department permission matrix.
         # Expected format: JSON object {"<dept-uuid>": <min_ranking_int>, ...}
@@ -126,7 +167,23 @@ class UploadDocumentAPIView(APIView):
 
         extension = Path(upload.name).suffix.lower()
         if not extension:
-            extension = '.pdf' if mime_type == 'application/pdf' else '.img'
+            MIME_TO_EXT = {
+                'application/pdf': '.pdf',
+                'image/png': '.png',
+                'image/jpeg': '.jpg',
+                'image/jpg': '.jpg',
+                'image/tiff': '.tiff',
+                'image/bmp': '.bmp',
+                'image/webp': '.webp',
+                'text/plain': '.txt',
+                'text/markdown': '.md',
+                'application/json': '.json',
+                'text/csv': '.csv',
+                'text/html': '.html',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+                'application/msword': '.doc',
+            }
+            extension = MIME_TO_EXT.get(mime_type, '.bin')
 
         stored_name = f'{document.id}{extension}'
         destination = save_upload(upload, settings.UPLOAD_ROOT, stored_name)
