@@ -150,7 +150,7 @@ export function DriveContent({
 }: DriveContentProps) {
   if (loading) {
     return (
-      <p className="px-4 py-6 text-sm text-slate-500">Loading items...</p>
+      <p className="px-4 py-6 text-sm text-muted-foreground">Loading items...</p>
     )
   }
 
@@ -352,13 +352,13 @@ export function PreviewPanel({
   formatFileSize,
 }: PreviewPanelProps) {
   return (
-    <aside className="relative hidden rounded-xl border border-slate-200 bg-white p-4 md:sticky md:top-4 md:flex md:h-[calc(100vh-7.5rem)] md:flex-col md:overflow-hidden">
+    <aside className="relative hidden rounded-xl border border-border bg-card p-4 md:sticky md:top-4 md:flex md:h-[calc(100vh-7.5rem)] md:flex-col md:overflow-hidden">
       {/* Resize handle */}
       <button
         type="button"
         onMouseDown={onStartResize}
         onDoubleClick={onResetWidth}
-        className="absolute -left-2 top-1/2 z-20 hidden h-16 w-4 -translate-y-1/2 cursor-col-resize items-center justify-center rounded-full border border-slate-300 bg-white text-slate-400 hover:text-slate-700 md:flex"
+        className="absolute -left-2 top-1/2 z-20 hidden h-16 w-4 -translate-y-1/2 cursor-col-resize items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground md:flex"
         aria-label="Resize preview panel"
         title="Drag to resize. Double-click to reset."
       >
@@ -377,7 +377,7 @@ export function PreviewPanel({
             <div className="flex h-full flex-col gap-3">
               <div className="flex items-center justify-between gap-2">
                 <p
-                  className="truncate text-sm font-medium text-slate-800"
+                  className="truncate text-sm font-medium text-foreground"
                   title={selectedItem.name}
                 >
                   {selectedItem.name}
@@ -404,7 +404,7 @@ export function PreviewPanel({
                   </Button>
                 </div>
               </div>
-              <div className="min-h-0 flex-1 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+              <div className="min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-muted/30">
                 <AllFileViewer
                   fileName={selectedItem.name}
                   fileUrl={previewUrl}
@@ -415,7 +415,7 @@ export function PreviewPanel({
               </div>
             </div>
           ) : (
-            <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 text-center text-sm text-slate-500">
+            <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 px-4 text-center text-sm text-muted-foreground">
               Select a file to preview it inline.
             </div>
           )}
@@ -448,13 +448,13 @@ export function PreviewPanel({
                 },
               ].map(({ label, value }) => (
                 <div key={label}>
-                  <p className="text-slate-500">{label}</p>
-                  <p className="font-medium text-slate-800">{value}</p>
+                  <p className="text-muted-foreground">{label}</p>
+                  <p className="font-medium text-foreground">{value}</p>
                 </div>
               ))}
 
               <div>
-                <p className="text-slate-500">Ingestion</p>
+                <p className="text-muted-foreground">Ingestion</p>
                 <div className="mt-1">
                   <IngestionStatusCell
                     item={selectedItem}
@@ -464,7 +464,7 @@ export function PreviewPanel({
                 {selectedItem.type === 'file' &&
                   selectedItem.sourceDocumentId &&
                   ingestionByDocumentId[selectedItem.sourceDocumentId]?.message && (
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {ingestionByDocumentId[selectedItem.sourceDocumentId].message}
                     </p>
                   )}
@@ -473,7 +473,7 @@ export function PreviewPanel({
               {selectedItem.type === 'file' && (
                 <div>
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="text-slate-500">Versions</p>
+                    <p className="text-muted-foreground">Versions</p>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -483,7 +483,7 @@ export function PreviewPanel({
                     </Button>
                   </div>
                   {selectedVersions.length === 0 ? (
-                    <p className="text-xs text-slate-400">No versions yet.</p>
+                    <p className="text-xs text-muted-foreground/70">No versions yet.</p>
                   ) : (
                     <ul className="space-y-1">
                       {selectedVersions.map((v, i) => (
@@ -491,7 +491,7 @@ export function PreviewPanel({
                           <button
                             type="button"
                             onClick={() => onPreviewVersion(selectedItem, v.version)}
-                            className="flex w-full items-center justify-between rounded px-2 py-1 text-left text-xs text-slate-600 hover:bg-slate-100"
+                            className="flex w-full items-center justify-between rounded px-2 py-1 text-left text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
                           >
                             <span>{`v${v.version}${i === 0 ? ' (latest)' : ''}`}</span>
                             <span>{formatDate(v.createdAt)}</span>
@@ -504,7 +504,7 @@ export function PreviewPanel({
               )}
             </div>
           ) : (
-            <p className="text-sm text-slate-500">Select a file or folder to view metadata.</p>
+            <p className="text-sm text-muted-foreground">Select a file or folder to view metadata.</p>
           )}
         </TabsContent>
 

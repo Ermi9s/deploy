@@ -173,5 +173,3 @@ These are service-level parameters (ports, broker routes, internal API topology 
 ### Comprehensive Drive Management
 *   Complete API for creating folders, renaming items, moving files, and managing the trash bin.
 
-## Contributing
-We welcome contributions! Please read our contribution guidelines before submitting pull requests. Ensure all tests pass and your code adheres to standard styling guidelines.

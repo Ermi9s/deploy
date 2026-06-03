@@ -70,7 +70,7 @@ export function DriveSidebarTree({
                 className={`group flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-primary/10 text-primary'
-                    : 'text-slate-600 hover:bg-slate-200/50 hover:text-slate-900'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                 }`}
               >
                 <button
@@ -91,7 +91,7 @@ export function DriveSidebarTree({
                   onClick={() => onNavigate(nextPath)}
                   className="flex min-w-0 flex-1 items-center gap-2 py-1 text-left"
                 >
-                  <Folder className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-slate-400'}`} fill={isActive ? 'currentColor' : 'none'} fillOpacity={0.2} />
+                  <Folder className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} fill={isActive ? 'currentColor' : 'none'} fillOpacity={0.2} />
                   <span className="truncate">{node.name}</span>
                 </button>
               </div>
@@ -137,7 +137,7 @@ export function DriveSidebarTree({
               className={`group flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium transition-colors ${
                 isSelected
                   ? 'bg-primary/10 text-primary'
-                  : 'text-slate-600 hover:bg-slate-200/50 hover:text-slate-900'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               }`}
             >
               <button
@@ -158,7 +158,7 @@ export function DriveSidebarTree({
                 onClick={() => onPreviewFile(node)}
                 className="flex min-w-0 flex-1 items-center gap-2 py-1 text-left"
               >
-                <File className={`h-4 w-4 shrink-0 ${isSelected ? 'text-primary' : 'text-slate-400'}`} />
+                <File className={`h-4 w-4 shrink-0 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
                 <span className="truncate">{node.name}</span>
               </button>
             </div>
