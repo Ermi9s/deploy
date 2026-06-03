@@ -5,8 +5,9 @@ import { api, DriveItem } from '@/lib/api'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Folder, File, Trash2, Download, Copy, Move, Edit } from 'lucide-react'
+import { Folder, File, Trash2, Download, Copy, Scissors, Clipboard, Edit, FolderInput } from 'lucide-react'
 import FilePreview from './file-preview'
+import { MoveDialog } from './move-dialog'
 
 interface FileGridProps {
   items: DriveItem[]
@@ -29,6 +30,8 @@ export default function FileGrid({
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; item: DriveItem } | null>(null)
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [newName, setNewName] = useState('')
+  const [clipboard, setClipboard] = useState<{ item: DriveItem; mode: 'cut' | 'copy' } | null>(null)
+  const [moveTarget, setMoveTarget] = useState<DriveItem | null>(null)
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes'
@@ -93,6 +96,33 @@ export default function FileGrid({
     } catch (error) {
       console.error('Failed to download item:', error)
     }
+  }
+
+  const handleCopy = (item: DriveItem) => {
+    if (item.type === 'folder') {
+      alert('Folder copy is not yet supported. Use Cut + Paste to move folders.')
+      return
+    }
+    setClipboard({ item, mode: 'copy' })
+    setContextMenu(null)
+  }
+
+  const handleCut = (item: DriveItem) => {
+    setClipboard({ item, mode: 'cut' })
+    setContextMenu(null)
+  }
+
+  const handlePaste = async (destinationFolderId: string | null) => {
+    if (!clipboard) return
+    try {
+      await api.moveItem(clipboard.item.id, destinationFolderId)
+      setClipboard(null)
+      onRefresh()
+    } catch (error) {
+      console.error('Failed to paste:', error)
+      alert(`Paste failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+    setContextMenu(null)
   }
 
   const openPreview = async (item: DriveItem) => {
@@ -210,11 +240,11 @@ export default function FileGrid({
           <div className="py-1 min-w-max">
             {contextMenu.item.type === 'file' && (
               <button 
-                onClick={() => handleDownload(contextMenu.item)}
-                className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors"
-              >
-                <Download className="w-4 h-4" /> Download
-              </button>
+              onClick={() => handleDownload(contextMenu.item)}
+              className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors"
+            >
+              <Download className="w-4 h-4" /> Download
+            </button>
             )}
             <button 
               className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors"
@@ -226,12 +256,33 @@ export default function FileGrid({
             >
               <Edit className="w-4 h-4" /> Rename
             </button>
-            <button className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors">
+            <button
+              className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors"
+              onClick={() => handleCopy(contextMenu.item)}
+            >
               <Copy className="w-4 h-4" /> Copy
             </button>
-            <button className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors">
-              <Move className="w-4 h-4" /> Move
+            <button
+              className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors"
+              onClick={() => handleCut(contextMenu.item)}
+            >
+              <Scissors className="w-4 h-4" /> Cut
             </button>
+            <button
+              className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors"
+              onClick={() => { setMoveTarget(contextMenu.item); setContextMenu(null) }}
+            >
+              <FolderInput className="w-4 h-4" /> Move to…
+            </button>
+            {clipboard && (
+              <button
+                className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 w-full text-left text-sm text-slate-700 transition-colors"
+                onClick={() => void handlePaste(currentFolderId)}
+              >
+                <Clipboard className="w-4 h-4" /> Paste{' '}
+                <span className="text-xs text-slate-400">({clipboard.mode})</span>
+              </button>
+            )}
             <div className="border-t border-slate-200" />
             <button
               className="flex items-center gap-3 px-4 py-2 hover:bg-red-50 w-full text-left text-sm text-red-600 transition-colors"
@@ -259,6 +310,23 @@ export default function FileGrid({
           onDownload={() => handleDownload(selectedItem)}
         />
       )}
+
+      {/* Move dialog */}
+      <MoveDialog
+        open={!!moveTarget}
+        item={moveTarget}
+        onOpenChange={(open) => { if (!open) setMoveTarget(null) }}
+        onMove={async (item, destId) => {
+          try {
+            await api.moveItem(item.id, destId)
+            setMoveTarget(null)
+            onRefresh()
+          } catch (error) {
+            console.error('Move failed:', error)
+            alert(`Move failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+          }
+        }}
+      />
     </>
   )
 }

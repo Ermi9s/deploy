@@ -10,6 +10,7 @@ import UploadModal from '@/components/drive/upload-modal'
 import { DriveHeader } from '@/components/drive/DriveHeader'
 import { DriveContent, PreviewPanel, formatDate, formatFileSize } from '@/components/drive/DriveContent'
 import { DriveSidebarTree } from '@/components/drive/DriveSidebarTree'
+import { MoveDialog } from '@/components/drive/move-dialog'
 import { Button } from '@/components/ui/button'
 import { ChevronRight, Folder } from 'lucide-react'
 
@@ -46,6 +47,12 @@ export default function DrivePage() {
     handleRename,
     handleDelete,
     handleDownload,
+    clipboard,
+    handleCopy,
+    handleCut,
+    handlePaste,
+    handleMoveItem,
+    clearClipboard,
   } = useDriveState()
 
   // ── Preview state ────────────────────────────────────────────────────────────
@@ -55,6 +62,9 @@ export default function DrivePage() {
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewError, setPreviewError] = useState<string | null>(null)
   const previewRequestRef = useRef(0)
+
+  // ── Move dialog state ─────────────────────────────────────────────────────────
+  const [moveDialogItem, setMoveDialogItem] = useState<DriveItem | null>(null)
 
   // ── Ingestion tracking ───────────────────────────────────────────────────────
   const ingestionByDocumentId = useIngestionTracking(items, selectedItem)
@@ -187,6 +197,7 @@ export default function DrivePage() {
               loadingTreeNodes={loadingTreeNodes}
               loadingFileVersions={loadingFileVersions}
               fileVersions={fileVersions}
+              clipboard={clipboard}
               onTogglePreviewPanel={() => setPreviewPanelOpen((p) => !p)}
               onSetViewMode={setViewMode}
               onSetSortBy={setSortBy}
@@ -202,6 +213,8 @@ export default function DrivePage() {
               onToggleFolder={(id) => void toggleTreeFolder(id)}
               onToggleFile={(id) => void toggleTreeFile(id)}
               onPreviewFile={(item, v) => void openPreview(item, v)}
+              onPaste={(destId) => void handlePaste(destId)}
+              onClearClipboard={clearClipboard}
               formatDate={formatDate}
             />
 
@@ -262,6 +275,8 @@ export default function DrivePage() {
                   loading={loading}
                   viewMode={viewMode}
                   selectedItem={selectedItem}
+                  clipboard={clipboard}
+                  currentFolderId={currentFolderId}
                   ingestionByDocumentId={ingestionByDocumentId}
                   onSelectItem={(item) => { setSelectedItem(item); clearPreviewState() }}
                   onOpenFolder={(item) => void openFolder(item)}
@@ -273,6 +288,10 @@ export default function DrivePage() {
                     })
                   }
                   onDownload={(item) => void handleDownload(item)}
+                  onCopy={(item) => handleCopy(item)}
+                  onCut={(item) => handleCut(item)}
+                  onPaste={(destId) => void handlePaste(destId)}
+                  onMove={(item) => setMoveDialogItem(item)}
                 />
               </div>
 
@@ -306,6 +325,17 @@ export default function DrivePage() {
           onOpenChange={setUploadModalOpen}
           currentFolderId={currentFolderId}
           onUploadSuccess={() => void refreshData()}
+        />
+
+        {/* Move To dialog */}
+        <MoveDialog
+          open={!!moveDialogItem}
+          item={moveDialogItem}
+          onOpenChange={(open) => { if (!open) setMoveDialogItem(null) }}
+          onMove={async (item, destId) => {
+            await handleMoveItem(item, destId)
+            setMoveDialogItem(null)
+          }}
         />
       </AppLayout>
     </AuthGuard>

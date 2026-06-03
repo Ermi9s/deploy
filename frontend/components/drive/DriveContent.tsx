@@ -1,6 +1,7 @@
 'use client'
 
 import { DriveItem, FileVersion, IngestionStatusSnapshot } from '@/lib/api'
+import { ClipboardEntry } from '@/hooks/useDriveState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -8,16 +9,21 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
   CheckCircle2,
+  Clipboard,
+  Copy,
   ExternalLink,
   File,
   FileText,
+  FolderInput,
   Folder,
   Image as ImageIcon,
   MoreHorizontal,
+  Scissors,
   Table2,
   XCircle,
 } from 'lucide-react'
@@ -126,6 +132,8 @@ interface DriveContentProps {
   loading: boolean
   viewMode: ViewMode
   selectedItem: DriveItem | null
+  clipboard: ClipboardEntry | null
+  currentFolderId: string | null
   ingestionByDocumentId: Record<string, IngestionStatusSnapshot>
   onSelectItem: (item: DriveItem) => void
   onOpenFolder: (item: DriveItem) => void
@@ -133,6 +141,10 @@ interface DriveContentProps {
   onRename: (item: DriveItem) => void
   onDelete: (item: DriveItem) => void
   onDownload: (item: DriveItem) => void
+  onCopy: (item: DriveItem) => void
+  onCut: (item: DriveItem) => void
+  onPaste: (destinationFolderId: string | null) => void
+  onMove: (item: DriveItem) => void
 }
 
 export function DriveContent({
@@ -140,6 +152,8 @@ export function DriveContent({
   loading,
   viewMode,
   selectedItem,
+  clipboard,
+  currentFolderId,
   ingestionByDocumentId,
   onSelectItem,
   onOpenFolder,
@@ -147,6 +161,10 @@ export function DriveContent({
   onRename,
   onDelete,
   onDownload,
+  onCopy,
+  onCut,
+  onPaste,
+  onMove,
 }: DriveContentProps) {
   if (loading) {
     return (
@@ -184,6 +202,10 @@ export function DriveContent({
               selectedItem?.id === item.id
                 ? 'bg-primary/10 ring-1 ring-primary/20'
                 : 'hover:bg-accent/50'
+            } ${
+              clipboard?.mode === 'cut' && clipboard.item.id === item.id
+                ? 'opacity-40'
+                : ''
             }`}
             onClick={() => handleClick(item)}
             onDoubleClick={() => handleDoubleClick(item)}
@@ -209,14 +231,33 @@ export function DriveContent({
                     <MoreHorizontal className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="center" className="w-48 rounded-xl">
+                <DropdownMenuContent align="center" className="w-52 rounded-xl">
                   {item.type === 'file' && (
-                    <DropdownMenuItem onClick={() => onPreviewFile(item)}>Preview</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onPreviewFile(item)}>
+                      <File className="h-4 w-4 mr-2" /> Preview
+                    </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => onRename(item)}>Rename</DropdownMenuItem>
                   {item.type === 'file' && (
                     <DropdownMenuItem onClick={() => onDownload(item)}>Download</DropdownMenuItem>
                   )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => { onCut(item) }}>
+                    <Scissors className="h-4 w-4 mr-2" /> Cut
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { onCopy(item) }}>
+                    <Copy className="h-4 w-4 mr-2" /> Copy
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onMove(item)}>
+                    <FolderInput className="h-4 w-4 mr-2" /> Move to…
+                  </DropdownMenuItem>
+                  {clipboard && (
+                    <DropdownMenuItem onClick={() => onPaste(item.type === 'folder' ? item.id : currentFolderId)}>
+                      <Clipboard className="h-4 w-4 mr-2" />
+                      Paste {clipboard.mode === 'cut' ? '(move)' : '(copy)'} here
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => onDelete(item)}
                     className="text-destructive focus:text-destructive focus:bg-destructive/10"
@@ -255,6 +296,10 @@ export function DriveContent({
             key={item.id}
             className={`group grid cursor-pointer grid-cols-12 items-center px-4 py-1.5 text-sm transition-colors ${
               selectedItem?.id === item.id ? 'bg-primary/10' : 'hover:bg-accent/30'
+            } ${
+              clipboard?.mode === 'cut' && clipboard.item.id === item.id
+                ? 'opacity-40'
+                : ''
             }`}
             onClick={() => handleClick(item)}
             onDoubleClick={() => handleDoubleClick(item)}
@@ -292,14 +337,33 @@ export function DriveContent({
                     <MoreHorizontal className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                <DropdownMenuContent align="end" className="w-52 rounded-xl">
                   {item.type === 'file' && (
-                    <DropdownMenuItem onClick={() => onPreviewFile(item)}>Preview</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onPreviewFile(item)}>
+                      <File className="h-4 w-4 mr-2" /> Preview
+                    </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => onRename(item)}>Rename</DropdownMenuItem>
                   {item.type === 'file' && (
                     <DropdownMenuItem onClick={() => onDownload(item)}>Download</DropdownMenuItem>
                   )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onCut(item)}>
+                    <Scissors className="h-4 w-4 mr-2" /> Cut
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onCopy(item)}>
+                    <Copy className="h-4 w-4 mr-2" /> Copy
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onMove(item)}>
+                    <FolderInput className="h-4 w-4 mr-2" /> Move to…
+                  </DropdownMenuItem>
+                  {clipboard && (
+                    <DropdownMenuItem onClick={() => onPaste(item.type === 'folder' ? item.id : currentFolderId)}>
+                      <Clipboard className="h-4 w-4 mr-2" />
+                      Paste {clipboard.mode === 'cut' ? '(move)' : '(copy)'} here
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => onDelete(item)}
                     className="text-destructive focus:text-destructive focus:bg-destructive/10"

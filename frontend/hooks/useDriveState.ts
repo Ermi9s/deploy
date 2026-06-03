@@ -4,6 +4,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { api, DriveItem, FileVersion } from '@/lib/api'
 
+export interface ClipboardEntry {
+  item: DriveItem
+  mode: 'copy' | 'cut'
+}
+
 export interface BreadcrumbItem {
   id: string | null
   name: string
@@ -47,6 +52,9 @@ export function useDriveState() {
   // ── Folder creation ──────────────────────────────────────────────────────────
   const [isCreatingFolder, setIsCreatingFolder] = useState(false)
   const [folderName, setFolderName] = useState('')
+
+  // ── Clipboard (cut / copy / paste) ───────────────────────────────────────────
+  const [clipboard, setClipboard] = useState<ClipboardEntry | null>(null)
 
   // ── Preview request deduplication ────────────────────────────────────────────
   const previewRequestRef = useRef(0)
@@ -272,6 +280,63 @@ export function useDriveState() {
     }
   }, [])
 
+  // ── Clipboard helpers ─────────────────────────────────────────────────────────
+  const handleCopy = useCallback((item: DriveItem) => {
+    if (item.type === 'folder') {
+      alert('Folder copy is not yet supported. You can move folders using Cut + Paste.')
+      return
+    }
+    setClipboard({ item, mode: 'copy' })
+  }, [])
+
+  const handleCut = useCallback((item: DriveItem) => {
+    setClipboard({ item, mode: 'cut' })
+  }, [])
+
+  const clearClipboard = useCallback(() => setClipboard(null), [])
+
+  /**
+   * Paste the clipboard item into `destinationFolderId`.
+   * - cut  → move the item to the destination
+   * - copy → move is used as a proxy until a server-side copy endpoint exists
+   */
+  const handlePaste = useCallback(
+    async (destinationFolderId: string | null) => {
+      if (!clipboard) return
+      const { item, mode } = clipboard
+      try {
+        if (mode === 'cut') {
+          await api.moveItem(item.id, destinationFolderId)
+        } else {
+          // Copy: re-use move for now (server-side copy can be added later)
+          await api.moveItem(item.id, destinationFolderId)
+        }
+        setClipboard(null)
+        await refreshData()
+      } catch (error) {
+        console.error('Failed to paste item:', error)
+        alert(`Paste failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
+    },
+    [clipboard, refreshData],
+  )
+
+  /**
+   * Move an item to a destination chosen by the user (e.g. from the Move dialog).
+   */
+  const handleMoveItem = useCallback(
+    async (item: DriveItem, destinationFolderId: string | null) => {
+      try {
+        await api.moveItem(item.id, destinationFolderId)
+        await refreshData()
+      } catch (error) {
+        console.error('Failed to move item:', error)
+        alert(`Move failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
+    },
+    [refreshData],
+  )
+
   return {
     // Listing
     items,
@@ -290,6 +355,13 @@ export function useDriveState() {
     folderName,
     setIsCreatingFolder,
     setFolderName,
+    // Clipboard
+    clipboard,
+    handleCopy,
+    handleCut,
+    handlePaste,
+    handleMoveItem,
+    clearClipboard,
     // Actions
     refreshData,
     navigateToPath,

@@ -18,17 +18,18 @@ import {
 import {
   ArrowDownUp,
   ChevronRight,
+  Clipboard,
   FolderPlus,
   List,
   Grid3X3,
   Menu,
   PanelRight,
-  Plus,
   RefreshCw,
   Upload,
+  X,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { BreadcrumbItem } from '@/hooks/useDriveState'
+import { BreadcrumbItem, ClipboardEntry } from '@/hooks/useDriveState'
 import { DriveItem } from '@/lib/api'
 import { DriveSidebarTree } from './DriveSidebarTree'
 import { FileVersion } from '@/lib/api'
@@ -72,6 +73,10 @@ interface DriveHeaderProps {
   onToggleFile: (id: string) => void
   onPreviewFile: (item: DriveItem, version?: number) => void
   formatDate: (date?: string) => string
+  // Clipboard
+  clipboard: ClipboardEntry | null
+  onPaste: (destinationFolderId: string | null) => void
+  onClearClipboard: () => void
 }
 
 /**
@@ -114,6 +119,9 @@ export function DriveHeader({
   onToggleFile,
   onPreviewFile,
   formatDate,
+  clipboard,
+  onPaste,
+  onClearClipboard,
 }: DriveHeaderProps) {
   return (
     <header className="flex flex-col gap-3 py-3 px-4 border-b border-border bg-accent/30 z-10 sticky top-0">
@@ -216,6 +224,34 @@ export function DriveHeader({
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
+
+        {/* Clipboard paste indicator */}
+        {clipboard && (
+          <div className="flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 pl-2 pr-1 py-0.5 text-xs text-primary">
+            <Clipboard className="h-3 w-3 shrink-0" />
+            <span className="max-w-[120px] truncate font-medium">
+              {clipboard.mode === 'cut' ? 'Cut' : 'Copy'}: {clipboard.item.name}
+            </span>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-5 w-5 p-0 rounded-full ml-0.5 text-primary hover:bg-primary/10"
+              title={`Paste into ${currentFolderId ? 'this folder' : 'My Drive'}`}
+              onClick={() => onPaste(currentFolderId)}
+            >
+              <Clipboard className="h-3 w-3" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-5 w-5 p-0 rounded-full text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+              title="Cancel"
+              onClick={onClearClipboard}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
 
         <div className="h-4 w-px bg-border mx-1" />
 
