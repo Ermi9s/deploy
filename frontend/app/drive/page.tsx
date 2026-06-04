@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useRef, useState, useEffect } from 'react'
-import { DriveItem, FileVersion } from '@/lib/api'
+import { DriveItem, FileVersion, Department } from '@/lib/api'
 import { useDriveState, ROOT_CRUMB } from '@/hooks/useDriveState'
 import { useIngestionTracking } from '@/hooks/useIngestionTracking'
 import { AppLayout } from '@/components/layout/AppLayout'
@@ -53,6 +53,8 @@ export default function DrivePage() {
     handlePaste,
     handleMoveItem,
     clearClipboard,
+    searchQuery,
+    setSearchQuery,
   } = useDriveState()
 
   // ── Preview state ────────────────────────────────────────────────────────────
@@ -73,12 +75,28 @@ export default function DrivePage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [sortBy, setSortBy] = useState<SortBy>('updated')
   const [sortAsc, setSortAsc] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [previewPanelOpen, setPreviewPanelOpen] = useState(false)
   const [previewPaneWidth, setPreviewPaneWidth] = useState(DEFAULT_PREVIEW_PANE_WIDTH)
   const [isResizingPreviewPane, setIsResizingPreviewPane] = useState(false)
   const browseSectionRef = useRef<HTMLElement | null>(null)
+  const [departments, setDepartments] = useState<Department[]>([])
+
+  useEffect(() => {
+    import('@/lib/api').then(({ api }) => {
+      api.listDepartments()
+        .then(setDepartments)
+        .catch((err) => console.error('Failed to load departments:', err))
+    })
+  }, [])
+
+  const departmentNames = useMemo(() => {
+    const map: Record<string, string> = {}
+    departments.forEach((dept) => {
+      map[dept.uuid] = dept.name
+    })
+    return map
+  }, [departments])
 
   // ── Side-effects ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -148,11 +166,12 @@ export default function DrivePage() {
     }
   }
 
-  // ── Sorted + filtered list ────────────────────────────────────────────────────
+  // ── Sorted list ───────────────────────────────────────────────────────────────
+  // NOTE: Search filtering is done server-side via the `search` query param.
+  // The `items` array already contains only matching results when a search is
+  // active, so we only need to sort here.
   const filteredAndSortedItems = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
-    const filtered = q ? items.filter((i) => i.name.toLowerCase().includes(q)) : items
-    const sorted = [...filtered].sort((a, b) => {
+    const sorted = [...items].sort((a, b) => {
       if (a.type !== b.type) return a.type === 'folder' ? -1 : 1
       if (sortBy === 'name') return a.name.localeCompare(b.name)
       if (sortBy === 'updated')
@@ -161,7 +180,7 @@ export default function DrivePage() {
       return (a.fileType || a.type).localeCompare(b.fileType || b.type)
     })
     return sortAsc ? sorted : sorted.reverse()
-  }, [items, searchQuery, sortBy, sortAsc])
+  }, [items, sortBy, sortAsc])
 
   const selectedVersions: FileVersion[] = useMemo(
     () => (selectedItem?.type === 'file' ? fileVersions[selectedItem.id] || [] : []),
@@ -277,6 +296,7 @@ export default function DrivePage() {
                   selectedItem={selectedItem}
                   clipboard={clipboard}
                   currentFolderId={currentFolderId}
+                  searchQuery={searchQuery}
                   ingestionByDocumentId={ingestionByDocumentId}
                   onSelectItem={(item) => { setSelectedItem(item); clearPreviewState() }}
                   onOpenFolder={(item) => void openFolder(item)}
@@ -306,6 +326,7 @@ export default function DrivePage() {
                     previewVersion={previewVersion}
                     selectedVersions={selectedVersions}
                     ingestionByDocumentId={ingestionByDocumentId}
+                    departmentNames={departmentNames}
                     onDownload={(item, v) => void handleDownload(item, v)}
                     onPreviewVersion={(item, v) => void openPreview(item, v)}
                     onRefreshVersions={(id) => void ensureVersionsLoaded(id, true)}

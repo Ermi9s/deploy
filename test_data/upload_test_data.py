@@ -111,10 +111,17 @@ def upload_file(file_path, dept_name, rank, dept_uuid_map, user_token,
         print(f"[-] [{filename}] Error: Target department '{dept_name}' UUID not resolved.")
         return False
 
-    dept_access = {
-        public_dept_uuid: 1,
-        target_dept_uuid: rank
-    }
+    if rank == 1:
+        # Public clearance files get marked with the Public department UUID
+        dept_access = {
+            public_dept_uuid: 1,
+            target_dept_uuid: 1
+        }
+    else:
+        # Departmental confidential/secret files only have their specific department access (not public)
+        dept_access = {
+            target_dept_uuid: rank
+        }
 
     print(f"\n[*] [{filename}] Starting ingestion workflow...")
     print(f"    - Type: {mime_type} | Size: {filesize} bytes")
@@ -193,6 +200,7 @@ def main():
     parser.add_argument("--ingestion-url", default="http://localhost:8001", help="Ingestion service base URL")
     parser.add_argument("--management-url", default="http://localhost:8002", help="Management service base URL")
     parser.add_argument("--minio-endpoint", default="localhost:9000", help="MinIO host:port (no scheme)")
+    parser.add_argument("--minio-url", help="MinIO full URL (e.g. http://minio:9000). If provided, overrides --minio-endpoint and --minio-secure")
     parser.add_argument("--minio-access-key", default="okm_minio_user", help="MinIO access key")
     parser.add_argument("--minio-secret-key", default="okm_minio_password", help="MinIO secret key")
     parser.add_argument("--minio-bucket", default="okm-files", help="MinIO bucket name")
@@ -202,11 +210,20 @@ def main():
     parser.add_argument("--user-password", default="Test@1234!", help="Default password for department head accounts")
     args = parser.parse_args()
 
+    minio_endpoint = args.minio_endpoint
+    minio_secure = args.minio_secure
+
+    if args.minio_url:
+        from urllib.parse import urlparse
+        parsed = urlparse(args.minio_url)
+        minio_endpoint = parsed.netloc or parsed.path
+        minio_secure = parsed.scheme == "https"
+
     # Locate test data directories
     script_dir = Path(__file__).resolve().parent
     test_data_dir = script_dir
     print(f"[+] Scanning for test data in: {test_data_dir}")
-    print(f"[+] MinIO endpoint: {args.minio_endpoint} | Bucket: {args.minio_bucket}")
+    print(f"[+] MinIO endpoint: {minio_endpoint} | Bucket: {args.minio_bucket}")
 
     # Authenticate as admin to retrieve department maps
     print(f"[+] Logging in as admin '{args.admin_email}'...")
@@ -282,11 +299,11 @@ def main():
                     user_token=user_token,
                     ingestion_url=args.ingestion_url,
                     management_url=args.management_url,
-                    minio_endpoint=args.minio_endpoint,
+                    minio_endpoint=minio_endpoint,
                     minio_access_key=args.minio_access_key,
                     minio_secret_key=args.minio_secret_key,
                     minio_bucket=args.minio_bucket,
-                    minio_secure=args.minio_secure,
+                    minio_secure=minio_secure,
                     owner_id=owner_id,
                 )
                 if success:

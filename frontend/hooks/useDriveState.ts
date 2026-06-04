@@ -56,6 +56,17 @@ export function useDriveState() {
   // ── Clipboard (cut / copy / paste) ───────────────────────────────────────────
   const [clipboard, setClipboard] = useState<ClipboardEntry | null>(null)
 
+  // ── Search state with debounce ────────────────────────────────────────────────
+  const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
   // ── Preview request deduplication ────────────────────────────────────────────
   const previewRequestRef = useRef(0)
 
@@ -63,7 +74,7 @@ export function useDriveState() {
   const loadCurrentItems = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await api.listFiles(currentFolderId)
+      const data = await api.listFiles(currentFolderId, debouncedSearchQuery)
       setItems(data.items)
     } catch (error) {
       console.error('Failed to load items:', error)
@@ -73,7 +84,7 @@ export function useDriveState() {
     } finally {
       setLoading(false)
     }
-  }, [currentFolderId, router])
+  }, [currentFolderId, debouncedSearchQuery, router])
 
   useEffect(() => {
     void loadCurrentItems()
@@ -362,6 +373,9 @@ export function useDriveState() {
     handlePaste,
     handleMoveItem,
     clearClipboard,
+    // Search
+    searchQuery,
+    setSearchQuery,
     // Actions
     refreshData,
     navigateToPath,

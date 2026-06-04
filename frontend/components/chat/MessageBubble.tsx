@@ -171,22 +171,34 @@ export function MessageBubble({ message, onSourceClick }: MessageBubbleProps) {
           </div>
         </div>
 
-        {/* Source chips */}
-        {message.sources && message.sources.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 pl-1">
-            <span className="w-full text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
-              Sources
-            </span>
-            {message.sources.map((src, i) => (
-              <SourceChip
-                key={src.chunk_id}
-                source={src}
-                index={i + 1}
-                onClick={onSourceClick}
-              />
-            ))}
-          </div>
-        )}
+        {/* Source chips — deduplicated by filename so the same file never
+            appears twice even when multiple chunks were retrieved from it. */}
+        {message.sources && message.sources.length > 0 && (() => {
+          const seen = new Set<string>()
+          const uniqueSources = message.sources.filter((src) => {
+            // Use filename as primary dedup key (visible to the user).
+            // Fall back to document_id then chunk_id for robustness.
+            const key = src.filename || src.document_id || src.chunk_id
+            if (seen.has(key)) return false
+            seen.add(key)
+            return true
+          })
+          return (
+            <div className="flex flex-wrap gap-1.5 pl-1">
+              <span className="w-full text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
+                Sources
+              </span>
+              {uniqueSources.map((src, i) => (
+                <SourceChip
+                  key={src.filename || src.chunk_id || src.document_id}
+                  source={src}
+                  index={i + 1}
+                  onClick={onSourceClick}
+                />
+              ))}
+            </div>
+          )
+        })()}
 
         {/* Timestamp */}
         {!isStreaming && (

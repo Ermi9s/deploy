@@ -26,10 +26,6 @@ class DepartmentAccessValidatorMixin:
             raise serializers.ValidationError(
                 'departmentAccess must be a JSON object mapping department UUIDs to integer rankings.'
             )
-        if not value:
-            raise serializers.ValidationError(
-                'departmentAccess must not be empty. Include at least the Public department.'
-            )
         for key, ranking in value.items():
             if not isinstance(key, str) or not key.strip():
                 raise serializers.ValidationError(

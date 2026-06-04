@@ -1,13 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Shield, Loader2, AlertCircle, Lock, Unlock, X } from 'lucide-react'
+import { Shield, Loader2, AlertCircle, Globe, Unlock, X } from 'lucide-react'
 import { api, Department, DepartmentAccessMap } from '@/lib/api'
 
 interface DepartmentAccessPickerProps {
   value: DepartmentAccessMap
   onChange: (next: DepartmentAccessMap) => void
   disabled?: boolean
+  /** Called once after departments are fetched — lets parents build UUID-to-name maps. */
+  onDepartmentsLoaded?: (depts: Department[]) => void
 }
 
 /**
@@ -23,6 +25,7 @@ export default function DepartmentAccessPicker({
   value,
   onChange,
   disabled = false,
+  onDepartmentsLoaded,
 }: DepartmentAccessPickerProps) {
   const [departments, setDepartments] = useState<Department[]>([])
   const [loading, setLoading] = useState(true)
@@ -36,6 +39,7 @@ export default function DepartmentAccessPicker({
       .listDepartments()
       .then((depts) => {
         setDepartments(depts)
+        onDepartmentsLoaded?.(depts)
 
         // Pre-populate the Public department with ranking 1 if not already set.
         const pub = depts.find((d) => d.name === 'Public')
@@ -54,9 +58,6 @@ export default function DepartmentAccessPicker({
 
   const handleSelectLevel = (dept: Department, ranking: number) => {
     if (disabled) return
-    // If it's Public, they cannot change the level or remove it (it must stay at ranking 1)
-    if (isPublic(dept)) return
-
     onChange({
       ...value,
       [dept.uuid]: ranking,
@@ -64,7 +65,7 @@ export default function DepartmentAccessPicker({
   }
 
   const handleRemoveDepartment = (dept: Department) => {
-    if (disabled || isPublic(dept)) return
+    if (disabled) return
     const next = { ...value }
     delete next[dept.uuid]
     onChange(next)
@@ -148,7 +149,9 @@ export default function DepartmentAccessPicker({
                     <td className="px-4 py-3.5 align-middle">
                       <div className="flex items-center gap-2">
                         {pub ? (
-                          <Lock className="w-4 h-4 text-emerald-500 shrink-0" />
+                          selected
+                            ? <Globe className="w-4 h-4 text-emerald-500 shrink-0" />
+                            : <Globe className="w-4 h-4 text-slate-400 shrink-0" />
                         ) : selected ? (
                           <Unlock className="w-4 h-4 text-indigo-400 shrink-0" />
                         ) : (
@@ -157,6 +160,11 @@ export default function DepartmentAccessPicker({
                         <span className={`text-sm font-semibold truncate ${selected ? 'text-slate-900 font-bold' : 'text-muted-foreground'}`}>
                           {dept.name}
                         </span>
+                        {pub && (
+                          <span className="text-[9px] font-bold uppercase tracking-wide text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5">
+                            Public
+                          </span>
+                        )}
                       </div>
                     </td>
 
@@ -165,7 +173,7 @@ export default function DepartmentAccessPicker({
                       <div className="flex flex-wrap gap-2">
                         {levels.map((level) => {
                           const isCurrent = selected && activeRanking === level.ranking
-                          const isButtonDisabled = disabled || (pub && level.ranking !== 1)
+                          const isButtonDisabled = disabled
 
                           return (
                             <button
@@ -191,17 +199,13 @@ export default function DepartmentAccessPicker({
 
                     {/* Action / Active State */}
                     <td className="px-4 py-3.5 align-middle text-center">
-                      {pub ? (
-                        <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                          Locked
-                        </span>
-                      ) : selected ? (
+                      {selected ? (
                         <button
                           type="button"
                           disabled={disabled}
                           onClick={() => handleRemoveDepartment(dept)}
                           className="p-1 hover:bg-red-50 hover:text-red-500 text-muted-foreground rounded-lg transition-colors border border-transparent hover:border-red-200 shrink-0"
-                          title="Revoke department access"
+                          title={pub ? 'Remove public access (file becomes private)' : 'Revoke department access'}
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>

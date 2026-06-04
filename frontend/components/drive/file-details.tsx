@@ -57,7 +57,7 @@ export default function FileDetails({
     })
 
   const accessEntries = Object.entries(departmentAccess ?? {})
-  const isOpen = accessEntries.length === 0
+  const isPrivate = accessEntries.length === 0
 
   return (
     <Card className="p-4 space-y-5 border-slate-200 shadow-none">
@@ -112,11 +112,11 @@ export default function FileDetails({
             </span>
           </div>
 
-          {isOpen ? (
-            <div className="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2">
-              <Unlock className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <p className="text-xs text-emerald-700 font-medium">
-                No restrictions — all authenticated users can access this file.
+          {isPrivate ? (
+            <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+              <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <p className="text-xs text-amber-700 font-medium">
+                Private — Only the owner can access this file.
               </p>
             </div>
           ) : (

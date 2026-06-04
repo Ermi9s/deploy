@@ -31,25 +31,48 @@ class DriveItemBaseAPIView(APIView):
         if user.is_superuser:
             return DriveItem.objects.all()
 
-        queryset = DriveItem.objects.filter(owner=user)
+        from django.db.models import Q
+        from UserAccountManager.models import Department
+
+        # ── Layer 1: Always include files the user owns ───────────────────────
+        owns_query = Q(owner=user)
+
+        # ── Layer 2: Public-tagged files (visible to everyone) ────────────────
+        # Any file whose department_access map includes the Public dept UUID
+        # at minimum ranking 1 is accessible to all authenticated users.
+        public_query = Q()
+        try:
+            pub_dept = Department.objects.get(name='Public')
+            pub_uuid_str = str(pub_dept.uuid)
+            public_query = Q(
+                department_access__has_key=pub_uuid_str,
+                **{f"department_access__{pub_uuid_str}__lte": 1}
+            )
+        except Department.DoesNotExist:
+            pass
+
+        # ── Layer 3: Department-specific MAC access ────────────────────────────
+        # If the user has a real (non-Public) department + permission_level,
+        # also include files their clearance allows within that department.
+        dept_mac_query = Q()
         try:
             profile = getattr(user, 'profile', None)
             if profile:
                 dept = profile.department
                 perm = profile.permission_level
-                if dept and perm is not None:
-                    from django.db.models import Q
+                # Only apply when the user has a *real* department (not just Public)
+                # and a valid permission level.
+                if dept and perm is not None and dept.name != 'Public':
                     dept_uuid_str = str(dept.uuid)
                     ranking_val = int(perm.ranking)
-                    mac_query = Q(
+                    dept_mac_query = Q(
                         department_access__has_key=dept_uuid_str,
                         **{f"department_access__{dept_uuid_str}__lte": ranking_val}
                     )
-                    queryset = DriveItem.objects.filter(Q(owner=user) | mac_query)
         except Exception:
             pass
 
-        return queryset
+        return DriveItem.objects.filter(owns_query | public_query | dept_mac_query)
 
     def _get_item(self, item_id, file_only=True, is_trashed=False):
         import uuid
@@ -95,11 +118,17 @@ class DriveItemBaseAPIView(APIView):
 class DriveItemListAPIView(DriveItemBaseAPIView):
     def get(self, request):
         parent_id = request.query_params.get('parentId')
+        search_query = request.query_params.get('search', '').strip()
+
         queryset = self.get_queryset().filter(is_trashed=False)
-        if parent_id in (None, '', 'null'):
-            queryset = queryset.filter(parent__isnull=True)
+
+        if search_query:
+            queryset = queryset.filter(name__icontains=search_query)
         else:
-            queryset = queryset.filter(parent_id=parent_id)
+            if parent_id in (None, '', 'null'):
+                queryset = queryset.filter(parent__isnull=True)
+            else:
+                queryset = queryset.filter(parent_id=parent_id)
 
         serializer = DriveItemSerializer(queryset, many=True)
         return Response({'items': serializer.data})

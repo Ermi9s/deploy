@@ -57,6 +57,7 @@ export default function UploadModal({
   const [step, setStep] = useState<Step>('select')
   const [fileQueue, setFileQueue] = useState<QueuedFile[]>([])
   const [departmentAccess, setDepartmentAccess] = useState<DepartmentAccessMap>({})
+  const [departmentNames, setDepartmentNames] = useState<Record<string, string>>({}) // uuid -> name
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -191,6 +192,7 @@ export default function UploadModal({
     setStep('select')
     setFileQueue([])
     setDepartmentAccess({})
+    setDepartmentNames({})
   }
 
   // Derived properties
@@ -310,6 +312,11 @@ export default function UploadModal({
               <DepartmentAccessPicker
                 value={departmentAccess}
                 onChange={setDepartmentAccess}
+                onDepartmentsLoaded={(depts) => {
+                  const names: Record<string, string> = {}
+                  depts.forEach((d) => { names[d.uuid] = d.name })
+                  setDepartmentNames(names)
+                }}
               />
               <div className="flex items-start gap-2.5 rounded-lg bg-indigo-50/40 border border-indigo-100 p-3">
                 <Info className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
@@ -354,42 +361,41 @@ export default function UploadModal({
                   <div className="space-y-2">
                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Permitted Clearance Levels</p>
                     <div className="flex flex-col gap-1.5">
-                      {Object.entries(departmentAccess).map(([deptUuid, minRanking]) => {
-                        const rankLabel =
-                          minRanking === 1 ? 'Public (Rank 1)' :
-                          minRanking === 2 ? 'Restricted (Rank 2)' :
-                          minRanking === 3 ? 'Confidential (Rank 3)' :
-                          minRanking === 4 ? 'Secret (Rank 4)' :
-                          `Top Secret (Rank ${minRanking})`;
+                      {Object.keys(departmentAccess).length === 0 ? (
+                        <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+                          <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <p className="text-xs text-amber-800 font-medium">
+                            No departments selected — only you (the owner) will be able to access this file.
+                          </p>
+                        </div>
+                      ) : (
+                        Object.entries(departmentAccess).map(([deptUuid, minRanking]) => {
+                          const rankLabel =
+                            minRanking === 1 ? 'Public (Rank 1)' :
+                            minRanking === 2 ? 'Restricted (Rank 2)' :
+                            minRanking === 3 ? 'Confidential (Rank 3)' :
+                            minRanking === 4 ? 'Secret (Rank 4)' :
+                            `Top Secret (Rank ${minRanking})`;
 
-                        return (
-                          <div key={deptUuid} className="flex items-center justify-between bg-card border border-border/50 px-3 py-1.5 rounded-lg">
-                            <span className="text-xs font-bold text-foreground/90 truncate max-w-[150px]">
-                              {deptUuid === 'Public' ? 'Public' : 'Active Department'}
-                            </span>
-                            <Badge variant="outline" className={`text-[10px] font-bold ${
-                              minRanking <= 1 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                              minRanking === 2 ? 'bg-sky-50 text-sky-700 border-sky-200' :
-                              minRanking === 3 ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                              minRanking === 4 ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                              'bg-red-50 text-red-700 border-red-200'
-                            }`}>
-                              {rankLabel}
-                            </Badge>
-                          </div>
-                        )
-                      })}
+                          return (
+                            <div key={deptUuid} className="flex items-center justify-between bg-card border border-border/50 px-3 py-1.5 rounded-lg">
+                              <span className="text-xs font-bold text-foreground/90 truncate max-w-[150px]">
+                                {departmentNames[deptUuid] ?? deptUuid}
+                              </span>
+                              <Badge variant="outline" className={`text-[10px] font-bold ${
+                                minRanking <= 1 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                minRanking === 2 ? 'bg-sky-50 text-sky-700 border-sky-200' :
+                                minRanking === 3 ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                minRanking === 4 ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                'bg-red-50 text-red-700 border-red-200'
+                              }`}>
+                                {rankLabel}
+                              </Badge>
+                            </div>
+                          )
+                        })
+                      )}
                     </div>
-                  </div>
-
-                  <div className="border-t border-border pt-3">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground/80">
-                      <Lock className="w-3.5 h-3.5 text-indigo-500" />
-                      Locked Security Fallback
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
-                      Public users are automatically granted read access at clearance rank 1+.
-                    </p>
                   </div>
                 </div>
               </div>

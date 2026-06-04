@@ -535,8 +535,11 @@ export const api = {
     })
   },
 
-  async listFiles(parentId?: string | null): Promise<DriveListResponse> {
-    const query = parentId ? `?parentId=${encodeURIComponent(parentId)}` : ''
+  async listFiles(parentId?: string | null, search?: string): Promise<DriveListResponse> {
+    const parts = []
+    if (parentId) parts.push(`parentId=${encodeURIComponent(parentId)}`)
+    if (search) parts.push(`search=${encodeURIComponent(search)}`)
+    const query = parts.length > 0 ? `?${parts.join('&')}` : ''
     return request<DriveListResponse>(`/api/drive/${query}`)
   },
 
